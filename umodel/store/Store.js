@@ -1,19 +1,18 @@
-import EventEmitter from 'events';
+import Base from '../Base';
+import ObservableMixin from "../mixins/ObservableMixin";
 
-class Store extends EventEmitter {
+class Store extends Base {
 
     static getModelClass() {
         throw new Error('getModelClass must be implemented in child class');
     }
 
-
-    constructor(items, config) {
+    constructor(items = []) {
         super();
         this.items = [];
-        this.config = config || {};
         if (items) {
             var modelClass = this.constructor.getModelClass();
-            if (Array.isArray(items) && items.length) {
+            if (Array.isArray(items)) {
                 this.addAll(items);
             } else {
                 throw new Error('Items must be an Array');
@@ -173,5 +172,7 @@ class Store extends EventEmitter {
     //     }
     // }
 }
+
+Store.addMixins([ObservableMixin]);
 
 export default Store;

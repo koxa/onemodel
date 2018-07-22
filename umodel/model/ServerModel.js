@@ -1,5 +1,5 @@
 import Model from './Model';
-import Globals from '../../../shared/stores/GlobalStore';
+//import Globals from '../../../shared/stores/GlobalStore';
 
 class ServerModel extends Model {
     
@@ -8,7 +8,7 @@ class ServerModel extends Model {
     }
 
     static getDbInstance() {
-        return Globals.DB.collection(this.getDbCollectionName());
+        //return Globals.DB.collection(this.getDbCollectionName());
     }
 
     static findById(id) {

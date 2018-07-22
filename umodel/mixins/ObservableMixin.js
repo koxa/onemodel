@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 
-const ObservableMixin = Base => class extends Base {
+class ObservableMixin extends EventEmitter {
 
     /**
      * Format: {UPDATE: 'update', ADD: 'add'}
@@ -21,6 +21,6 @@ const ObservableMixin = Base => class extends Base {
     unMute() {
         this.__muted = false;
     }
-};
+}
 
 export default ObservableMixin;
