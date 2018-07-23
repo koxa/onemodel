@@ -1,6 +1,7 @@
-import ServerModel from "../model/ServerModel";
+import ServerModel from "../ServerModel";
+import BaseAdaptorMixin from "../../../common/mixins/BaseAdaptorMixin";
 
-class MongoServerModel extends ServerModel {
+class MongoServerModel extends BaseAdaptorMixin {
 
     static findById(id) {
         return this.find({
@@ -10,7 +11,7 @@ class MongoServerModel extends ServerModel {
 
     static find(params) {
         return new Promise((resolve, reject) => {
-            this.getDbInstance().find(params).toArray(function (err, docs) {
+            this.getDriver().find(params).toArray(function (err, docs) {
                 if (err) {
                     reject(err)
                 } else {

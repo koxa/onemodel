@@ -1,16 +1,16 @@
-import Model from './model/Model.js';
-import ServerModel from './model/ServerModel.js';
+import Model from './common/model/Model.js';
+import ServerModel from './server/model/ServerModel.js';
 //import Store from './store/Store.js';
 //import ServerStore from './store/ServerStore.js';
-import UModel from "./model/UModel";
+import ClientModel from "./client/model/ClientModel";
 
 window.Model = Model;
 window.ServerModel = ServerModel;
 //window.Store = Store;
 //window.ServerStore = ServerStore;
-window.UModel = UModel;
+window.ClientModel = ClientModel;
 
-class Book extends UModel {
+class Book extends ClientModel {
     static getDefaultProps() {
         return {
             title: null,

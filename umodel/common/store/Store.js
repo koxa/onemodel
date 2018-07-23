@@ -1,4 +1,4 @@
-import Base from '../Base';
+import Base from '../../Base';
 import ObservableMixin from "../mixins/ObservableMixin";
 
 class Store extends Base {

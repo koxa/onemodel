@@ -1,9 +1,13 @@
-import ServerStore from '../store/ServerStore';
+import Store from '../../common/store/Store';
 
-class MongoServerStore extends ServerStore {
+class ServerStore extends Store {
 
     static getDbCollection() {
         return this.getModelClass().getDbInstance();
+    }
+
+    save() {
+        return this.constructor.serverAddAll(this.items);
     }
 
     // add(item, silent, updateIfExists, noPersist) {
@@ -67,7 +71,7 @@ class MongoServerStore extends ServerStore {
     //     });
     // }
 
-    static find(params) {
+    static serverFind(params) {
         console.log('serverFind');
         var db = this.getDbCollection();
         return new Promise((resolve, reject) => {
@@ -100,7 +104,7 @@ class MongoServerStore extends ServerStore {
     //     });
     // }
 
-    static add(item) {
+    static serverAdd(item) {
         console.log('serverAdd');
         var db = this.getDbCollection();
         return db.insertOne(item, function (err, result) {
@@ -112,7 +116,7 @@ class MongoServerStore extends ServerStore {
         });
     }
 
-    static addAll(items) {
+    static serverAddAll(items) {
         console.log('serverAddAll');
         var db = this.getDbCollection();
         return new Promise((resolve, reject) => {
@@ -128,7 +132,7 @@ class MongoServerStore extends ServerStore {
         });
     }
 
-    static update(filter, update, options) {
+    static serverUpdate(filter, update, options) {
         console.log('serverUpdate');
         var db = this.getDbCollection();
         return db.updateMany(filter, update, options, function (err, result) {
@@ -140,7 +144,7 @@ class MongoServerStore extends ServerStore {
         });
     }
 
-    static updateAll(filter, update, options) {
+    static serverUpdateAll(filter, update, options) {
         console.log('serverUpdateAll');
         var db = this.getDbCollection();
         return db.updateMany(filter, update, options, function (err, result) {
@@ -152,13 +156,13 @@ class MongoServerStore extends ServerStore {
         });
     }
 
-    static remove(id) {
+    static serverRemove(id) {
 
     }
 
-    static removeAll(params) {
+    static serverRemoveAll(params) {
 
     }
 }
 
-export default MongoServerStore;
+export default ServerStore;

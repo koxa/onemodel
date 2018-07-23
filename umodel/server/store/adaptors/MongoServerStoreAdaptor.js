@@ -1,13 +1,9 @@
-import Store from './Store';
+import ServerStore from '../ServerStore';
 
-class ServerStore extends Store {
+class MongoServerStore extends ServerStore {
 
     static getDbCollection() {
         return this.getModelClass().getDbInstance();
-    }
-
-    save() {
-        return this.constructor.serverAddAll(this.items);
     }
 
     // add(item, silent, updateIfExists, noPersist) {
@@ -71,7 +67,7 @@ class ServerStore extends Store {
     //     });
     // }
 
-    static serverFind(params) {
+    static find(params) {
         console.log('serverFind');
         var db = this.getDbCollection();
         return new Promise((resolve, reject) => {
@@ -104,7 +100,7 @@ class ServerStore extends Store {
     //     });
     // }
 
-    static serverAdd(item) {
+    static add(item) {
         console.log('serverAdd');
         var db = this.getDbCollection();
         return db.insertOne(item, function (err, result) {
@@ -116,7 +112,7 @@ class ServerStore extends Store {
         });
     }
 
-    static serverAddAll(items) {
+    static addAll(items) {
         console.log('serverAddAll');
         var db = this.getDbCollection();
         return new Promise((resolve, reject) => {
@@ -132,7 +128,7 @@ class ServerStore extends Store {
         });
     }
 
-    static serverUpdate(filter, update, options) {
+    static update(filter, update, options) {
         console.log('serverUpdate');
         var db = this.getDbCollection();
         return db.updateMany(filter, update, options, function (err, result) {
@@ -144,7 +140,7 @@ class ServerStore extends Store {
         });
     }
 
-    static serverUpdateAll(filter, update, options) {
+    static updateAll(filter, update, options) {
         console.log('serverUpdateAll');
         var db = this.getDbCollection();
         return db.updateMany(filter, update, options, function (err, result) {
@@ -156,13 +152,13 @@ class ServerStore extends Store {
         });
     }
 
-    static serverRemove(id) {
+    static remove(id) {
 
     }
 
-    static serverRemoveAll(params) {
+    static removeAll(params) {
 
     }
 }
 
-export default ServerStore;
+export default MongoServerStore;

@@ -1,4 +1,4 @@
-import Base from '../Base';
+import Base from '../../Base';
 
 class Model extends Base {
 
@@ -12,7 +12,7 @@ class Model extends Base {
 
     constructor(data, force) {
         super(...arguments);
-        this.constructor.getDefaultProps() && this.setAll(this.constructor.getDefaultProps());
+        this.constructor.getDefaultProps() && this.setAll(this.constructor.getDefaultProps(), true); // set all default props but skip hooks
         data && this.setAll(data);
     }
 
@@ -32,14 +32,14 @@ class Model extends Base {
         return this[prop];
     }
 
-    set(prop, val) {
+    set(prop, val, skipHooks = false) {
         let modified = false;
-        this.__hookBeforeSet(...arguments); //todo: should hooks be executed even if value not really set ?
+        !skipHooks && this.__hookBeforeSet(prop, val); //todo: should hooks be executed even if value not really set ?
         if (!prop in this || this[prop] !== val) { // now will also set undefined props
             this[prop] = val;
             modified = true;
         }
-        this.__hookAfterSet(modified, ...arguments);
+        !skipHooks && this.__hookAfterSet(modified, prop, val);
         return modified;
     }
 
@@ -49,28 +49,29 @@ class Model extends Base {
      * Ignores properties with undefined values anyway
      *
      * @param data Object to copy data from
+     * @param {Boolean} skipHooks Skip Hooks
      * @return {Array} Array of modified props
      */
-    setAll(data = {}) {
+    setAll(data = {}, skipHooks = false) {
         let modifiedProps = [];
-        this.__hookBeforeSetAll(...arguments); //todo: should hooks be executed even if values not really set ?
+        !skipHooks && this.__hookBeforeSetAll(data); //todo: should hooks be executed even if values not really set ?
         for (let prop in data) {
-            if (this.set(prop, data[prop])) {
+            if (this.set(prop, data[prop], skipHooks)) {
                 modifiedProps.push(prop); // record modified props and return them at the end
             }
         }
-        this.__hookAfterSetAll(modifiedProps, ...arguments);
+        !skipHooks && this.__hookAfterSetAll(modifiedProps, data);
         return modifiedProps;
     }
 
-    delete(prop) {
+    unset(prop, skipHooks = false) {
         let deleted = false;
-        this.__hookBeforeDelete(...arguments);
+        !skipHooks && this.__hookBeforeUnset(prop);
         if (prop in this) {
             delete this[prop];
             deleted = true;
         }
-        this.__hookAfterDelete(deleted, ...arguments);
+        !skipHooks && this.__hookAfterUnset(deleted, prop);
         return deleted;
     }
 
@@ -90,11 +91,11 @@ class Model extends Base {
         return this;
     }
 
-    __hookBeforeDelete(prop) {
+    __hookBeforeUnset(prop) {
         return this;
     }
 
-    __hookAfterDelete(deleted, prop) {
+    __hookAfterUnset(deleted, prop) {
         return this;
     }
 
