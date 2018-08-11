@@ -1,5 +1,5 @@
 import ServerModel from "../ServerModel";
-import BaseAdaptorMixin from "../../../common/mixins/BaseAdaptorMixin";
+import BaseAdaptorMixin from "../../../common/adaptors/BaseAdaptor";
 
 class MongoServerModel extends BaseAdaptorMixin {
 

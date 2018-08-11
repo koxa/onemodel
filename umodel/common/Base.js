@@ -25,6 +25,7 @@ class Base {
             applyPrototypes(this, mixin, ['length', 'name', 'arguments', 'caller', 'prototype']); // apply Static props excluding standard Function props
             applyPrototypes(this.prototype, new mixin(), ['constructor']); // apply instance props excluding constructor
         }
+        return this;
     }
 
 
