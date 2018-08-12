@@ -1,4 +1,4 @@
-import BaseAdaptor from "./BaseAdaptor";
+import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 
 class HttpAdaptor extends BaseAdaptor {
     static create(data = {}, config = {}) {

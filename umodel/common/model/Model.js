@@ -2,8 +2,15 @@ import Base from '../Base';
 
 class Model extends Base {
 
+    static getModelConfig() {
+        return {
+            strictProps: false
+        }
+    }
+
     static getIdAttr() {
-        throw new Error('getIdAttr must be implemented in child class');
+        //throw new Error('getIdAttr must be implemented in child class');
+        return 'id';
     }
 
     static getDefaultProps() {

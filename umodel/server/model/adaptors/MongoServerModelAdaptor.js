@@ -3,6 +3,22 @@ import BaseAdaptorMixin from "../../../common/adaptors/BaseAdaptor";
 
 class MongoServerModel extends BaseAdaptorMixin {
 
+    static create(data, params) {
+
+    }
+
+    static read(id, params) {
+
+    }
+
+    static update(id, data, params) {
+
+    }
+
+    static delete(id, params) {
+
+    }
+
     static findById(id) {
         return this.find({
             [this.getIdAttr()]: id

@@ -1,4 +1,4 @@
-import BaseAdaptor from "./BaseAdaptor";
+import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 
 class LocalStorageAdaptor extends BaseAdaptor {
     static create(data, params) {
@@ -6,7 +6,7 @@ class LocalStorageAdaptor extends BaseAdaptor {
         const localCollection = window.localStorage.getItem(this.getKey());
         if (!localCollection) {
             window.localStorage.setItem(this.getKey(), JSON.stringify({
-                [data.getClientId()]: data
+                [data.getId() || data.getClientId()]: data
             }));
         } else {
             window.localStorage.setItem(this.getKey(),
@@ -21,9 +21,28 @@ class LocalStorageAdaptor extends BaseAdaptor {
     }
 
     static read(id, params) {
-        let obj = window.localStorage.getItem(this.getKey());
-        if (obj) {
-            return JSON.parse(obj)[id];
+        const json = window.localStorage.getItem(this.getKey());
+        if (json) {
+            const obj = JSON.parse(json);
+            const result = [];
+            if (id) { // if id defined look up model by id immediately
+                return obj[id];
+            } else { // otherwise search by params
+                for (let id in obj) {
+                    let includeModel = true;
+                    let model = obj[id];
+                    for (let param in params) { // check if every param is in object
+                        if (!model.hasOwnProperty(param) || model[param] !== params[param]) {
+                            includeModel = false;
+                            break;
+                        }
+                    }
+                    if (includeModel) {
+                        result.push(model);
+                    }
+                }
+                return result;
+            }
         }
     }
 
@@ -49,10 +68,6 @@ class LocalStorageAdaptor extends BaseAdaptor {
                 return true;
             }
         }
-    }
-
-    static find() {
-
     }
 
     static getKey() {

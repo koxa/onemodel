@@ -30,15 +30,16 @@ class BaseAdaptor {
         return this.read(id, params);
     }
 
-    fetch(params) {
+    fetch(id) { // should only fetch by id so far
         //throw new Error('Fetch method must be implemented in a model/store class');
-        return this.constructor.read(this.getId(), params);
+        id = this.getId() || id;
+        return this.setAll(this.constructor.read(id));
     }
 
     save(params) {
         //throw new Error('Save method must be implemented in a model/store class');
         if (this.getId()) {
-            return this.constructor.update(id, this, params);
+            return this.constructor.update(this.getId(), this, params);
         } else {
             return this.constructor.create(this, params);
         }
