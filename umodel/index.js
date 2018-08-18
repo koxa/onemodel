@@ -11,10 +11,17 @@ import {ClientModel} from "./client";
 window.ClientModel = ClientModel;
 
 class Book extends ClientModel {
+    static getModelConfig() {
+        return Object.assign(super.getModelConfig(), {
+            strictProps: true,
+            //enforceSet: true
+        });
+    }
+
     static getDefaultProps() {
         return {
             title: null,
-            author: null
+            author: 'hui-sobachiy'
         }
     }
 

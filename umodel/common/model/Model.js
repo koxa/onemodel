@@ -4,7 +4,9 @@ class Model extends Base {
 
     static getModelConfig() {
         return {
-            strictProps: false
+            sealProps: false, // will only let DefaultProps in model, will seal object so that new props can't be assigned
+            enforceSet: false, // all property assignment will always go through 'set' which calls prepare and possible hooks
+            enforceSetHooks: false // will always fire hooks via direct assignment. Combine it with enforceSet
         }
     }
 
@@ -19,7 +21,39 @@ class Model extends Base {
 
     constructor(data, force) {
         super(...arguments);
-        this.constructor.getDefaultProps() && this.setAll(this.constructor.getDefaultProps(), true); // set all default props but skip hooks
+        const defaultProps = this.constructor.getDefaultProps();
+        const modelConfig = this.constructor.getModelConfig();
+
+        if (defaultProps) {
+            const propertyDescriptors = Object.keys(defaultProps).reduce((acc, propKey) => {
+                acc[propKey] = {
+                    value: defaultProps[propKey],
+                    configurable: false,
+                    enumerable: true,
+                    writable: true
+                };
+                if (modelConfig.enforceSet) {
+                    const tmpProps = {};
+                    acc[propKey]['writable'] = false;
+                    acc[propKey]['get'] = () => {
+                        return tmpProps[propKey];
+                    };
+                    acc[propKey]['set'] = (val) => {
+                        modelConfig.enforceSetHooks && this.__hookBeforeSet(propKey, val);
+                        const prepared = this.prepareSet(propKey, val);
+                        modelConfig.enforceSetHooks && this.__hookAfterSet(prepared.doSet, propKey, prepared.val);
+                        if (prepared.doSet) {
+                            tmpProps[propKey] = prepared.val;
+                        }
+                    };
+                }
+                return acc;
+            }, {});
+            Object.defineProperties(this, propertyDescriptors);
+        }
+        if (modelConfig.sealProps) {
+            Object.seal(this);
+        }
         data && this.setAll(data);
     }
 
@@ -39,14 +73,40 @@ class Model extends Base {
         return this[prop];
     }
 
-    set(prop, val, skipHooks = false) {
-        let modified = false;
-        !skipHooks && this.__hookBeforeSet(prop, val); //todo: should hooks be executed even if value not really set ?
+    /**
+     * Prepare value to be set on model property
+     * Should apply any possible validators/converters and then return value to be set
+     * @param prop
+     * @param val
+     */
+    prepareSet(prop, val) {
+        //todo: apply validators/converters
+        let doSet = false;
         if (!prop in this || this[prop] !== val) { // now will also set undefined props
-            this[prop] = val;
-            modified = true;
+            if (!this.constructor.getModelConfig()['sealProps'] || (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop))) {
+                doSet = true;
+            } else {
+                console.log(`Trying to set unknown property (${prop}) on strictProps model`);
+            }
         }
-        !skipHooks && this.__hookAfterSet(modified, prop, val);
+        return {doSet: doSet, prop: prop, val: val};
+    }
+
+    set(prop, val, skipHooks = false) {
+        let modelConfig = this.constructor.getModelConfig();
+        let modified = false;
+        !skipHooks && !modelConfig.enforceSetHooks && this.__hookBeforeSet(prop, val); //todo: should hooks be executed even if value not really set ?
+        if (modelConfig.enforceSet) {
+            this[prop] = val;  // property's setter will call preparation function
+            modified = this[prop] !== val;
+        } else {
+            let prepared = this.prepareSet(prop, val);
+            if (prepared.doSet) {
+                this[prop] = prepared.val;
+            }
+            modified = prepared.doSet;
+        }
+        !skipHooks && !modelConfig.enforceSetHooks && this.__hookAfterSet(modified, prop, this[prop]);
         return modified;
     }
 
