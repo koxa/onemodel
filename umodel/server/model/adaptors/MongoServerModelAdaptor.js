@@ -1,7 +1,10 @@
-import ServerModel from "../ServerModel";
 import BaseAdaptorMixin from "../../../common/adaptors/BaseAdaptor";
 
-class MongoServerModel extends BaseAdaptorMixin {
+class MongoServerModelAdaptor extends BaseAdaptorMixin {
+
+    static getDriver() {
+        throw new Error('getDirver must be implemented in child class');
+    }
 
     static create(data, params) {
 
@@ -38,7 +41,7 @@ class MongoServerModel extends BaseAdaptorMixin {
     }
 
     save() {
-        const collection = this.constructor.getDbInstance();
+        const collection = this.constructor.getDriver();
         const idAttr = this.constructor.getIdAttr();
         if (this.id) {
             collection.updateOne({idAttr: this[idAttr]}, {$set: this});
@@ -48,4 +51,4 @@ class MongoServerModel extends BaseAdaptorMixin {
     }
 }
 
-export default ServerModel;
+export default MongoServerModelAdaptor;

@@ -5,6 +5,6 @@ import LocalStorageAdaptor from "./adaptors/LocalStorageClientModelAdaptor";
 class ClientModel extends ObservableModel {
 }
 
-ClientModel.addMixins([LocalStorageAdaptor]);
+ClientModel.addMixins([HttpAdaptor]);
 
 export default ClientModel;
