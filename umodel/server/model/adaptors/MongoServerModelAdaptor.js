@@ -6,48 +6,28 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
         throw new Error('getDirver must be implemented in child class');
     }
 
-    static create(data, params) {
-
+    static getIdAttr() {
+        return '_id';
     }
 
-    static read(id, params) {
-
+    static async create(data, params) {
+        return await this.getDriver().insertOne(data);
     }
 
-    static update(id, data, params) {
+    static async read(id, params) {
+        if (id) {
+            return new this(await this.getDriver().findOne({[this.getIdAttr()]: id}));
+        } else {
+            return (await this.getDriver().find(params).toArray()).map(b => new this(b));
+        }
+    }
 
+    static async update(id, data, params) {
+        return await this.getDriver().updateOne({[this.getIdAttr()]: id}, {$set: data});
     }
 
     static delete(id, params) {
 
-    }
-
-    static findById(id) {
-        return this.find({
-            [this.getIdAttr()]: id
-        })
-    }
-
-    static find(params) {
-        return new Promise((resolve, reject) => {
-            this.getDriver().find(params).toArray(function (err, docs) {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(docs);
-                }
-            });
-        });
-    }
-
-    save() {
-        const collection = this.constructor.getDriver();
-        const idAttr = this.constructor.getIdAttr();
-        if (this.id) {
-            collection.updateOne({idAttr: this[idAttr]}, {$set: this});
-        } else {
-            collection.insertOne(this);
-        }
     }
 }
 

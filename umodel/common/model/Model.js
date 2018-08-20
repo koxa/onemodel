@@ -4,15 +4,15 @@ class Model extends Base {
 
     static getModelConfig() {
         return {
-            sealProps: false, // will only let DefaultProps in model, will seal object so that new props can't be assigned
+            lockProps: false, // will only let DefaultProps in model, will seal object so that new props can't be assigned
             enforceSet: false, // all property assignment will always go through 'set' which calls prepare and possible hooks
-            enforceSetHooks: false // will always fire hooks via direct assignment. Combine it with enforceSet
+            enforceSetHooks: false, // will always fire hooks via direct assignment. Combine it with enforceSet
+            useInitialDataAsProps: false
         }
     }
 
     static getIdAttr() {
-        //throw new Error('getIdAttr must be implemented in child class');
-        return 'id';
+        return undefined;
     }
 
     static getDefaultProps() {
@@ -21,8 +21,11 @@ class Model extends Base {
 
     constructor(data, force) {
         super(...arguments);
-        const defaultProps = this.constructor.getDefaultProps();
         const modelConfig = this.constructor.getModelConfig();
+        let defaultProps = modelConfig.useInitialDataAsProps ? data : this.constructor.getDefaultProps();
+        defaultProps = Object.assign(defaultProps, {
+            [this.constructor.getIdAttr()]: defaultProps[this.constructor.getIdAttr()] || undefined
+        }); // adding IdProp here
 
         if (defaultProps) {
             const propertyDescriptors = Object.keys(defaultProps).reduce((acc, propKey) => {
@@ -51,10 +54,10 @@ class Model extends Base {
             }, {});
             Object.defineProperties(this, propertyDescriptors);
         }
-        if (modelConfig.sealProps) {
+        if (modelConfig.lockProps) {
             Object.seal(this);
         }
-        data && this.setAll(data);
+        data && this.setAll(data, true);
     }
 
     getId() {
@@ -83,7 +86,7 @@ class Model extends Base {
         //todo: apply validators/converters
         let doSet = false;
         if (!prop in this || this[prop] !== val) { // now will also set undefined props
-            if (!this.constructor.getModelConfig()['sealProps'] || (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop))) {
+            if (!this.constructor.getModelConfig()['lockProps'] || (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop)) || this.constructor.getIdAttr() === prop) {
                 doSet = true;
             } else {
                 console.log(`Trying to set unknown property (${prop}) on strictProps model`);

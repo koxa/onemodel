@@ -20,34 +20,34 @@ class BaseAdaptor {
         throw new Error('GetCollectionName method must be implemented in a model/store class');
     }
 
-    static find(params) {
+    static async find(params) {
         //throw new Error('Find method must be implemented in a model/store class');
-        return this.read(null, params);
+        return await this.read(null, params);
     }
 
-    static findById(id, params) {
+    static async findById(id, params) {
         //throw new Error('FindById method must be implemented in a model/store class');
-        return this.read(id, params);
+        return await this.read(id, params);
     }
 
-    fetch(id) { // should only fetch by id so far
-        //throw new Error('Fetch method must be implemented in a model/store class');
-        id = this.getId() || id;
-        return this.setAll(this.constructor.read(id));
-    }
+    // async fetch(id) { // should only fetch by id so far
+    //     //throw new Error('Fetch method must be implemented in a model/store class');
+    //     id = this.getId() || id;
+    //     //return this.setAll(await this.constructor.read(id));
+    // }
 
-    save(params) {
-        //throw new Error('Save method must be implemented in a model/store class');
-        if (this.getId()) {
-            return this.constructor.update(this.getId(), this, params);
-        } else {
-            return this.constructor.create(this, params);
-        }
-    }
+    // async save(params) {
+    //     //throw new Error('Save method must be implemented in a model/store class');
+    //     if (this.getId()) {
+    //         return await this.constructor.update(this.getId(), this, params);
+    //     } else {
+    //         return await this.constructor.create(this, params);
+    //     }
+    // }
 
-    destroy(params) {
-        return this.constructor.delete(id, params);
-    }
+    // async destroy(params) {
+    //     return await this.constructor.delete(id, params);
+    // }
 }
 
 export default BaseAdaptor

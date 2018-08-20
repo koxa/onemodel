@@ -46,6 +46,10 @@ class Base {
         });
     }
 
+    getData() {
+        return {...this};
+    }
+
     toJSON() {
         return this;
     }
