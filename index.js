@@ -2,7 +2,7 @@ require("babel-register");
 require("babel-polyfill");
 const http = require('http');
 const app = require('express')();
-const {ServerModel} = require('./umodel/server');
+const {ServerModel} = require('./onemodel/server');
 const MongoClient = require('mongodb').MongoClient;
 
 async function run() {
