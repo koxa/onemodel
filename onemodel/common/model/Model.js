@@ -145,6 +145,10 @@ class Model extends Base {
         return deleted;
     }
 
+    __hookAfterConstruct(data) {
+        return this;
+    }
+
     __hookBeforeSet(prop, val) {
         return this;
     }

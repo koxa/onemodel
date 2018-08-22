@@ -30,24 +30,24 @@ class BaseAdaptor {
         return await this.read(id, params);
     }
 
-    // async fetch(id) { // should only fetch by id so far
-    //     //throw new Error('Fetch method must be implemented in a model/store class');
-    //     id = this.getId() || id;
-    //     //return this.setAll(await this.constructor.read(id));
-    // }
+    async fetch(id) { // should only fetch by id so far
+        //throw new Error('Fetch method must be implemented in a model/store class');
+        id = this.getId() || id;
+        return this.setAll(await this.constructor.read(id));
+    }
 
-    // async save(params) {
-    //     //throw new Error('Save method must be implemented in a model/store class');
-    //     if (this.getId()) {
-    //         return await this.constructor.update(this.getId(), this, params);
-    //     } else {
-    //         return await this.constructor.create(this, params);
-    //     }
-    // }
+    async save(params) {
+        //throw new Error('Save method must be implemented in a model/store class');
+        if (this.getId()) {
+            return await this.constructor.update(this.getId(), this, params);
+        } else {
+            return await this.constructor.create(this, params);
+        }
+    }
 
-    // async destroy(params) {
-    //     return await this.constructor.delete(id, params);
-    // }
+    async destroy(params) {
+        return await this.constructor.delete(id, params);
+    }
 }
 
 export default BaseAdaptor
