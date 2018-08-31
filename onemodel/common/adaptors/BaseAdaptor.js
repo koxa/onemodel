@@ -38,11 +38,15 @@ class BaseAdaptor {
 
     async save(params) {
         //throw new Error('Save method must be implemented in a model/store class');
+        let data;
         if (this.getId()) {
-            return await this.constructor.update(this.getId(), this, params);
+            data = await this.constructor.update(this.getId(), this, params);
         } else {
-            return await this.constructor.create(this, params);
+            data = await this.constructor.create(this.getData(), params);
         }
+
+        return this.setAll(data);
+        //return data;
     }
 
     async destroy(params) {

@@ -1,5 +1,5 @@
 .idea/
-index.html
+public/index.html
 node_modules/
 package-lock.json
 public/

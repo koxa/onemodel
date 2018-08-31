@@ -1,14 +1,19 @@
 {
   "presets": [
     [
-      "env",
-      {
-        "useBuiltIns": true
-      }
+      "env"
     ]
   ],
   "plugins": [
-    "transform-object-rest-spread",
-    "transform-async-to-module-method"
+    [
+      "transform-runtime",
+      {
+        "helpers": false,
+        "polyfill": false,
+        "regenerator": true,
+        "moduleName": "babel-runtime"
+      }
+    ],
+    "transform-object-rest-spread"
   ]
 }

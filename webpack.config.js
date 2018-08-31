@@ -5,7 +5,7 @@ module.exports = [{
     mode: 'development',
     target: 'web',
     entry: {
-        frontend: './umodel/index.js'
+        frontend: './onemodel/index.js'
     },
     output: {
         path: __dirname + '/public',
@@ -16,10 +16,7 @@ module.exports = [{
             {
                 test: /\.js?$/,
                 loader: 'babel-loader',
-                exclude: /node_modules/,
-                options: {
-                    presets: ['env']
-                }
+                exclude: /node_modules/
             }
         ]
     },

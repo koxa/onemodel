@@ -13,7 +13,13 @@ class HttpAdaptor extends BaseAdaptor {
             redirect: 'follow',
             referrer: 'client',
             body: JSON.stringify(data)
-        });
+        }).then(resp => {
+            if (resp.ok) {
+                return resp.json();
+            } else {
+                throw new Error('Response is not ok');
+            }
+        }).catch(err => console.log(err));
     }
 
     static read(id, config = {}) {
@@ -27,7 +33,13 @@ class HttpAdaptor extends BaseAdaptor {
             },
             redirect: 'follow',
             referrer: 'client'
-        });
+        }).then(resp => {
+            if (resp.ok) {
+                return resp.json();
+            } else {
+                throw new Error('Response is not ok');
+            }
+        }).catch(err => console.log(err));
     }
 
 
@@ -43,7 +55,13 @@ class HttpAdaptor extends BaseAdaptor {
             redirect: 'follow',
             referrer: 'client',
             body: JSON.stringify(data)
-        });
+        }).then(resp => {
+            if (resp.ok) {
+                return resp.json();
+            } else {
+                throw new Error('Response is not ok');
+            }
+        }).catch(err => console.log(err));
     }
 
     static delete(id, config = {}) {
@@ -57,7 +75,13 @@ class HttpAdaptor extends BaseAdaptor {
             },
             redirect: 'follow',
             referrer: 'client',
-        });
+        }).then(resp => {
+            if (resp.ok) {
+                return resp.json();
+            } else {
+                throw new Error('Response is not ok');
+            }
+        }).catch(err => console.log(err));
     }
 
     static getURL(id) {

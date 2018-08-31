@@ -14,14 +14,14 @@ class Book extends ClientModel {
     static getModelConfig() {
         return Object.assign(super.getModelConfig(), {
             strictProps: true,
-            //enforceSet: true
+            //strictAssignment: true
         });
     }
 
     static getDefaultProps() {
         return {
-            title: null,
-            author: 'hui-sobachiy'
+            title: undefined,
+            author: undefined
         }
     }
 
