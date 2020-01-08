@@ -4,10 +4,11 @@ class Model extends Base {
 
     static getModelConfig() {
         return {
-            sealProps: false, // will only let DefaultProps in model, will seal object so that new props can't be assigned
-            strictAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible hooks
+            sealProps: false, // will only let DefaultProps in model, will seal object so that new prop values can't be assigned
+            strictAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
             enableAssignmentHooks: false, // will always fire hooks via direct assignment. Combine it with strictAssignment. Works only if strictAssignment is true
-            useInitialDataAsProps: false
+            useInitialDataAsProps: false,
+            lockExtension: false //todo: support locking props
         }
     }
 
@@ -18,6 +19,29 @@ class Model extends Base {
     static getDefaultProps() {
         return null;
     }
+
+    static getValidators() {
+        return null;
+    }
+
+    static getConverters() {
+        return null;
+    }
+
+    static validate(prop, val) {
+        const validators = this.constructor.getValidators();
+        if (validators[prop]) {
+            return validators[prop](val);
+        }
+    }
+
+    static convert(prop, val) {
+        const converters = this.constructor.getConverters();
+        if (converters[prop]) {
+            return converters[prop](val);
+        }
+    }
+
 
     constructor(data) {
         super(...arguments);
@@ -93,9 +117,19 @@ class Model extends Base {
      * @param val
      */
     prepareSet(prop, val) {
-        //todo: apply validators/converters
+        const validators = this.constructor.getValidators();
+        const converters = this.constructor.getConverters();
+        if (validators && validators[prop]) {
+            if (!validators[prop](val)) {
+                return {doSet: false, prop, val};
+            }
+        }
+        if (converters && converters[prop]) {
+            val = converters[prop](val);
+        }
         let doSet = false;
         if (!prop in this || this[prop] !== val) { // now will also set undefined props
+            //todo: review this condition
             if (!this.constructor.getModelConfig()['sealProps'] || (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop)) || this.constructor.getIdAttr() === prop) {
                 doSet = true;
             } else {
@@ -115,17 +149,18 @@ class Model extends Base {
             modified = this[prop] !== val;
             !skipHooks && !modelConfig.enableAssignmentHooks && this.__hookAfterSet(modified, prop, this[prop]);
         } else {
-            !skipHooks && this.__hookBeforeSet(prop, val);
-            let prepared = this.prepareSet(prop, val);
-            if (prepared.doSet) {
-                if (prop === this.constructor.getIdAttr() && this[prop] === undefined) {
-                    this.__defineId(prepared.val); // will define and set id attr as immutable
+            let prep = this.prepareSet(prop, val);
+            if (prep.doSet) {
+                !skipHooks && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
+                if (prep.prop === this.constructor.getIdAttr() && this[prep.prop] === undefined) {
+                    this.__defineId(prep.val); // will define and set id attr as immutable
                 } else {
-                    this[prop] = prepared.val;
+                    this[prep.prop] = prep.val;
                 }
             }
-            modified = prepared.doSet;
-            !skipHooks && this.__hookAfterSet(modified, prop, this[prop]);
+            modified = prep.doSet;
+            //todo: maybe don't call without modifications
+            !skipHooks && this.__hookAfterSet(modified, prep.prop, this[prop]);
         }
         return modified;
     }
