@@ -4,7 +4,8 @@
   "description": "OneModel - Isomorphic Data Model and Store for Client and Server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "node node_modules/webpack/bin/webpack.js  --watch"
   },
   "repository": {
     "type": "git",
@@ -17,18 +18,16 @@
   },
   "homepage": "https://github.com/koxa/onemodel#readme",
   "dependencies": {
-    "babel-polyfill": "*",
     "mongodb": "*"
   },
   "devDependencies": {
-    "babel-cli": "*",
-    "babel-core": "*",
+    "@babel/core": "*",
+    "@babel/preset-env": "*",
+    "@babel/preset-react": "*",
+    "@babel/register": "*",
     "babel-loader": "*",
-    "babel-plugin-transform-async-to-module-method": "*",
-    "babel-plugin-transform-object-rest-spread": "*",
-    "babel-plugin-transform-runtime": "*",
-    "babel-preset-env": "*",
-    "babel-preset-es2015": "*",
+    "core-js": "*",
+    "regenerator-runtime": "*",
     "express": "*",
     "webpack": "*",
     "webpack-cli": "*"

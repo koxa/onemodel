@@ -5,9 +5,9 @@ class Model extends Base {
     static getModelConfig() {
         return {
             sealProps: false, // will only let DefaultProps in model, will seal object so that new prop values can't be assigned
-            strictAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
-            enableAssignmentHooks: false, // will always fire hooks via direct assignment. Combine it with strictAssignment. Works only if strictAssignment is true
-            useInitialDataAsProps: false,
+            smartAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
+            assignmentHooks: false, // will always fire hooks via direct assignment. Combine it with smartAssignment. Works only if smartAssignment is true
+            initialDataAsProps: false,
             lockExtension: false //todo: support locking props
         }
     }
@@ -47,11 +47,11 @@ class Model extends Base {
         super(...arguments);
         const modelConfig = this.constructor.getModelConfig();
         const idAttr = this.constructor.getIdAttr();
-        let defaultProps = modelConfig.useInitialDataAsProps ? data : this.constructor.getDefaultProps();
+        let defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
         let propertyDescriptors;
 
         Object.keys(defaultProps).forEach(
-            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.strictAssignment, modelConfig.enableAssignmentHooks)
+            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
         );
 
         if (modelConfig.sealProps) {
@@ -143,11 +143,11 @@ class Model extends Base {
         let modelConfig = this.constructor.getModelConfig();
         let modified = false;
 
-        if (modelConfig.strictAssignment) {
-            !skipHooks && !modelConfig.enableAssignmentHooks && this.__hookBeforeSet(prop, val);
+        if (modelConfig.smartAssignment) {
+            !skipHooks && !modelConfig.assignmentHooks && this.__hookBeforeSet(prop, val);
             this[prop] = val;  // property's setter will call preparation function
             modified = this[prop] !== val;
-            !skipHooks && !modelConfig.enableAssignmentHooks && this.__hookAfterSet(modified, prop, this[prop]);
+            !skipHooks && !modelConfig.assignmentHooks && this.__hookAfterSet(modified, prop, this[prop]);
         } else {
             let prep = this.prepareSet(prop, val);
             if (prep.doSet) {

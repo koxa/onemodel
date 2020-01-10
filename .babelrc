@@ -1,19 +1,16 @@
 {
   "presets": [
     [
-      "env"
-    ]
-  ],
-  "plugins": [
-    [
-      "transform-runtime",
+      "@babel/preset-env",
       {
-        "helpers": false,
-        "polyfill": false,
-        "regenerator": true,
-        "moduleName": "babel-runtime"
+        "useBuiltIns": "usage",
+        "corejs": 3,
+        "targets": {
+          "browsers": [
+            "last 2 chrome versions"
+          ]
+        }
       }
-    ],
-    "transform-object-rest-spread"
+    ]
   ]
 }

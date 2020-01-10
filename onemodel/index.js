@@ -14,7 +14,7 @@ class Book extends ClientModel {
     static getModelConfig() {
         return Object.assign(super.getModelConfig(), {
             strictProps: true,
-            //strictAssignment: true
+            //smartAssignment: true
         });
     }
 

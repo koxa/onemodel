@@ -1,5 +1,6 @@
-require("babel-register");
-require("babel-polyfill");
+require('@babel/register');
+require("core-js/stable");
+require("regenerator-runtime/runtime");
 const http = require('http');
 const express = require('express');
 const {ServerModel} = require('./onemodel/server');
