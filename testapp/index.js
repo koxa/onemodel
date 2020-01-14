@@ -1,4 +1,4 @@
-import {ClientModel, Model, ObservableModel} from '../onemodel/client';
+import {ClientModel, Model, ObservableModel} from '../src/client';
 
 window.ClientModel = ClientModel;
 window.ObservableModel = ObservableModel;

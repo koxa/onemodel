@@ -1,5 +1,5 @@
 import BaseAdaptorMixin from "../../../common/adaptors/BaseAdaptor";
-import {ObjectID} from 'mongodb';
+import {ObjectID} from "mongodb"
 
 class MongoServerModelAdaptor extends BaseAdaptorMixin {
 
