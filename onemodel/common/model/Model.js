@@ -50,7 +50,7 @@ class Model extends Base {
         let defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
         let propertyDescriptors;
 
-        Object.keys(defaultProps).forEach(
+        defaultProps && Object.keys(defaultProps).forEach(
             prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
         );
 

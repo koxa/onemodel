@@ -5,7 +5,7 @@ module.exports = [{
     mode: 'development',
     target: 'web',
     entry: {
-        frontend: './onemodel/index.js'
+        client: './testapp/index.js'
     },
     output: {
         path: __dirname + '/public',

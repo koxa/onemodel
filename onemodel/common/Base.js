@@ -28,6 +28,14 @@ class Base {
         return this;
     }
 
+    // static extend() {
+    //     const cls = function() {
+    //
+    //     };
+    //     cls.prototype = this;
+    //     this.constructor.apply(cls);
+    //     return cls;
+    // }
 
     static getClientIdAttr() {
         return '__cid';
@@ -47,7 +55,7 @@ class Base {
     }
 
     getData() {
-        return {...this};
+        return {...this}; // will include prototype as well. todo: Maybe we should not have it
     }
 
     toJSON() {
