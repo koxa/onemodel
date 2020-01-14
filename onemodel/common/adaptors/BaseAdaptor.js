@@ -42,7 +42,7 @@ class BaseAdaptor {
         if (this.getId()) {
             data = await this.constructor.update(this.getId(), this, params);
         } else {
-            data = await this.constructor.create(this.getData(), params);
+            data = await this.constructor.create(this.getAll(), params);
         }
 
         return this.setAll(data);

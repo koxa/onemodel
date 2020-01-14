@@ -24,7 +24,7 @@ class VersionableMixin {
     __hookAfterConstruct() {
         this.__version = this.constructor.getNextVersion();
         this.__versionData = {
-            [this.__version]: this.getData()
+            [this.__version]: this.getAll()
         };
         this.__modified = {}; // stores props that were modified since last version
     }
@@ -38,7 +38,7 @@ class VersionableMixin {
     __hookAfterSave() {
         this.__version = this.constructor.getNextVersion(this.__version);
         this.__modified = {};
-        this.__versionData[this.__version] = this.getData();
+        this.__versionData[this.__version] = this.getAll();
     }
 
 

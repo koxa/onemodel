@@ -73,6 +73,10 @@ class Model extends Base {
         return this[prop];
     }
 
+    getAll() {
+        return {...this}; // will include prototype as well. todo: Maybe we should not have it
+    }
+
     __defineId(val) {
         Object.defineProperty(this, this.constructor.getIdAttr(), {
             configurable: true,

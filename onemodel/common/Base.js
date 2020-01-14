@@ -54,10 +54,6 @@ class Base {
         });
     }
 
-    getData() {
-        return {...this}; // will include prototype as well. todo: Maybe we should not have it
-    }
-
     toJSON() {
         return this;
     }
