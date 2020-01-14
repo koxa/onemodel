@@ -29,14 +29,14 @@ class Model extends Base {
     }
 
     static validate(prop, val) {
-        const validators = this.constructor.getValidators();
+        const validators = this.getValidators();
         if (validators[prop]) {
             return validators[prop](val);
         }
     }
 
     static convert(prop, val) {
-        const converters = this.constructor.getConverters();
+        const converters = this.getConverters();
         if (converters[prop]) {
             return converters[prop](val);
         }
@@ -46,10 +46,7 @@ class Model extends Base {
     constructor(data) {
         super(...arguments);
         const modelConfig = this.constructor.getModelConfig();
-        const idAttr = this.constructor.getIdAttr();
         let defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
-        let propertyDescriptors;
-
         defaultProps && Object.keys(defaultProps).forEach(
             prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
         );
