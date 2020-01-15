@@ -22,9 +22,9 @@ module.exports = [{
         ]
     },
     devtool: 'eval-cheap-module-source-map',
-},{
-    mode: 'production',
-    target: 'node',
+}, {
+    mode: 'development',
+    // target: 'node',
     entry: {
         index: './src/index.js'
     },
@@ -33,7 +33,30 @@ module.exports = [{
         libraryTarget: 'umd',
         umdNamedDefine: true,
         path: path.resolve('dist'),
-        filename: '[name].js'
+        filename: 'onemodel.min.js'
+    },
+    module: {
+        rules: [
+            {
+                test: /\.js?$/,
+                loader: 'babel-loader',
+                exclude: /node_modules/
+            }
+        ]
+    },
+    externals: [nodeExternals()]
+}, {
+    mode: 'production',
+    // target: 'node',
+    entry: {
+        index: './src/index.js'
+    },
+    output: {
+        library: 'OneModel',
+        libraryTarget: 'umd',
+        umdNamedDefine: true,
+        path: path.resolve('dist'),
+        filename: 'onemodel.js'
     },
     module: {
         rules: [
