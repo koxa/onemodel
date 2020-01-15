@@ -33,7 +33,7 @@ module.exports = [{
         libraryTarget: 'umd',
         umdNamedDefine: true,
         path: path.resolve('dist'),
-        filename: 'onemodel.min.js'
+        filename: 'onemodel.development.js'
     },
     module: {
         rules: [
