@@ -31,6 +31,7 @@ module.exports = [{
     output: {
         library: 'OneModel',
         libraryTarget: 'umd',
+        umdNamedDefine: true,
         path: path.resolve('dist'),
         filename: '[name].js'
     },

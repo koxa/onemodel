@@ -1,7 +1,12 @@
 import BaseAdaptorMixin from "../../../common/adaptors/BaseAdaptor";
-import {ObjectID} from "mongodb"
+
+//todo: move to separate package
 
 class MongoServerModelAdaptor extends BaseAdaptorMixin {
+
+    static getMongo() {
+        throw new Error('getMongo must be implemented in child class');
+    }
 
     static getDriver() {
         throw new Error('getDirver must be implemented in child class');
@@ -19,7 +24,7 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
 
     static async read(id, params) {
         if (id) {
-            id = id instanceof ObjectID ? id : new ObjectID(id);
+            id = id instanceof this.getMongo().ObjectID ? id : new this.getMongo().ObjectID(id);
             const result = await this.getDriver().findOne({[this.getIdAttr()]: id});
             return new this(result);
         } else {
@@ -28,7 +33,7 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
     }
 
     static async update(id, data, params) {
-        id = id instanceof ObjectID ? id : new ObjectID(id);
+        id = id instanceof this.getMongo().ObjectID ? id : new this.getMongo().ObjectID(id);
         return await this.getDriver().updateOne({[this.getIdAttr()]: id}, {$set: data});
     }
 
