@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/koxa/onemodel#readme",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "devDependencies": {
     "@babel/core": "*",
