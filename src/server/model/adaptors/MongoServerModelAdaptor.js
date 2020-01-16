@@ -34,8 +34,9 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
      */
     static async readOne(key, val) {
         let query;
+        const mongo = this.getMongo();
         if (typeof key === 'object') { // e.g. {key: val} or Mongo.ObjectID
-            if (key instanceof this.getMongo().ObjectID) { // if ObjectID supplied
+            if (key instanceof mongo.ObjectID) { // if ObjectID supplied
                 query = {[this.getIdAttr()]: val};
             } else { // if key in format {key: val, key2: val2,...}
                 query = key;
@@ -43,7 +44,7 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
         } else if (key && val !== undefined) {
             query = {[key]: val}
         } else if (key) { // if only key and it;s not object it's likely a numeric ID
-            query = {[this.getIdAttr()]: new this.getMongo().ObjectID(key)};
+            query = {[this.getIdAttr()]: new mongo.ObjectID(key)};
         }
         const result = await this.getDriver().findOne(query);
         return new this(result);
