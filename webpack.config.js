@@ -22,7 +22,7 @@ module.exports = [
                 }
             ]
         },
-        devtool: 'eval-cheap-module-source-map',
+        //devtool: 'eval-cheap-module-source-map',
     }, {
         mode: 'development',
         target: 'web',
@@ -45,6 +45,7 @@ module.exports = [
                 }
             ]
         },
+        devtool: ''
         //externals: [nodeExternals()]
     }, {
         mode: 'production',
@@ -68,6 +69,7 @@ module.exports = [
                 }
             ]
         },
+        devtool: ''
         //externals: [nodeExternals()]
     },
     {
@@ -90,6 +92,7 @@ module.exports = [
                 }
             ]
         },
+        devtool: ''
         //externals: [nodeExternals()]
     },
     {
@@ -112,6 +115,7 @@ module.exports = [
                 }
             ]
         },
+        devtool: ''
         //externals: [nodeExternals()]
     }
 ];
