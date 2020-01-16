@@ -4,8 +4,12 @@ class BaseAdaptor {
         throw new Error('CREATE method must be implemented in child Adaptor');
     }
 
-    static read(id, params) {
+    static read(params) {
         throw new Error('READ method must be implemented in child Adaptor');
+    }
+
+    static readOne(key, val) {
+        throw new Error('READ_ONE method must be implemented in child Adaptor');
     }
 
     static update(id, data, params) {

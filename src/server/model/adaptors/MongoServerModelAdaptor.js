@@ -22,14 +22,31 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
         });
     }
 
-    static async read(id, params) {
-        if (id) {
-            id = id instanceof this.getMongo().ObjectID ? id : new this.getMongo().ObjectID(id);
-            const result = await this.getDriver().findOne({[this.getIdAttr()]: id});
-            return new this(result);
-        } else {
-            return (await this.getDriver().find(params).toArray()).map(b => new this(b));
+    static async read(params) {
+        return (await this.getDriver().find(params).toArray()).map(b => new this(b));
+    }
+
+    /**
+     * Finds one record by param or set of params or ID
+     * @param key or {key: val, ...} or Mongo.ObjectID or ID
+     * @param val
+     * @returns {Promise<MongoServerModelAdaptor>}
+     */
+    static async readOne(key, val) {
+        let query;
+        if (typeof key === 'object') { // e.g. {key: val} or Mongo.ObjectID
+            if (key instanceof this.getMongo().ObjectID) { // if ObjectID supplied
+                query = {[this.getIdAttr()]: val};
+            } else { // if key in format {key: val, key2: val2,...}
+                query = key;
+            }
+        } else if (key && val !== undefined) {
+            query = {[key]: val}
+        } else if (key) { // if only key and it;s not object it's likely a numeric ID
+            query = {[this.getIdAttr()]: new this.getMongo().ObjectID(key)};
         }
+        const result = await this.getDriver().findOne(query);
+        return new this(result);
     }
 
     static async update(id, data, params) {
