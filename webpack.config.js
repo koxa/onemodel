@@ -25,7 +25,7 @@ module.exports = [
         devtool: 'eval-cheap-module-source-map',
     }, {
         mode: 'development',
-        // target: 'node',
+        target: 'web',
         entry: {
             index: './src/index.js'
         },
@@ -34,7 +34,7 @@ module.exports = [
             libraryTarget: 'umd',
             umdNamedDefine: true,
             path: path.resolve('dist'),
-            filename: 'onemodel.development.js'
+            filename: 'onemodel.umd.dev.js'
         },
         module: {
             rules: [
@@ -48,7 +48,7 @@ module.exports = [
         //externals: [nodeExternals()]
     }, {
         mode: 'production',
-        // target: 'node',
+        target: 'web',
         entry: {
             index: './src/index.js'
         },
@@ -57,7 +57,51 @@ module.exports = [
             libraryTarget: 'umd',
             umdNamedDefine: true,
             path: path.resolve('dist'),
-            filename: 'onemodel.js' 
+            filename: 'onemodel.umd.js'
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.js?$/,
+                    loader: 'babel-loader',
+                    exclude: /node_modules/
+                }
+            ]
+        },
+        //externals: [nodeExternals()]
+    },
+    {
+        mode: 'development',
+        target: 'node',
+        entry: {
+            index: './src/index.js'
+        },
+        output: {
+            libraryTarget: 'commonjs2',
+            path: path.resolve('dist'),
+            filename: 'onemodel.common.dev.js'
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.js?$/,
+                    loader: 'babel-loader',
+                    exclude: /node_modules/
+                }
+            ]
+        },
+        //externals: [nodeExternals()]
+    },
+    {
+        mode: 'production',
+        target: 'node',
+        entry: {
+            index: './src/index.js'
+        },
+        output: {
+            libraryTarget: 'commonjs2',
+            path: path.resolve('dist'),
+            filename: 'onemodel.common.js'
         },
         module: {
             rules: [

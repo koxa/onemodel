@@ -1,7 +1,7 @@
 'use strict';
 
 if (process.env.NODE_ENV === 'production') {
-    module.exports = require('./dist/onemodel.js');
+    module.exports = require('./dist/onemodel.common');
 } else {
-    module.exports = require('./dist/onemodel.development.js');
+    module.exports = require('./dist/onemodel.common.dev');
 }
