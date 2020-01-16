@@ -21,7 +21,8 @@
   "homepage": "https://github.com/koxa/onemodel#readme",
   "files": [
     "dist",
-    "src"
+    "src",
+    "index.js"
   ],
   "devDependencies": {
     "@babel/core": "*",
