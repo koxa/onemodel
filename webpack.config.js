@@ -45,7 +45,7 @@ module.exports = [
                 }
             ]
         },
-        externals: [nodeExternals()]
+        //externals: [nodeExternals()]
     }, {
         mode: 'production',
         // target: 'node',
@@ -68,6 +68,6 @@ module.exports = [
                 }
             ]
         },
-        externals: [nodeExternals()]
+        //externals: [nodeExternals()]
     }
 ];

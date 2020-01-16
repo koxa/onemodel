@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "node node_modules/webpack/bin/webpack.js  --watch",
-    "build": "webpack"
+    "build": "webpack",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,9 @@
     "url": "https://github.com/koxa/onemodel/issues"
   },
   "homepage": "https://github.com/koxa/onemodel#readme",
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "@babel/core": "*",
     "@babel/preset-env": "*",
