@@ -51,7 +51,8 @@ class MongoServerModelAdaptor extends BaseAdaptorMixin {
     }
 
     static async update(id, data, params) {
-        id = id instanceof (this.getMongo().ObjectID) ? id : new (this.getMongo().ObjectID(id));
+        const mongo = this.getMongo();
+        id = id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id);
         return await this.getDriver().updateOne({[this.getIdAttr()]: id}, {$set: data});
     }
 
