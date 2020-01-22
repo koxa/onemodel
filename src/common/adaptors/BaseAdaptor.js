@@ -44,7 +44,7 @@ class BaseAdaptor {
         //throw new Error('Save method must be implemented in a model/store class');
         let data;
         if (this.getId()) {
-            data = await this.constructor.update(this.getId(), this, params);
+            data = await this.constructor.update(this.getId(), this.getAll(this.getIdAttr()), params); // supply all data but id
         } else {
             data = await this.constructor.create(this.getAll(), params);
         }

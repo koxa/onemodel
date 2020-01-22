@@ -13,7 +13,7 @@ class Model extends Base {
     }
 
     static getIdAttr() { // id attr is a Primary Key. It is immutable and can't be modified once set
-        return '_id';
+        return 'id';
     }
 
     static getDefaultProps() {
