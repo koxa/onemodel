@@ -1,6 +1,6 @@
 {
   "name": "onemodel",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "OneModel - Isomorphic Data Model and Store for Client and Server",
   "main": "index.js",
   "scripts": {
