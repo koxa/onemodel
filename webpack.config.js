@@ -7,7 +7,7 @@ module.exports = [
         mode: 'development',
         target: 'web',
         entry: {
-            client: './testapp/index.js'
+            client: './testapp/client.js'
         },
         output: {
             path: __dirname + '/public',

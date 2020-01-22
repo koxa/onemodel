@@ -73,8 +73,14 @@ class Model extends Base {
         return this[prop];
     }
 
-    getAll() {
-        return {...this}; // will include prototype as well. todo: Maybe we should not have it
+    getAll(...exclude) {
+        let out = {}
+        for (let prop in this) {
+            if (exclude.indexOf(prop) < 0) {
+                out[prop] = this[prop];
+            }
+        }
+        return out;
     }
 
     __defineId(val) {

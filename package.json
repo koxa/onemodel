@@ -31,8 +31,9 @@
     "@babel/register": "*",
     "babel-loader": "*",
     "core-js": "*",
-    "regenerator-runtime": "*",
     "express": "*",
+    "mongodb": "*",
+    "regenerator-runtime": "*",
     "webpack": "*",
     "webpack-cli": "*",
     "webpack-node-externals": "*"

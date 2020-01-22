@@ -3,8 +3,9 @@ require("core-js/stable");
 require("regenerator-runtime/runtime");
 const http = require('http');
 const express = require('express');
-const {ServerModel} = require('./onemodel/server');
+const {ServerModel} = require('../src');
 const MongoClient = require('mongodb').MongoClient;
+const mongo = require('mongodb');
 const app = express();
 const router = express.Router();
 
@@ -20,10 +21,12 @@ async function run() {
             return DB.collection(this.getCollectionName());
         }
 
+        static getMongo() {
+            return mongo;
+        }
+
         static getModelConfig() {
-            return Object.assign(super.getModelConfig(), {
-                lockProps: true
-            });
+            return {...super.getModelConfig(), lockProps: true};
         }
 
         static getDefaultProps() {
