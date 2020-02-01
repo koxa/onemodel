@@ -4,7 +4,7 @@ class Model extends Base {
 
     static getModelConfig() {
         return {
-            sealProps: false, // will only let DefaultProps in model, will seal object so that new prop values can't be assigned
+            seal: false, // will seal object right after construction
             smartAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
             assignmentHooks: false, // will always fire hooks via direct assignment. Combine it with smartAssignment. Works only if smartAssignment is true
             initialDataAsProps: false,
@@ -32,6 +32,8 @@ class Model extends Base {
         const validators = this.getValidators();
         if (validators[prop]) {
             return validators[prop](val);
+        } else {
+            console.log('validator is not defined for prop: ', prop);
         }
     }
 
@@ -39,6 +41,8 @@ class Model extends Base {
         const converters = this.getConverters();
         if (converters[prop]) {
             return converters[prop](val);
+        } else {
+            console.log('converter is not defined for prop: ', prop);
         }
     }
 
@@ -50,11 +54,10 @@ class Model extends Base {
         defaultProps && Object.keys(defaultProps).forEach(
             prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
         );
-
-        if (modelConfig.sealProps) {
+        data && this.setAll(data, true);
+        if (modelConfig.seal) {
             Object.seal(this);
         }
-        data && this.setAll(data, true);
     }
 
     getId() {
@@ -117,6 +120,10 @@ class Model extends Base {
         Object.defineProperty(this, prop, def);
     }
 
+    __isPropExists(prop) {
+        return Object.keys(this).includes(prop);
+    }
+
     /**
      * Prepare value to be set on model property
      * Should apply any possible validators/converters and then return value to be set
@@ -135,13 +142,17 @@ class Model extends Base {
             val = converters[prop](val);
         }
         let doSet = false;
-        if (!prop in this || this[prop] !== val) { // now will also set undefined props
+        if (!this.__isPropExists(prop) || this[prop] !== val) { // now will also set undefined props
             //todo: review this condition
-            if (!this.constructor.getModelConfig()['sealProps'] || (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop)) || this.constructor.getIdAttr() === prop) {
+            // if (/*!this.constructor.getModelConfig()['seal'] ||*/ (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop)) || this.constructor.getIdAttr() === prop) {
+            if (!Object.isSealed(this)) {
                 doSet = true;
             } else {
-                console.log(`Trying to set unknown property (${prop}) on strictProps model`);
+                console.log('Trying to set property on a sealed object');
             }
+            //} else {
+            //    console.log(`Trying to set unknown property (${prop}) on strictProps model`);
+            // }
         }
         return {doSet: doSet, prop: prop, val: val};
     }

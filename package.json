@@ -4,7 +4,7 @@
   "description": "OneModel - Isomorphic Data Model and Store for Client and Server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "webpack": "node node_modules/webpack/bin/webpack.js  --watch",
     "build": "webpack",
     "prepublish": "npm run build"
@@ -32,6 +32,7 @@
     "babel-loader": "*",
     "core-js": "*",
     "express": "*",
+    "jest": "^25.1.0",
     "mongodb": "*",
     "regenerator-runtime": "*",
     "webpack": "*",
