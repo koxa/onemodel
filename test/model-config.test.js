@@ -29,6 +29,26 @@ class SealedCar extends Model {
             seal: true
         }
     }
+
+    static getDefaultProps() {
+        return {
+            year: 2012
+        }
+    }
+}
+
+class FrozenCar extends Model {
+    static getModelConfig() {
+        return {
+            freeze: true
+        }
+    }
+
+    static getDefaultProps() {
+        return {
+            year: 2012
+        }
+    }
 }
 
 describe('testing model default props', () => {
@@ -66,8 +86,22 @@ describe('testing model default props', () => {
 describe('testing model config', () => {
     test('model sealed', () => {
         let car = new SealedCar({make: 'tesla', model: 'model s'});
-        expect(car.set('model', 'cybertruck')).toBe(false);
-        expect(car.get('model')).toBe('model s');
+        expect(car.set('model', 'cybertruck')).toBe(true);
+        expect(car.get('model')).toBe('cybertruck');
+        expect(car.set('new_prop', 'test')).toBe(false);
+        expect(car.get('new_prop')).toBeUndefined();
+        expect(car.set('year', 2020)).toBe(true);
+        expect(car.get('year')).toBe(2020);
+        expect(Object.isSealed(car)).toBe(true);
+    })
+
+    test('model frozen', () => {
+        let car = new FrozenCar({make: 'bmw', model: 'x5'});
+        expect(car.get('model')).toBe('x5');
+        expect(car.set('model', 'x6')).toBe(false);
+        expect(car.get('model')).toBe('x5');
+        expect(car.set('year', 2018)).toBe(false);
+        expect(car.get('year')).toBe(2012);
         expect(car.set('new_prop', 'test')).toBe(false);
         expect(car.get('new_prop')).toBeUndefined();
     })

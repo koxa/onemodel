@@ -5,10 +5,10 @@ class Model extends Base {
     static getModelConfig() {
         return {
             seal: false, // will seal object right after construction
+            freeze: false, // will freeze object right after construction
             smartAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
             assignmentHooks: false, // will always fire hooks via direct assignment. Combine it with smartAssignment. Works only if smartAssignment is true
-            initialDataAsProps: false,
-            lockExtension: false //todo: support locking props
+            initialDataAsProps: false
         }
     }
 
@@ -57,6 +57,9 @@ class Model extends Base {
         data && this.setAll(data, true);
         if (modelConfig.seal) {
             Object.seal(this);
+        }
+        if (modelConfig.freeze) {
+            Object.freeze(this);
         }
     }
 
@@ -110,7 +113,7 @@ class Model extends Base {
             };
             def.set = (val) => {
                 enableAssignmentHooks && this.__hookBeforeSet(prop, val);
-                const prepared = this.prepareSet(prop, val);
+                const prepared = this.__prepareSet(prop, val);
                 enableAssignmentHooks && this.__hookAfterSet(prepared.doSet, prop, prepared.val);
                 if (prepared.doSet) {
                     tmpProps[prop] = prepared.val;
@@ -130,29 +133,35 @@ class Model extends Base {
      * @param prop
      * @param val
      */
-    prepareSet(prop, val) {
+    __prepareSet(prop, val) {
         const validators = this.constructor.getValidators();
         const converters = this.constructor.getConverters();
+
         if (validators && validators[prop]) {
             if (!validators[prop](val)) {
                 return {doSet: false, prop, val};
             }
         }
+
         if (converters && converters[prop]) {
             val = converters[prop](val);
         }
-        let doSet = false;
-        if (!this.__isPropExists(prop) || this[prop] !== val) { // now will also set undefined props
-            //todo: review this condition
-            // if (/*!this.constructor.getModelConfig()['seal'] ||*/ (this.constructor.getDefaultProps() && this.constructor.getDefaultProps().hasOwnProperty(prop)) || this.constructor.getIdAttr() === prop) {
-            if (!Object.isSealed(this)) {
-                doSet = true;
-            } else {
-                console.log('Trying to set property on a sealed object');
-            }
-            //} else {
-            //    console.log(`Trying to set unknown property (${prop}) on strictProps model`);
-            // }
+
+        let doSet = true;
+        let propExists = this.__isPropExists(prop);
+
+        if (Object.isFrozen(this)) {
+            doSet = false;
+            console.log('Trying to set property on a frozen object');
+        }
+
+        if (Object.isSealed(this) && !propExists) {
+            doSet = false;
+            console.log('Trying to set new property on sealed object');
+        }
+
+        if (doSet && propExists && this[prop] === val) {
+            doSet = false; // skip if value is same
         }
         return {doSet: doSet, prop: prop, val: val};
     }
@@ -167,7 +176,7 @@ class Model extends Base {
             modified = this[prop] !== val;
             !skipHooks && !modelConfig.assignmentHooks && this.__hookAfterSet(modified, prop, this[prop]);
         } else {
-            let prep = this.prepareSet(prop, val);
+            let prep = this.__prepareSet(prop, val);
             if (prep.doSet) {
                 !skipHooks && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
                 if (prep.prop === this.constructor.getIdAttr() && this[prep.prop] === undefined) {
