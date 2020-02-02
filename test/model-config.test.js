@@ -51,6 +51,30 @@ class FrozenCar extends Model {
     }
 }
 
+class SmartAssignmentCar extends Model {
+    static getModelConfig() {
+        return {
+            //smartAssignment: true,
+            assignmentHooks: true
+        }
+    }
+
+    static getDefaultProps() {
+        return {
+            make: 'test',
+            model: 'test'
+        }
+    }
+
+    __hookAfterSet(prop, val) {
+        console.log('hook after set prop: ', prop, " val: ", val);
+        if (prop === 'make' || prop === 'model') {
+            this.makeModel = this.make + ' ' + this.model;
+        }
+        console.log('makeModel is', this.makeModel);
+    }
+}
+
 describe('testing model default props', () => {
     let car1, car2;
 
@@ -93,7 +117,7 @@ describe('testing model config', () => {
         expect(car.set('year', 2020)).toBe(true);
         expect(car.get('year')).toBe(2020);
         expect(Object.isSealed(car)).toBe(true);
-    })
+    });
 
     test('model frozen', () => {
         let car = new FrozenCar({make: 'bmw', model: 'x5'});
@@ -104,6 +128,13 @@ describe('testing model config', () => {
         expect(car.get('year')).toBe(2012);
         expect(car.set('new_prop', 'test')).toBe(false);
         expect(car.get('new_prop')).toBeUndefined();
-    })
+    });
+
+    test('model smart assignment', () => {
+        let car = new SmartAssignmentCar({make: 'kia', model: 'optima'});
+        expect(car.get('model')).toBe('optima');
+        expect(car.model).toBe('optima');
+        expect(car.get('makeModel')).toBe('kia optima');
+    });
 });
 

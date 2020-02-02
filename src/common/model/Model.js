@@ -47,14 +47,15 @@ class Model extends Base {
     }
 
 
-    constructor(data) {
+    constructor(data, options) {
         super(...arguments);
+        //todo: define options such as whether to convert or validate, whether to fire hooks
         const modelConfig = this.constructor.getModelConfig();
-        let defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
+        const defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
         defaultProps && Object.keys(defaultProps).forEach(
             prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
         );
-        data && this.setAll(data, true);
+        data && this.setAll(data); // do not skip hooks unless it's specifically set by user
         if (modelConfig.seal) {
             Object.seal(this);
         }
@@ -98,27 +99,32 @@ class Model extends Base {
         });
     }
 
-    __defineProperty(prop, val, strictAssignment, enableAssignmentHooks) {
+    __defineProperty(prop, val, smartAssignment, enableAssignmentHooks) {
         const def = {
-            value: val,
+            //value: val,
             configurable: true,
             enumerable: true,
-            writable: true
+            //writable: true
         };
-        if (strictAssignment) {
-            const tmpProps = {};
-            def.writable = false;
+        if (smartAssignment) {
+            const tmpProps = {
+                [prop]: val
+            };
+            // def.writable = false;
             def.get = () => {
                 return tmpProps[prop];
             };
             def.set = (val) => {
-                enableAssignmentHooks && this.__hookBeforeSet(prop, val);
                 const prepared = this.__prepareSet(prop, val);
-                enableAssignmentHooks && this.__hookAfterSet(prepared.doSet, prop, prepared.val);
                 if (prepared.doSet) {
+                    enableAssignmentHooks && this.__hookBeforeSet(prop, val);
                     tmpProps[prop] = prepared.val;
+                    enableAssignmentHooks && this.__hookAfterSet(prop, prepared.val);
                 }
             }
+        } else {
+            def['value'] = val;
+            def['writable'] = true;
         }
         Object.defineProperty(this, prop, def);
     }
@@ -171,10 +177,15 @@ class Model extends Base {
         let modified = false;
 
         if (modelConfig.smartAssignment) {
-            !skipHooks && !modelConfig.assignmentHooks && this.__hookBeforeSet(prop, val);
+            // if (!skipHooks && !modelConfig.assignmentHooks) {
+            //     this.__hookBeforeSet(prop, val);
+            // }
+            let oldVal = this[prop];
             this[prop] = val;  // property's setter will call preparation function
-            modified = this[prop] !== val;
-            !skipHooks && !modelConfig.assignmentHooks && this.__hookAfterSet(modified, prop, this[prop]);
+            // modified = this[prop] !== oldVal;
+            // if (!skipHooks && !modelConfig.assignmentHooks) {
+            //     this.__hookAfterSet(modified, prop, this[prop]);
+            // }
         } else {
             let prep = this.__prepareSet(prop, val);
             if (prep.doSet) {
@@ -186,8 +197,7 @@ class Model extends Base {
                 }
             }
             modified = prep.doSet;
-            //todo: maybe don't call without modifications
-            !skipHooks && this.__hookAfterSet(modified, prep.prop, this[prop]);
+            !skipHooks && modified && this.__hookAfterSet(prep.prop, this[prop]);
         }
         return modified;
     }
@@ -232,7 +242,7 @@ class Model extends Base {
         return this;
     }
 
-    __hookAfterSet(modified, prop, val) {
+    __hookAfterSet(prop, val) {
         return this;
     }
 
