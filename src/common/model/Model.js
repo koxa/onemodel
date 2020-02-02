@@ -177,9 +177,11 @@ class Model extends Base {
         const {skipHooks, skipValidate, skipConvert} = options;
 
         if (modelConfig.smartAssignment) {
+            const oldVal = this[prop];
             this[prop] = val;  // property's setter will call preparation function
+            return val !== oldVal;
         } else {
-            const prep = this.__prepareSet(prop, val, options);
+            const prep = this.__prepareSet(prop, val, {skipValidate, skipConvert});
             if (prep.doSet) {
                 !skipHooks && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
                 if (prep.prop === this.constructor.getIdAttr() && this[prep.prop] === undefined) {
@@ -189,8 +191,8 @@ class Model extends Base {
                 }
                 !skipHooks && this.__hookAfterSet(prep.prop, this[prop]);
             }
+            return prep.doSet;
         }
-        return prep.doSet;
     }
 
     /**
@@ -203,7 +205,8 @@ class Model extends Base {
      * @return {Object} Array of modified props
      */
     setAll(data = {}, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
-        let modifiedProps = {};
+        const modifiedProps = {};
+        const {skipHooks} = options;
         !skipHooks && this.__hookBeforeSetAll(data); //todo: should hooks be executed even if values not really set ?
         for (let prop in data) {
             if (this.set(prop, data[prop], options)) {
