@@ -6,8 +6,9 @@ class Model extends Base {
         return {
             seal: false, // will seal object right after construction
             freeze: false, // will freeze object right after construction
-            smartAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
-            assignmentHooks: false, // will always fire hooks via direct assignment. Combine it with smartAssignment. Works only if smartAssignment is true
+            disableHooks: false,
+            disableSmartAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
+            disableAssignmentHooks: false, // will always fire hooks via direct assignment. Combine it with disableSmartAssignment. Works only if disableSmartAssignment is true
             initialDataAsProps: false
         }
     }
@@ -52,7 +53,7 @@ class Model extends Base {
         const modelConfig = this.constructor.getModelConfig();
         const defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
         defaultProps && Object.keys(defaultProps).forEach(
-            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
+            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.disableSmartAssignment, modelConfig.disableAssignmentHooks)
         );
         data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
         if (modelConfig.seal) {
@@ -98,14 +99,14 @@ class Model extends Base {
         });
     }
 
-    __defineProperty(prop, val, smartAssignment, enableAssignmentHooks) {
+    __defineProperty(prop, val, disableSmartAssignment, disableAssignmentHooks) {
         const def = {
             //value: val,
             configurable: true,
             enumerable: true,
             //writable: true
         };
-        if (smartAssignment) {
+        if (!disableSmartAssignment) {
             const tmpProps = {
                 [prop]: val
             };
@@ -116,9 +117,9 @@ class Model extends Base {
             def.set = (val) => {
                 const prepared = this.__prepareSet(prop, val);
                 if (prepared.doSet) {
-                    enableAssignmentHooks && this.__hookBeforeSet(prop, val);
+                    !disableAssignmentHooks && this.__hookBeforeSet(prop, val);
                     tmpProps[prop] = prepared.val;
-                    enableAssignmentHooks && this.__hookAfterSet(prop, prepared.val);
+                    !disableAssignmentHooks && this.__hookAfterSet(prop, prepared.val);
                 }
             }
         } else {
@@ -142,6 +143,17 @@ class Model extends Base {
         const validators = this.constructor.getValidators();
         const converters = this.constructor.getConverters();
         const {skipValidate, skipConvert} = options;
+        const propExists = this.__isPropExists(prop);
+
+        if (Object.isFrozen(this)) {
+            console.log('Trying to set property on a frozen object');
+            return {doSet: false, prop: prop, val: val};
+        }
+
+        if (Object.isSealed(this) && !propExists) {
+            console.log('Trying to set new property on sealed object');
+            return {doSet: false, prop: prop, val: val};
+        }
 
         if (!skipValidate && validators && validators[prop]) {
             if (!validators[prop](val)) {
@@ -149,24 +161,12 @@ class Model extends Base {
             }
         }
 
+        let doSet = true;
         if (!skipConvert && converters && converters[prop]) {
             val = converters[prop](val);
         }
 
-        let doSet = true;
-        let propExists = this.__isPropExists(prop);
-
-        if (Object.isFrozen(this)) {
-            doSet = false;
-            console.log('Trying to set property on a frozen object');
-        }
-
-        if (Object.isSealed(this) && !propExists) {
-            doSet = false;
-            console.log('Trying to set new property on sealed object');
-        }
-
-        if (doSet && propExists && this[prop] === val) {
+        if (propExists && this[prop] === val) {
             doSet = false; // skip if value is same
         }
         return {doSet: doSet, prop: prop, val: val};
@@ -175,11 +175,16 @@ class Model extends Base {
     set(prop, val, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
         const modelConfig = this.constructor.getModelConfig();
         const {skipHooks, skipValidate, skipConvert} = options;
+        const propExists = this.__isPropExists(prop);
 
-        if (modelConfig.smartAssignment) {
+        if (Object.isFrozen(this) || (!propExists && Object.isSealed(this))) { // if frozen or not extensible
+            return false; //todo: remove frozen/sealed check from prepareSet
+        }
+
+        if (!modelConfig.disableSmartAssignment) {
             const oldVal = this[prop];
             this[prop] = val;  // property's setter will call preparation function
-            return val !== oldVal;
+            return !propExists || val !== oldVal; // if prop didn't exist before or val modified
         } else {
             const prep = this.__prepareSet(prop, val, {skipValidate, skipConvert});
             if (prep.doSet) {

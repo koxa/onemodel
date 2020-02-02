@@ -54,8 +54,8 @@ class FrozenCar extends Model {
 class SmartAssignmentCar extends Model {
     static getModelConfig() {
         return {
-            //smartAssignment: true,
-            assignmentHooks: true
+            //disableSmartAssignment: true,
+            //assignmentHooks: true
         }
     }
 
@@ -71,7 +71,7 @@ class SmartAssignmentCar extends Model {
         if (prop === 'make' || prop === 'model') {
             this.makeModel = this.make + ' ' + this.model;
         }
-        console.log('makeModel is', this.makeModel);
+        // console.log('makeModel is', this.makeModel);
     }
 }
 
