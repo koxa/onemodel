@@ -47,15 +47,14 @@ class Model extends Base {
     }
 
 
-    constructor(data, options) {
+    constructor(data, options = {skipHooks: false, skipConvert: false, skipValidate: false}) {
         super(...arguments);
-        //todo: define options such as whether to convert or validate, whether to fire hooks
         const modelConfig = this.constructor.getModelConfig();
         const defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
         defaultProps && Object.keys(defaultProps).forEach(
             prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.smartAssignment, modelConfig.assignmentHooks)
         );
-        data && this.setAll(data); // do not skip hooks unless it's specifically set by user
+        data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
         if (modelConfig.seal) {
             Object.seal(this);
         }
@@ -139,17 +138,18 @@ class Model extends Base {
      * @param prop
      * @param val
      */
-    __prepareSet(prop, val) {
+    __prepareSet(prop, val, options = {skipValidate: false, skipConvert: false}) {
         const validators = this.constructor.getValidators();
         const converters = this.constructor.getConverters();
+        const {skipValidate, skipConvert} = options;
 
-        if (validators && validators[prop]) {
+        if (!skipValidate && validators && validators[prop]) {
             if (!validators[prop](val)) {
                 return {doSet: false, prop, val};
             }
         }
 
-        if (converters && converters[prop]) {
+        if (!skipConvert && converters && converters[prop]) {
             val = converters[prop](val);
         }
 
@@ -172,22 +172,14 @@ class Model extends Base {
         return {doSet: doSet, prop: prop, val: val};
     }
 
-    set(prop, val, skipHooks = false) {
-        let modelConfig = this.constructor.getModelConfig();
-        let modified = false;
+    set(prop, val, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
+        const modelConfig = this.constructor.getModelConfig();
+        const {skipHooks, skipValidate, skipConvert} = options;
 
         if (modelConfig.smartAssignment) {
-            // if (!skipHooks && !modelConfig.assignmentHooks) {
-            //     this.__hookBeforeSet(prop, val);
-            // }
-            let oldVal = this[prop];
             this[prop] = val;  // property's setter will call preparation function
-            // modified = this[prop] !== oldVal;
-            // if (!skipHooks && !modelConfig.assignmentHooks) {
-            //     this.__hookAfterSet(modified, prop, this[prop]);
-            // }
         } else {
-            let prep = this.__prepareSet(prop, val);
+            const prep = this.__prepareSet(prop, val, options);
             if (prep.doSet) {
                 !skipHooks && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
                 if (prep.prop === this.constructor.getIdAttr() && this[prep.prop] === undefined) {
@@ -195,11 +187,10 @@ class Model extends Base {
                 } else {
                     this[prep.prop] = prep.val;
                 }
+                !skipHooks && this.__hookAfterSet(prep.prop, this[prop]);
             }
-            modified = prep.doSet;
-            !skipHooks && modified && this.__hookAfterSet(prep.prop, this[prop]);
         }
-        return modified;
+        return prep.doSet;
     }
 
     /**
@@ -211,11 +202,11 @@ class Model extends Base {
      * @param {Boolean} skipHooks Skip Hooks
      * @return {Object} Array of modified props
      */
-    setAll(data = {}, skipHooks = false) {
+    setAll(data = {}, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
         let modifiedProps = {};
         !skipHooks && this.__hookBeforeSetAll(data); //todo: should hooks be executed even if values not really set ?
         for (let prop in data) {
-            if (this.set(prop, data[prop], skipHooks)) {
+            if (this.set(prop, data[prop], options)) {
                 modifiedProps[prop] = this[prop]; // record modified props and return them at the end
             }
         }
