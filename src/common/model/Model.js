@@ -4,11 +4,7 @@ class Model extends Base {
 
     static getModelConfig() {
         return {
-            seal: false, // will seal object right after construction
-            freeze: false, // will freeze object right after construction
-            disableHooks: false,
-            disableSmartAssignment: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
-            disableAssignmentHooks: false, // will always fire hooks via direct assignment. Combine it with disableSmartAssignment. Works only if disableSmartAssignment is true
+            reactivity: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
             initialDataAsProps: false
         }
     }
@@ -53,15 +49,9 @@ class Model extends Base {
         const modelConfig = this.constructor.getModelConfig();
         const defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
         defaultProps && Object.keys(defaultProps).forEach(
-            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.disableSmartAssignment, modelConfig.disableAssignmentHooks)
+            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.reactivity)
         );
         data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
-        if (modelConfig.seal) {
-            Object.seal(this);
-        }
-        if (modelConfig.freeze) {
-            Object.freeze(this);
-        }
     }
 
     getId() {
@@ -99,14 +89,14 @@ class Model extends Base {
         });
     }
 
-    __defineProperty(prop, val, disableSmartAssignment, disableAssignmentHooks) {
+    __defineProperty(prop, val, reactivity) {
         const def = {
             //value: val,
             configurable: true,
             enumerable: true,
             //writable: true
         };
-        if (!disableSmartAssignment) {
+        if (reactivity) {
             const tmpProps = {
                 [prop]: val
             };
@@ -117,9 +107,9 @@ class Model extends Base {
             def.set = (val) => {
                 const prepared = this.__prepareSet(prop, val);
                 if (prepared.doSet) {
-                    !disableAssignmentHooks && this.__hookBeforeSet(prop, val);
+                    this.__hookBeforeSet && this.__hookBeforeSet(prop, val);
                     tmpProps[prop] = prepared.val;
-                    !disableAssignmentHooks && this.__hookAfterSet(prop, prepared.val);
+                    this.__hookAfterSet && this.__hookAfterSet(prop, prepared.val);
                 }
             }
         } else {
@@ -143,17 +133,7 @@ class Model extends Base {
         const validators = this.constructor.getValidators();
         const converters = this.constructor.getConverters();
         const {skipValidate, skipConvert} = options;
-        const propExists = this.__isPropExists(prop);
-
-        if (Object.isFrozen(this)) {
-            console.log('Trying to set property on a frozen object');
-            return {doSet: false, prop: prop, val: val};
-        }
-
-        if (Object.isSealed(this) && !propExists) {
-            console.log('Trying to set new property on sealed object');
-            return {doSet: false, prop: prop, val: val};
-        }
+        // const propExists = this.__isPropExists(prop);
 
         if (!skipValidate && validators && validators[prop]) {
             if (!validators[prop](val)) {
@@ -161,12 +141,12 @@ class Model extends Base {
             }
         }
 
-        let doSet = true;
         if (!skipConvert && converters && converters[prop]) {
             val = converters[prop](val);
         }
 
-        if (propExists && this[prop] === val) {
+        let doSet = true;
+        if (/*propExists &&*/ this[prop] === val) {
             doSet = false; // skip if value is same
         }
         return {doSet: doSet, prop: prop, val: val};
@@ -175,26 +155,26 @@ class Model extends Base {
     set(prop, val, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
         const modelConfig = this.constructor.getModelConfig();
         const {skipHooks, skipValidate, skipConvert} = options;
-        const propExists = this.__isPropExists(prop);
 
-        if (Object.isFrozen(this) || (!propExists && Object.isSealed(this))) { // if frozen or not extensible
-            return false; //todo: remove frozen/sealed check from prepareSet
+        if (!this.__isPropExists(prop)) { // then define prop
+            // should be defined with 'undefined' as default value
+            this.__defineProperty(prop, undefined, modelConfig.reactivity);
         }
 
-        if (!modelConfig.disableSmartAssignment) {
+        if (modelConfig.reactivity) { // todo: whether to fire hooks on undefined
             const oldVal = this[prop];
             this[prop] = val;  // property's setter will call preparation function
-            return !propExists || val !== oldVal; // if prop didn't exist before or val modified
+            return val !== oldVal; // if prop didn't exist before or val modified
         } else {
             const prep = this.__prepareSet(prop, val, {skipValidate, skipConvert});
             if (prep.doSet) {
-                !skipHooks && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
+                !skipHooks && this.__hookBeforeSet && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
                 if (prep.prop === this.constructor.getIdAttr() && this[prep.prop] === undefined) {
                     this.__defineId(prep.val); // will define and set id attr as immutable
                 } else {
                     this[prep.prop] = prep.val;
                 }
-                !skipHooks && this.__hookAfterSet(prep.prop, this[prop]);
+                !skipHooks && this.__hookAfterSet && this.__hookAfterSet(prep.prop, this[prop]);
             }
             return prep.doSet;
         }
@@ -212,24 +192,24 @@ class Model extends Base {
     setAll(data = {}, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
         const modifiedProps = {};
         const {skipHooks} = options;
-        !skipHooks && this.__hookBeforeSetAll(data); //todo: should hooks be executed even if values not really set ?
+        !skipHooks && this.__hookBeforeSetAll && this.__hookBeforeSetAll(data); //todo: should hooks be executed even if values not really set ?
         for (let prop in data) {
             if (this.set(prop, data[prop], options)) {
                 modifiedProps[prop] = this[prop]; // record modified props and return them at the end
             }
         }
-        !skipHooks && this.__hookAfterSetAll(modifiedProps, data);
+        !skipHooks && this.__hookAfterSetAll && this.__hookAfterSetAll(modifiedProps, data);
         return modifiedProps;
     }
 
     unset(prop, skipHooks = false) {
         let deleted = false;
-        !skipHooks && this.__hookBeforeUnset(prop);
+        !skipHooks && this.__hookBeforeUnset && this.__hookBeforeUnset(prop);
         if (prop in this) {
             delete this[prop];
             deleted = true;
         }
-        !skipHooks && this.__hookAfterUnset(deleted, prop);
+        !skipHooks && this.__hookAfterUnset && this.__hookAfterUnset(deleted, prop);
         return deleted;
     }
 

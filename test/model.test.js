@@ -28,7 +28,9 @@ describe('testing model basics', () => {
         expect(car.set('year', 2020)).toBe(true);
         expect(car.get('year')).toBe(2020);
         expect(car.set('year', 2020)).toBe(false); // returns false if not modified
-        expect(car.set('new_prop', undefined)).toBe(true); // true when new prop added
+        expect(Object.keys(car).length).toBe(3);
+        expect(car.set('new_prop', undefined)).toBe(false); // true when new prop added, but false if value undefined
+        expect(Object.keys(car).length).toBe(4); // still adds a new prop though
         expect(car.get('new_prop')).toBe(undefined);
     });
 
