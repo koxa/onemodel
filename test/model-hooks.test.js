@@ -1,15 +1,11 @@
 import {Model} from "../src";
 
-class CarWithHooks extends Model {
+class CarHookAfterSet extends Model {
     static getDefaultProps() {
         return {
             make: 'test',
             model: 'test'
         }
-    }
-
-    __hookBeforeSet(prop, val) {
-
     }
 
     __hookAfterSet(prop, val) {
@@ -20,9 +16,26 @@ class CarWithHooks extends Model {
     }
 }
 
+class CarHookBeforeSet extends Model {
+    static getDefaultProps() {
+        return {
+            make: 'test',
+            model: 'test',
+            year: 1900
+        }
+    }
+
+    __hookBeforeSet(prop, val) { // WARNING! modifying same prop while reactivity enabled will create infinite loop
+        if (prop === 'year') { // making sure year is at least 1900 using the hook
+            return val > 1900 ? val : 1900
+        }
+        return val;
+    }
+}
+
 describe('test hooks', () => {
     test('model hook after set', () => {
-        let car = new CarWithHooks({make: 'kia', model: 'optima'});
+        let car = new CarHookAfterSet({make: 'kia', model: 'optima'});
         expect(car.get('model')).toBe('optima');
         expect(car.make).toBe('kia');
         expect(car.get('makeModel')).toBe('kia optima');
@@ -31,5 +44,13 @@ describe('test hooks', () => {
         expect(car.timesSet).toBe(2); // set hooks won't fire if value is same
         expect(car.set('seats', 5)).toBe(true);
         expect(car.timesSet).toBe(3);
+    });
+
+    test('model hook before set', () => {
+        let car = new CarHookBeforeSet();
+        expect(car.set('year', 2000)).toBe(true);
+        expect(car.year).toBe(2000);
+        expect(car.set('year', 1800)).toBe(true);
+        expect(car.year).toBe(1900); // hook worked
     });
 });

@@ -54,6 +54,14 @@ class Model extends Base {
         data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
     }
 
+    getConfig() {
+       return {
+           disableHooks: false,
+           disableConverters: false,
+           disableValidators: false
+       };
+    }
+
     getId() {
         return this[this.constructor.getIdAttr()];
     }
@@ -107,9 +115,12 @@ class Model extends Base {
             def.set = (val) => {
                 const prepared = this.__prepareSet(prop, val);
                 if (prepared.doSet) {
-                    this.__hookBeforeSet && this.__hookBeforeSet(prop, val);
-                    tmpProps[prop] = prepared.val;
-                    this.__hookAfterSet && this.__hookAfterSet(prop, prepared.val);
+                    val = prepared.val;
+                    if (this.__hookBeforeSet) {
+                        val = this.__hookBeforeSet(prop, val);
+                    }
+                    tmpProps[prop] = val;
+                    this.__hookAfterSet && this.__hookAfterSet(prop, val);
                 }
             }
         } else {
@@ -168,13 +179,16 @@ class Model extends Base {
         } else {
             const prep = this.__prepareSet(prop, val, {skipValidate, skipConvert});
             if (prep.doSet) {
-                !skipHooks && this.__hookBeforeSet && this.__hookBeforeSet(prep.prop, prep.val); //now calling only if value doSet
-                if (prep.prop === this.constructor.getIdAttr() && this[prep.prop] === undefined) {
-                    this.__defineId(prep.val); // will define and set id attr as immutable
-                } else {
-                    this[prep.prop] = prep.val;
+                val = prep.val;
+                if(!skipHooks && this.__hookBeforeSet) { // now calling only if value doSet
+                    val = this.__hookBeforeSet(prop, val);
                 }
-                !skipHooks && this.__hookAfterSet && this.__hookAfterSet(prep.prop, this[prop]);
+                if (prop === this.constructor.getIdAttr() && this[prop] === undefined) {
+                    this.__defineId(val); // will define and set id attr as immutable
+                } else {
+                    this[prop] = val;
+                }
+                !skipHooks && this.__hookAfterSet && this.__hookAfterSet(prop, this[prop]);
             }
             return prep.doSet;
         }
@@ -218,7 +232,7 @@ class Model extends Base {
     }
 
     __hookBeforeSet(prop, val) {
-        return this;
+        return val;
     }
 
     __hookAfterSet(prop, val) {
@@ -226,7 +240,7 @@ class Model extends Base {
     }
 
     __hookBeforeSetAll(data) {
-        return this;
+        return data;
     }
 
     __hookAfterSetAll(modifiedProps, data) {
