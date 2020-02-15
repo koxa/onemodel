@@ -2,116 +2,90 @@ import Base from '../Base';
 import ObservableMixin from "../mixins/ObservableMixin";
 import SortableStoreMixin from "./mixins/SortableStoreMixin";
 
-class Store extends Base {
+class Store extends Array {
 
     static getModelClass() {
         return null;
     }
 
-    constructor(items = []) {
-        super();
-        this.items = [];
-        if (items) {
-            if (Array.isArray(items)) {
-                this.addAll(items);
-            } else {
-                throw new Error('Items must be an Array');
+    static wrapItems(items) {
+        const modelClass = this.getModelClass();
+        if (modelClass) {
+            for (let i = 0; i < items.length; i++) {
+                if (typeof items[i] === 'object' && !(items[i] instanceof modelClass)) {
+                    items[i] = new modelClass(items[i]);
+                }
             }
         }
+        return items;
     }
 
-    get(key, val) {
-        for (let item of items) {
-            if (typeof item === 'object' && item.hasOwnProperty(key) && item[key] === val) {
-                return item;
-            }
-        }
-        return null;
+    constructor() {
+        super(...arguments);
+        this.__hookBeforeConstruct && this.__hookBeforeConstruct(...arguments);
+        this.constructor.wrapItems(this);
+        this.__hookAfterConstruct && this.__hookAfterConstruct();
     }
 
-    getIds() {
-
+    get(id) {
+        return this.find(item => item.getId() === id);
     }
 
-    getAt(index) {
-        return this.items[index];
+    add(item, skipHooks) {
+        !skipHooks && this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
+        const items = this.constructor.wrapItems(arguments);
+        const out = super.push(...items);
+        !skipHooks && this.__hookAfterChange && this.__hookAfterChange(out);
+        return out;
     }
 
-    getAll() {
-        return this.items;
+    remove(id, skipHooks) {
+        !skipHooks && this.__hookBeforeChange && this.__hookBeforeChange();
+        const index = this.findIndex(item => item.getId() === id);
+        const out = super.splice(index, 1);
+        !skipHooks && this.__hookAfterChange && this.__hookAfterChange();
+        return out;
     }
 
-    getSize() {
-        return this.items.length;
+    push() {
+        this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
+        const items = this.constructor.wrapItems(arguments);
+        const out = super.push(...items);
+        this.__hookAfterChange && this.__hookAfterChange(out);
+        return out;
     }
 
-    add(item, silent, updateIfExists) {
-        const modelClass = this.constructor.getModelClass();
-        if (modelClass && !(item instanceof modelClass)) {
-            item = new modelClass(item);
-        }
-        this.items.push(item);
-        !silent && this.emit("update");
-        //!noSync && this.syncDown(item);
-        //sync && this.serverAdd(item);
-        return this;
+    pop() {
+        this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
+        const out = super.pop(...arguments);
+        this.__hookAfterChange && this.__hookAfterChange(out);
+        return out;
     }
 
-    addAll(items, silent, updateIfExists, ...rest) {
-        for (let item of items) {
-            this.add(item, true, updateIfExists, ...rest);
-        }
-        //sync && this.serverSave();
-        //!noSync && this.syncDown(items);
-        !silent && this.emit("update");
-        return this;
+    shift() {
+        this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
+        const out = super.shift(...arguments);
+        this.__hookAfterChange && this.__hookAfterChange(out);
+        return out;
     }
 
-    remove(id, silent) {
-        let item = this.get(id);
-        if (item) {
-            let index = this.items.indexOf(item);
-            this.items.splice(index, 1);
-            delete this._indexedItems[id];
-            !silent && this.emit("update");
-            //!noSync && this.serverRemove(id);
-        } else {
-            console.log('not item found: ', id);
-        }
-        return this;
+    unshift() {
+        this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
+        const out = super.unshift(...arguments);
+        this.__hookAfterChange && this.__hookAfterChange(out);
+        return out;
     }
 
-    save() {
-
+    splice() {
+        this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
+        const out = super.splice(...arguments);
+        this.__hookAfterChange && this.__hookAfterChange(out);
+        return out;
     }
 
-    removeAt(index) {
-
-    }
-
-    // syncDown(item) {
-    //     if (typeof window !== 'undefined') {
-    //         //window.localStorage && localStorage.setItem(this.constructor.name, JSON.stringify(this.items));
-    //     }
-    // }
-    //
-    // syncUp() {
-    //     var self = this;
-    //     if (typeof window !== 'undefined') {
-    //         // if (window.localStorage) {
-    //         //     console.log("storage", localStorage);
-    //         //     var itemsString = localStorage.getItem(this.constructor.name);
-    //         //     if (itemsString) {
-    //         //         this.addAll(JSON.parse(itemsString), true);
-    //         //     }
-    //         // }
-    //         $.get(this.endpoint, function (items) {
-    //             self.addAll(items);
-    //         });
-    //     }
-    // }
+    //todo: all methods that accept items
 }
 
-Store.addMixins([ObservableMixin, SortableStoreMixin]);
+// Store.addMixins([ObservableMixin, SortableStoreMixin]);
 
 export default Store;
