@@ -1,4 +1,4 @@
-import Model from '../../../common/model/Model';
+import BaseModel from '../../../common/model/BaseModel';
 import Globals from '../../../../shared/stores/GlobalStore';
 
 var Mixin = Base => class extends Base {

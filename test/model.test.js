@@ -11,6 +11,11 @@ describe('testing model basics', () => {
         car = undefined;
     });
 
+    test('model class name', () => {
+        // when running tests in node Model is ServerModel
+        expect(Model.getName()).toEqual('ServerModel');
+    });
+
     test('model get', () => {
         expect(car.get('make')).toEqual('toyota');
         expect(car.get('model')).toEqual('camry');

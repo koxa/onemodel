@@ -1,7 +1,7 @@
-import Model from "./Model";
+import BaseModel from "./BaseModel";
 import ObservableModelMixin from "./mixins/ObservableModelMixin";
 
-class ObservableModel extends Model {
+class ObservableModel extends BaseModel {
 }
 
 ObservableModel.addMixins([ObservableModelMixin]);

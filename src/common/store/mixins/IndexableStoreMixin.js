@@ -5,7 +5,7 @@ class IndexableStoreMixin {
 
     // static getIndexes() {
     //     return [
-    //         {field: '_id', type: Model.INDEX_PRIMARY}
+    //         {field: '_id', type: BaseModel.INDEX_PRIMARY}
     //     ]
     // }
 
