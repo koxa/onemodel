@@ -23,7 +23,7 @@ class Base {
     static addMixins(mixins = []) {
         for (let mixin of mixins) {
             applyPrototypes(this, mixin, ['length', 'name', 'arguments', 'caller', 'prototype']); // apply Static props excluding standard Function props
-            applyPrototypes(this.prototype, new mixin(), ['constructor']); // apply instance props excluding constructor
+            applyPrototypes(this.prototype, mixin.prototype, ['constructor']); // apply proto props excluding constructor
         }
         return this;
     }
