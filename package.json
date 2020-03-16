@@ -31,7 +31,7 @@
     "@babel/register": "*",
     "babel-loader": "*",
     "core-js": "*",
-    "express": "*",
+    "express": "^4.17.1",
     "jest": "^25.1.0",
     "mongodb": "*",
     "regenerator-runtime": "*",
