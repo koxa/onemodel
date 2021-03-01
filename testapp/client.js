@@ -1,8 +1,7 @@
-import {ClientModel, Model, ObservableModel, Store} from '../src';
-import * as OneModel from '../src';
+import {ClientModel, OneModel, ObservableModel, Store} from '../src';
 
-window.ClientModel = ClientModel;
-window.ObservableModel = ObservableModel;
-window.Model = Model;
+//window.ClientModel = ClientModel;
+//window.ObservableModel = ObservableModel;
+//window.OneModel = OneModel;
 window.OneModel = OneModel;
-window.Store = Store;
+//window.Store = Store;

@@ -21,7 +21,8 @@ class BaseAdaptor {
     }
 
     static getCollectionName() {
-        throw new Error('GetCollectionName method must be implemented in a model/store class');
+        return this.name.toLowerCase();
+        //throw new Error('GetCollectionName method must be implemented in a model/store class');
     }
 
     static async find(params) {

@@ -5,15 +5,15 @@ OneModel - Universal JS Data BaseModel and Store to be used in front-end and bac
 
 **Client:**
 
-    import {Model} from 'onemodel'
-    const user = new Model({firstName: 'Eddie', lastName: 'Money'});<br/>
+    import {OneModel} from 'onemodel'
+    const user = new OneModel({firstName: 'Eddie', lastName: 'Money'});<br/>
     user.save();
 
 by default will issue POST /model/
 
 **Server** (Node with Express):
 
-    import {Model} from 'onemodel'; <br/>
+    import {OneModel} from 'onemodel'; <br/>
     router.post('/model/', (data) => { <br/>
         const user = new ServerModel(data); <br/>
         user.save(); // saves to file model.txt
@@ -22,7 +22,7 @@ by default will issue POST /model/
 <br/>
 <br/>
 
-#### Sharing Model basics between Client and Server
+#### Sharing OneModel basics between Client and Server
 
 **Define Common BaseModel**
 

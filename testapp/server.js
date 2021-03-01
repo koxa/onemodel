@@ -3,7 +3,7 @@ require("core-js/stable");
 require("regenerator-runtime/runtime");
 const http = require('http');
 const express = require('express');
-const {ServerModel} = require('../src');
+const {OneModel} = require('../src');
 const MongoClient = require('mongodb').MongoClient;
 const mongo = require('mongodb');
 const app = express();
@@ -16,7 +16,7 @@ async function run() {
     app.use(express.static('public'));
     app.use(express.json());
 
-    class Book extends ServerModel {
+    class Book extends OneModel {
         static getDriver() {
             return DB.collection(this.getCollectionName());
         }
@@ -44,10 +44,13 @@ async function run() {
             super(...arguments);
         }
     }
-
+    // app.route('/')
+    //     .get((req, res) => {
+    //         res.
+    //     })
     app.route('/books/:id?')
         .get(async (req, res) => {
-            const books = await Book.find();
+            const books = await Book.read();
             res.json(books);
         })
         .post(async (req, res) => {

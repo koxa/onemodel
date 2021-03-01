@@ -12,7 +12,7 @@ describe('testing model basics', () => {
     });
 
     test('model class name', () => {
-        // when running tests in node Model is ServerModel
+        // when running tests in node OneModel is ServerModel
         expect(Model.getName()).toEqual('ServerModel');
     });
 

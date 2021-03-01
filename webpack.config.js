@@ -45,7 +45,7 @@ module.exports = [
                 }
             ]
         },
-        devtool: ''
+        //devtool: ''
         //externals: [nodeExternals()]
     }, {
         mode: 'production',
@@ -69,7 +69,7 @@ module.exports = [
                 }
             ]
         },
-        devtool: ''
+        //devtool: ''
         //externals: [nodeExternals()]
     },
     {
@@ -92,7 +92,7 @@ module.exports = [
                 }
             ]
         },
-        devtool: ''
+        //devtool: ''
         //externals: [nodeExternals()]
     },
     {
@@ -115,7 +115,7 @@ module.exports = [
                 }
             ]
         },
-        devtool: ''
+        //devtool: ''
         //externals: [nodeExternals()]
     }
 ];

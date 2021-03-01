@@ -1,20 +1,26 @@
 import Base from '../Base';
 
 class BaseModel extends Base {
-
-    static getModelConfig() {
+    static getConfig() {
         return {
-            reactivity: false, // all property assignment will always go through 'set' which calls prepare and possible converters/validators/hooks
-            initialDataAsProps: false
-        }
+            idAttr: this.getIdAttr(),
+            props: this.getProps(),
+            reactivity: this.getReactivity(),
+            validators: this.getValidators(),
+            converters: this.getConverters()
+        };
     }
 
     static getIdAttr() { // id attr is a Primary Key. It is immutable and can't be modified once set
-        return 'id';
+        return 'id'; //todo: maybe use null in BaseModel
     }
 
-    static getDefaultProps() {
+    static getProps() {
         return null;
+    }
+
+    static getReactivity() {
+        return false;
     }
 
     static getValidators() {
@@ -44,22 +50,26 @@ class BaseModel extends Base {
     }
 
 
-    constructor(data, options = {skipHooks: false, skipConvert: false, skipValidate: false}) {
+    constructor(data, options = {skipHooks: false, skipConvert: false, skipValidate: false}, config) {
         super(...arguments);
-        const modelConfig = this.constructor.getModelConfig();
-        const defaultProps = modelConfig.initialDataAsProps ? data : this.constructor.getDefaultProps();
-        defaultProps && Object.keys(defaultProps).forEach(
-            prop => this.__defineProperty(prop, defaultProps[prop], modelConfig.reactivity)
+        Object.defineProperty(this, '_config', {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: {...this.constructor.getConfig(), ...config} // initial value is assigned
+        });
+        this._config.props && Object.keys(this._config.props).forEach(
+            prop => this.__defineProperty(prop, this._config.props[prop], this._config.reactivity)
         );
         data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
     }
 
     getConfig() {
-       return {
-           disableHooks: false,
-           disableConverters: false,
-           disableValidators: false
-       };
+        return this._config;
+    }
+
+    setConfig(config) {
+        return Object.assign(this._config, config);
     }
 
     getId() {
