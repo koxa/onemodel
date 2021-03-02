@@ -1,8 +1,8 @@
 import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 
 class HttpAdaptor extends BaseAdaptor {
-    static create(data = {}, config = {}) {
-        return fetch(this.getURL(), {
+    static create(url, data = {}, config = {}) { //todo: url must be optional (for static calls)
+        return fetch(url, {
             method: config.method || 'POST',
             mode: 'same-origin',
             cache: 'default',
@@ -22,8 +22,8 @@ class HttpAdaptor extends BaseAdaptor {
         }).catch(err => console.log(err));
     }
 
-    static read(id, config = {}) {
-        return fetch(this.getURL(id), {
+    static read(url, config = {}) { //todo: url or id for static calls
+        return fetch(url, {
             method: config.method || 'GET',
             mode: 'same-origin',
             cache: 'default',
@@ -43,8 +43,8 @@ class HttpAdaptor extends BaseAdaptor {
     }
 
 
-    static update(id, data = {}, config = {}) {
-        return fetch(this.getURL(id), {
+    static update(url, data = {}, config = {}) { //todo: url or id for static calls
+        return fetch(url, {
             method: config.method || 'PUT',
             mode: 'same-origin',
             cache: 'default',
@@ -64,8 +64,8 @@ class HttpAdaptor extends BaseAdaptor {
         }).catch(err => console.log(err));
     }
 
-    static delete(id, config = {}) {
-        return fetch(this.getURL(id), {
+    static delete(url, config = {}) { //todo: url or id for static calls
+        return fetch(url, {
             method: config.method || 'DELETE',
             mode: 'same-origin',
             cache: 'default',
@@ -82,12 +82,6 @@ class HttpAdaptor extends BaseAdaptor {
                 throw new Error('Response is not ok');
             }
         }).catch(err => console.log(err));
-    }
-
-    static getURL(id) {
-        let url = '/' + this.getCollectionName();
-        url = id ? url + '/' + id : url;
-        return url;
     }
 }
 

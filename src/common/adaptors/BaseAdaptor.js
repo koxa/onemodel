@@ -1,5 +1,13 @@
 class BaseAdaptor {
 
+    static getURLPrefix() {
+        return '/api/';
+    }
+
+    static getCollectionName() {
+        return this.name.toLowerCase();
+    }
+
     static create(data, params) {
         throw new Error('CREATE method must be implemented in child Adaptor');
     }
@@ -20,11 +28,6 @@ class BaseAdaptor {
         throw new Error('DELETE method must be implemented in child Adaptor');
     }
 
-    static getCollectionName() {
-        return this.name.toLowerCase();
-        //throw new Error('GetCollectionName method must be implemented in a model/store class');
-    }
-
     static async find(params) {
         //throw new Error('Find method must be implemented in a model/store class');
         return await this.read(null, params);
@@ -35,19 +38,39 @@ class BaseAdaptor {
         return await this.read(id, params);
     }
 
+    static getURL(id) {
+        let url = this.getURLPrefix() + this.getCollectionName();
+        url = id ? url + '/' + id : url;
+        return url;
+    }
+
+    getURLPrefix() {
+        return this.getConfig().URLPrefix || this.constructor.getURLPrefix();
+    }
+
+    getCollectionName() {
+        return this.getConfig().collectionName || this.constructor.getCollectionName();
+    }
+
+    getURL(id) {
+        let url = this.getURLPrefix() + this.getCollectionName();
+        url = id ? url + '/' + id : url;
+        return url;
+    }
+
     async fetch(id) { // should only fetch by id so far
         //throw new Error('Fetch method must be implemented in a model/store class');
         id = this.getId() || id;
-        return this.setAll(await this.constructor.read(id));
+        return this.setAll(await this.constructor.read(this.getURL(id)));
     }
 
     async save(params) {
         //throw new Error('Save method must be implemented in a model/store class');
         let data;
         if (this.getId()) {
-            data = await this.constructor.update(this.getId(), this.getAll(this.constructor.getIdAttr()), params); // supply all data but id
+            data = await this.constructor.update(this.getURL(this.getId()), this.getAll(this.constructor.getIdAttr()), params); // supply all data but id
         } else {
-            data = await this.constructor.create(this.getAll(), params);
+            data = await this.constructor.create(this.getURL(), this.getAll(), params);
         }
 
         return this.setAll(data);
@@ -55,7 +78,7 @@ class BaseAdaptor {
     }
 
     async destroy(params) {
-        return await this.constructor.delete(id, params);
+        return await this.constructor.delete(this.getURL(this.getId()), params);
     }
 }
 

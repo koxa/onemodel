@@ -16,54 +16,55 @@ async function run() {
     app.use(express.static('public'));
     app.use(express.json());
 
-    class Book extends OneModel {
-        static getDriver() {
-            return DB.collection(this.getCollectionName());
-        }
-
-        static getMongo() {
-            return mongo;
-        }
-
-        static getModelConfig() {
-            return {...super.getModelConfig(), lockProps: true};
-        }
-
-        static getDefaultProps() {
-            return {
-                title: undefined,
-                author: undefined
-            }
-        }
-
-        static getCollectionName() {
-            return 'books';
-        }
-
-        constructor() {
-            super(...arguments);
-        }
-    }
+    // class Book extends OneModel {
+    //     static getDriver() {
+    //         return DB.collection(this.getCollectionName());
+    //     }
+    //
+    //     static getMongo() {
+    //         return mongo;
+    //     }
+    //
+    //     static getModelConfig() {
+    //         return {...super.getModelConfig(), lockProps: true};
+    //     }
+    //
+    //     static getDefaultProps() {
+    //         return {
+    //             title: undefined,
+    //             author: undefined
+    //         }
+    //     }
+    //
+    //     static getCollectionName() {
+    //         return 'books';
+    //     }
+    //
+    //     constructor() {
+    //         super(...arguments);
+    //     }
+    // }
     // app.route('/')
     //     .get((req, res) => {
     //         res.
     //     })
-    app.route('/books/:id?')
-        .get(async (req, res) => {
-            const books = await Book.read();
-            res.json(books);
-        })
-        .post(async (req, res) => {
-            //const book = req.data();
-            const book = new Book(req.body);
-            res.json(await book.save());
-        })
-        .put(async (req, res) => {
-            const id = req.params.id;
-            const book = await Book.findById(id);
-            book.setAll(req.body);
-            res.json(await book.save());
-        });
+
+    // app.route('/books/:id?')
+    //     .get(async (req, res) => {
+    //         const books = await Book.read();
+    //         res.json(books);
+    //     })
+    //     .post(async (req, res) => {
+    //         //const book = req.data();
+    //         const book = new Book(req.body);
+    //         res.json(await book.save());
+    //     })
+    //     .put(async (req, res) => {
+    //         const id = req.params.id;
+    //         const book = await Book.findById(id);
+    //         book.setAll(req.body);
+    //         res.json(await book.save());
+    //     });
 
     //app.use('*', router);
     console.log('Mongo connected');

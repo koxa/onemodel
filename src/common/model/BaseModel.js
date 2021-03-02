@@ -52,24 +52,31 @@ class BaseModel extends Base {
 
     constructor(data, options = {skipHooks: false, skipConvert: false, skipValidate: false}, config) {
         super(...arguments);
-        Object.defineProperty(this, '_config', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {...this.constructor.getConfig(), ...config} // initial value is assigned
-        });
-        this._config.props && Object.keys(this._config.props).forEach(
-            prop => this.__defineProperty(prop, this._config.props[prop], this._config.reactivity)
+        if (config && Object.keys(config).length) { // if custom config provided store it in instance
+            this.__defineConfig(config);
+        }
+        const fullConfig = this.getConfig();
+        fullConfig.props && Object.keys(fullConfig.props).forEach(
+            prop => this.__defineProperty(prop, fullConfig.props[prop], fullConfig.reactivity)
         );
         data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
     }
 
+    /**
+     * Returns FULL CONFIG (merge of class config and instance config)
+     * @returns {any}
+     */
     getConfig() {
-        return this._config;
+       return  this._config ? Object.assign(this.constructor.getConfig(), this._config) : this.constructor.getConfig();
     }
 
+    /**
+     * Sets any custom config properties
+     * @param config
+     * @returns {*} Returns own config object
+     */
     setConfig(config) {
-        return Object.assign(this._config, config);
+        return this._config ? Object.assign(this._config, config) : this.__defineConfig(config);
     }
 
     getId() {
@@ -98,6 +105,16 @@ class BaseModel extends Base {
         return out;
     }
 
+    __defineConfig(config) {
+        Object.defineProperty(this, '_config', {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: config // initial value is assigned
+        });
+        return this['_config'];
+    }
+
     __defineId(val) {
         Object.defineProperty(this, this.constructor.getIdAttr(), {
             configurable: true,
@@ -105,6 +122,7 @@ class BaseModel extends Base {
             writable: false, // id is immutable by default
             value: val // initial value is assigned
         });
+        return this[this.constructor.getIdAttr()];
     }
 
     __defineProperty(prop, val, reactivity) {
@@ -149,6 +167,7 @@ class BaseModel extends Base {
      * Should apply any possible validators/converters and then return value to be set
      * @param prop
      * @param val
+     * @param options
      */
     __prepareSet(prop, val, options = {skipValidate: false, skipConvert: false}) {
         const validators = this.constructor.getValidators();
@@ -174,15 +193,15 @@ class BaseModel extends Base {
     }
 
     set(prop, val, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
-        const modelConfig = this.constructor.getModelConfig();
+        const config = this.getConfig();
         const {skipHooks, skipValidate, skipConvert} = options;
 
         if (!this.__isPropExists(prop)) { // then define prop
             // should be defined with 'undefined' as default value
-            this.__defineProperty(prop, undefined, modelConfig.reactivity);
+            this.__defineProperty(prop, undefined, config.reactivity);
         }
 
-        if (modelConfig.reactivity) { // todo: whether to fire hooks on undefined
+        if (config.reactivity) { // todo: whether to fire hooks on undefined
             const oldVal = this[prop];
             this[prop] = val;  // property's setter will call preparation function
             return val !== oldVal; // if prop didn't exist before or val modified
