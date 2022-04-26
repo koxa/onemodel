@@ -5,6 +5,6 @@ export {default as ClientModelWrapper} from './client/model/ClientModelWrapper';
 export {default as ServerModel} from './server/model/ServerModel';
 export {default as ServerModelWrapper} from './server/model/ServerModelWrapper';
 export {default as OneModel} from './OneModel';
-export {default as Store} from './common/store/Store';
+export {default as OneStore} from './OneStore';
 
 

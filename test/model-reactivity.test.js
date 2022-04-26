@@ -1,13 +1,13 @@
-import {Model} from "../src";
+import {OneModel as Model} from "../src";
 
 class ReactiveModel extends Model {
-    static getModelConfig() {
+    static getConfig() {
         return {
             reactivity: true
         }
     }
 
-    static getDefaultProps() {
+    static getProps() {
         return {
             make: null,
             model: null,
@@ -15,7 +15,7 @@ class ReactiveModel extends Model {
         }
     }
 
-    static getConverters() {
+    static getConverters() { // converter kicks in after validator
         return {
             make: (val) => {
                 return val.toUpperCase();
@@ -42,11 +42,18 @@ describe('test reactivity', () => {
         car.model = 'Prius';
         expect(car.model).toBe('PRIUS');
     });
+    test('reactivity and converters', () => {
+        const car = new ReactiveModel({make: 'toyota', model: 'camry'});
+        expect(car.make).toBe('TOYOTA');
+        expect(car.model).toBe('CAMRY');
+        car.make = 'ford';
+        expect(car.make).toBe('FORD'); // converted kicked in and uppercased ford
+    });
     test('reactivity and validators', () => {
         const car = new ReactiveModel({make: 'toyota', model: 'camry'});
         expect(car.make).toBe('TOYOTA');
         expect(car.model).toBe('CAMRY');
         car.make = 'nissan';
-        expect(car.make).toBe('TOYOTA');
+        expect(car.make).toBe('TOYOTA'); // validator kicked in and doesn't allow NISSAN
     });
 });

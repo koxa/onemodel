@@ -1,5 +1,5 @@
 global.window = {}; // simulate window here
-import {Model} from '../src';
+import {OneModel as Model} from '../src';
 import express from 'express';
 
 const app = express();
@@ -10,7 +10,7 @@ app.get('/', function(req, res) {
 
 describe('full stack test', () => {
     test('some', () => {
-        const user = new Model({name: 'John'});
-        user.save();
+        //const user = new Model({name: 'John'});
+        //user.save();
     })
 });

@@ -1,4 +1,4 @@
-import {Model} from '../src';
+import {OneModel as Model} from '../src';
 
 describe('testing model\'s observability', () => {
     var car;

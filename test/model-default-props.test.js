@@ -1,7 +1,7 @@
-import {Model} from '../src';
+import {OneModel as Model} from '../src';
 
 class Car extends Model {
-    static getDefaultProps() {
+    static getProps() {
         return {
             type: 'car',
             make: '',
@@ -15,9 +15,9 @@ class Car extends Model {
 }
 
 class SedanCar extends Car {
-    static getDefaultProps() {
+    static getProps() {
         return {
-            ...super.getDefaultProps(),
+            ...super.getProps(),
             type: 'sedan'
         }
     }
@@ -40,7 +40,7 @@ describe('testing model default props', () => {
         expect(car1.get('year')).toBe(1900);
         expect(car1.get('make')).toBe('toyota');
         expect(car2.get('year')).toBe(2020);
-        expect(car2.constructor.getDefaultProps()).toEqual({
+        expect(car2.constructor.getProps()).toEqual({
             make: '',
             model: '',
             year: 1900,

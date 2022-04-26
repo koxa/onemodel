@@ -1,7 +1,7 @@
-import {Store, Model} from '../src';
+import {OneStore as Store, OneModel as Model} from '../src';
 
 class MyModel extends Model {
-    static getDefaultProps() {
+    static getProps() {
         return {make: 'toyota', model: 'camry'}
     }
 }

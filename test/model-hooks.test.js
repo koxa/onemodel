@@ -1,7 +1,7 @@
-import {Model} from "../src";
+import {OneModel as Model} from "../src";
 
 class CarHookAfterSet extends Model {
-    static getDefaultProps() {
+    static getProps() {
         return {
             make: 'test',
             model: 'test'
@@ -17,7 +17,7 @@ class CarHookAfterSet extends Model {
 }
 
 class CarHookBeforeSet extends Model {
-    static getDefaultProps() {
+    static getProps() {
         return {
             make: 'test',
             model: 'test',
