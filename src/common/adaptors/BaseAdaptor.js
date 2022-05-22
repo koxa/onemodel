@@ -1,18 +1,14 @@
 class BaseAdaptor {
 
-    static getURLPrefix() {
-        return '/api/';
-    }
-
     static getCollectionName() {
         return this.name.toLowerCase();
     }
 
-    static create(data, params) {
+    static create(url, data, params) {
         throw new Error('CREATE method must be implemented in child Adaptor');
     }
 
-    static read(params) {
+    static read(url, params) {
         throw new Error('READ method must be implemented in child Adaptor');
     }
 
@@ -20,11 +16,11 @@ class BaseAdaptor {
         throw new Error('READ_ONE method must be implemented in child Adaptor');
     }
 
-    static update(id, data, params) {
+    static update(collectionName, id, data, params) {
         throw new Error('UPDATE method must be implemented in child Adaptor');
     }
 
-    static delete(id, params) {
+    static delete(url, params) {
         throw new Error('DELETE method must be implemented in child Adaptor');
     }
 
@@ -33,29 +29,17 @@ class BaseAdaptor {
         return await this.read(null, params);
     }
 
-    static async findById(id, params) {
+    static async findById(url, id, params) {
         //throw new Error('FindById method must be implemented in a model/store class');
-        return await this.read(id, params);
-    }
-
-    static getURL(id) {
-        let url = this.getURLPrefix() + this.getCollectionName();
-        url = id ? url + '/' + id : url;
-        return url;
-    }
-
-    getURLPrefix() {
-        return this.getConfig().URLPrefix || this.constructor.getURLPrefix();
+        return await this.read(url, id, params);
     }
 
     getCollectionName() {
         return this.getConfig().collectionName || this.constructor.getCollectionName();
     }
 
-    getURL(id) {
-        let url = this.getURLPrefix() + this.getCollectionName();
-        url = id ? url + '/' + id : url;
-        return url;
+    getAdaptorParams() {
+        throw new Error('getAdaptorParams method must be implemented in child Adaptor');
     }
 
     async fetch(id) { // should only fetch by id so far
@@ -68,9 +52,13 @@ class BaseAdaptor {
         //throw new Error('Save method must be implemented in a model/store class');
         let data;
         if (this.getId()) {
-            data = await this.constructor.update(this.getURL(this.getId()), this.getAll(this.constructor.getIdAttr()), params); // supply all data but id
+            data = await this.constructor.update(this.getURL(this.getId()), this.getAll(this.constructor.getIdAttr()), params); // get all data but id
         } else {
-            data = await this.constructor.create(this.getURL(), this.getAll(), params);
+            //data = await this.constructor.create(this.getURL(), this.getAll(), params);
+            //data = await this.constructor.create(root, this.getCollectionName(), this.getAll(), params);
+            data = await this.constructor.create(this.getAdaptorParams(), this.getAll(), params);
+            // for http adaptor: hostname, path, collectionName
+            // for mongo adaptor: db, collectionName
         }
 
         return this.setAll(data);
