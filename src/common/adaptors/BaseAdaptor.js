@@ -34,17 +34,16 @@ class BaseAdaptor {
         return await this.read(url, id, params);
     }
 
-    getCollectionName() {
-        return this.getConfig().collectionName || this.constructor.getCollectionName();
-    }
-
     getAdaptorParams() {
         throw new Error('getAdaptorParams method must be implemented in child Adaptor');
     }
 
-    async fetch(id) { // should only fetch by id so far
+    async fetch(params) { // should only fetch by id so far //todo: support direct id along with params object
         //throw new Error('Fetch method must be implemented in a model/store class');
-        id = this.getId() || id;
+        const id = this.getId() || params.id;
+        if(!id) {
+            throw new Error('ID must be provided to fetch a model');
+        }
         return this.setAll(await this.constructor.read(this.getURL(id)));
     }
 
@@ -52,11 +51,10 @@ class BaseAdaptor {
         //throw new Error('Save method must be implemented in a model/store class');
         let data;
         if (this.getId()) {
-            data = await this.constructor.update(this.getURL(this.getId()), this.getAll(this.constructor.getIdAttr()), params); // get all data but id
+            params = {id: this.getId(), ...params};
+            data = await this.constructor.update(this.getAdaptorParams(params), this.getAll(this.constructor.getIdAttr())); // get all data but id
         } else {
-            //data = await this.constructor.create(this.getURL(), this.getAll(), params);
-            //data = await this.constructor.create(root, this.getCollectionName(), this.getAll(), params);
-            data = await this.constructor.create(this.getAdaptorParams(), this.getAll(), params);
+            data = await this.constructor.create(this.getAdaptorParams(params), this.getAll());
             // for http adaptor: hostname, path, collectionName
             // for mongo adaptor: db, collectionName
         }

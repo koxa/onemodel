@@ -1,12 +1,11 @@
 import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 import http from 'http';
-import {resolve} from "@babel/core/lib/vendor/import-meta-resolve";
 
 class HttpAdaptor extends BaseAdaptor {
     static getHostname() {
         return '';
     }
-    static getPath() {
+    static getPrefix() {
         return 'api';
     }
     static getPort() {
@@ -19,32 +18,8 @@ class HttpAdaptor extends BaseAdaptor {
     //     return url;
     // }
 
-    static async create({hostname, path, port}, data = {}, config = {}) {
-        // return fetch(url, {
-        //     method: config.method || 'POST',
-        //     mode: 'same-origin',
-        //     cache: 'default',
-        //     credentials: 'omit',
-        //     headers: {
-        //         "Content-Type": "application/json; charset=utf-8"
-        //     },
-        //     redirect: 'follow',
-        //     referrer: 'client',
-        //     body: JSON.stringify(data)
-        // }).then(resp => {
-        //     if (resp.ok) {
-        //         return resp.json();
-        //     } else {
-        //         throw new Error('Response is not ok');
-        //     }
-        // }).catch(err => console.log(err));
-
-        hostname = config.hostname || hostname;
-        path = config.path || path;
-        port = config.port || port;
-        let method = 'POST' || config.method;
-
-        return await new Promise((resolve, reject) => {
+    static request({hostname, path, port, method}, data = {}) {
+        return new Promise((resolve, reject) => {
             const req = http.request({
                 hostname,
                 port,
@@ -69,96 +44,59 @@ class HttpAdaptor extends BaseAdaptor {
                 //console.log(error);
                 reject(error);
             });
-            req.write(JSON.stringify(data));
+            if (data) {
+                req.write(JSON.stringify(data));
+            }
             req.end();
         });
     }
 
-    static read(url, config = {}) { //todo: url or id for static calls
-        return fetch(url, {
-            method: config.method || 'GET',
-            mode: 'same-origin',
-            cache: 'default',
-            credentials: 'omit',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8"
-            },
-            redirect: 'follow',
-            referrer: 'client'
-        }).then(resp => {
-            if (resp.ok) {
-                return resp.json();
-            } else {
-                throw new Error('Response is not ok');
-            }
-        }).catch(err => console.log(err));
+    static async create(params, data = {}) { //todo: optimize so that params and config is one
+        return await this.request({...this.getAdaptorParams(params), method: 'POST'}, data);
+    }
+
+    static async read(params) { //todo: url or id for static calls
+        return await this.request({...this.getAdaptorParams(params), method: 'GET'});
     }
 
 
-    static update(url, data = {}, config = {}) { //todo: url or id for static calls
-        return fetch(url, {
-            method: config.method || 'PUT',
-            mode: 'same-origin',
-            cache: 'default',
-            credentials: 'omit',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8"
-            },
-            redirect: 'follow',
-            referrer: 'client',
-            body: JSON.stringify(data)
-        }).then(resp => {
-            if (resp.ok) {
-                return resp.json();
-            } else {
-                throw new Error('Response is not ok');
-            }
-        }).catch(err => console.log(err));
+    static async update(params, data = {}) { //todo: url or id for static calls
+        return await this.request({...this.getAdaptorParams(params), method: 'PUT'}, data);
     }
 
-    static delete(url, config = {}) { //todo: url or id for static calls
-        return fetch(url, {
-            method: config.method || 'DELETE',
-            mode: 'same-origin',
-            cache: 'default',
-            credentials: 'omit',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8"
-            },
-            redirect: 'follow',
-            referrer: 'client',
-        }).then(resp => {
-            if (resp.ok) {
-                return resp.json();
-            } else {
-                throw new Error('Response is not ok');
-            }
-        }).catch(err => console.log(err));
+    static async delete(params) { //todo: url or id for static calls
+        return await this.request({...this.getAdaptorParams(params), method: 'DELETE'});
     }
 
-    getHostname() {
-        return this.getConfig().hostname || this.constructor.getHostname();
-    }
-
-    getPort() {
-        return this.getConfig().port || this.constructor.getPort();
-    }
-
-    getPath() {
-        return this.getConfig().path || this.constructor.getPath();
-    }
-
-    // getURL(id) {
-    //     let url = `${this.getHostname()}/${this.getPath()}/${this.getCollectionName()}`;
-    //     url = id ? url + '/' + id : url;
-    //     return url;
-    // }
-
-    getAdaptorParams() {
+    static getAdaptorParams({id, hostname, prefix, port, collectionName, path}) {
+        hostname = hostname || this.getHostname();
+        port = port || this.getPort();
+        if (!path) {
+            prefix = prefix || this.getPrefix();
+            collectionName = collectionName || this.getCollectionName();
+            path = path || (`/${prefix}/${collectionName}` + (id ? `/${id}` : ''));
+        }
         return {
-            hostname: this.getHostname(),
-            path: '/' + this.getPath() + '/' + this.getCollectionName(),
-            port: this.getPort()
+            id,
+            hostname,
+            path,
+            port
+        }
+    }
+
+    getAdaptorParams({id, hostname, prefix, port, collectionName, path}) {
+        hostname = hostname || this.getConfig().hostname;
+        port = port || this.getConfig().port;
+        id = id || this.getId();
+        prefix = prefix || this.getConfig().prefix;
+        collectionName = collectionName || this.getConfig().collectionName;
+        return {
+            id,
+            hostname,
+            port,
+            prefix,
+            collectionName,
+            path
         }
     }
 }
