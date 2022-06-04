@@ -71,7 +71,7 @@ class Base {
     static addMixins(mixins = []) {
         for (let mixin of mixins) {
             applyPrototypeChainProps(this, mixin, [...DEFAULT_FUNCTION_PROPS, ...DEFAULT_OBJECT_PROPS]); // apply Static/Constructor(function) props excluding standard Function and Object props
-            applyPrototypeChainProps(this, new mixin(), DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
+            applyPrototypeChainProps(this.prototype, new mixin(), DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
         }
         return this;
     }
