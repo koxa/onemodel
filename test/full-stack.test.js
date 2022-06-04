@@ -66,4 +66,11 @@ describe('test block', () => {
         const resp = await user.save({port});
         expect(user.name).toBe('MICHAEL');
     });
+
+    test('should read preconfigured Model by id', async() => {
+        Model.configure({port});
+        const user = await Model.read({id: 1});
+        expect(user.name).toBe('ethan');
+    });
+
 });

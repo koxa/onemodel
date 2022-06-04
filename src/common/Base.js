@@ -25,7 +25,7 @@ const DEFAULT_FUNCTION_PROPS = [
     'toString'
 ]
 
-function applyPrototypeChainProps(accumulator, originalProto, excludeProps = []) {
+function applyPrototypeChainProps(accumulator, originalProto, excludeProps = [], mergeProps = []) {
     if (!accumulator || !originalProto) {
         return;
     }
@@ -37,11 +37,11 @@ function applyPrototypeChainProps(accumulator, originalProto, excludeProps = [])
     }
     for (let proto of prototypes.reverse()) {
         //console.log("STATIC applyPrototypeChainProps", "accum:", accumulator, "donor: ", proto, "all enum keys: ", Object.keys(proto), "all own props", Object.getOwnPropertyNames(proto));
-        applyProps(accumulator, proto, excludeProps);
+        applyProps(accumulator, proto, excludeProps, mergeProps);
     }
 }
 
-function applyProps(accumulator, donor, excludeProps = []) {
+function applyProps(accumulator, donor, excludeProps = [], mergeProps = []) {
     if (!accumulator || !donor) {
         return;
     }
@@ -49,11 +49,23 @@ function applyProps(accumulator, donor, excludeProps = []) {
     for (let prop of Object.getOwnPropertyNames(donor)) { // get all props including non-enum es6 class methods
         if (!excludeProps.includes(prop)) {
             //console.log('defining', prop, donor[prop]);
-            Object.defineProperty(accumulator, prop, {
-                value: donor[prop],
-                enumerable: typeof donor[prop] !== 'function', // in es6 all class methods (both static and regular) are non enumerable, so we do same here
-                writable: true
-            });
+            if (prop in accumulator) { // if prop already exists
+                if (mergeProps.includes(prop)) {
+                    if (typeof accumulator[prop] === 'object' && typeof donor[prop] === 'object') {
+                        Object.assign(accumulator[prop], donor[prop]);
+                    } else {
+                        throw new Error('MergeProps prop types don\'t match');
+                    }
+                } else {
+                    accumulator[prop] = donor[prop]; // override value of existing prop
+                }
+            } else { // define prop from scratch with value
+                Object.defineProperty(accumulator, prop, {
+                    value: donor[prop],
+                    enumerable: typeof donor[prop] !== 'function', // in es6 all class methods (both static and regular) are non enumerable, so we do same here
+                    writable: true
+                });
+            }
         } else {
             //console.log('property excluded', prop);
         }
@@ -70,7 +82,7 @@ class Base {
      */
     static addMixins(mixins = []) {
         for (let mixin of mixins) {
-            applyPrototypeChainProps(this, mixin, [...DEFAULT_FUNCTION_PROPS, ...DEFAULT_OBJECT_PROPS]); // apply Static/Constructor(function) props excluding standard Function and Object props
+            applyPrototypeChainProps(this, mixin, [...DEFAULT_FUNCTION_PROPS, ...DEFAULT_OBJECT_PROPS], ['_config']); // apply Static/Constructor(function) props excluding standard Function and Object props. Also merge config objects
             applyPrototypeChainProps(this.prototype, new mixin(), DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
         }
         return this;

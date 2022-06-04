@@ -2,6 +2,12 @@ import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 import http from 'http';
 
 class HttpAdaptor extends BaseAdaptor {
+    static _config = {
+        ...BaseAdaptor._config,
+        hostname: this.getHostname(),
+        prefix: this.getPrefix(),
+        port: this.getPort()
+    }
     static getHostname() {
         return '';
     }
@@ -11,12 +17,6 @@ class HttpAdaptor extends BaseAdaptor {
     static getPort() {
         return 3000;
     }
-
-    // static getURL(id) {
-    //     let url = `${this.getHostname()}/${this.getPath()}/${this.getCollectionName()}`;
-    //     url = id ? url + '/' + id : url;
-    //     return url;
-    // }
 
     static request({hostname, path, port, method}, data = {}) {
         return new Promise((resolve, reject) => {
@@ -69,11 +69,11 @@ class HttpAdaptor extends BaseAdaptor {
     }
 
     static getAdaptorParams({id, hostname, prefix, port, collectionName, path}) {
-        hostname = hostname || this.getHostname();
-        port = port || this.getPort();
+        hostname = hostname || this.getConfig().hostname;
+        port = port || this.getConfig().port;
         if (!path) {
-            prefix = prefix || this.getPrefix();
-            collectionName = collectionName || this.getCollectionName();
+            prefix = prefix || this.getConfig().prefix;
+            collectionName = collectionName || this.getConfig().collectionName;
             path = path || (`/${prefix}/${collectionName}` + (id ? `/${id}` : ''));
         }
         return {

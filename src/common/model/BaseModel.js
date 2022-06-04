@@ -1,14 +1,24 @@
 import Base from '../Base';
 
 class BaseModel extends Base {
+    static _config = { //todo: make _config private
+        idAttr: this.getIdAttr(),
+        props: this.getProps(),
+        reactivity: this.getReactivity(),
+        validators: this.getValidators(),
+        converters: this.getConverters()
+    };
+
     static getConfig() {
-        return {
-            idAttr: this.getIdAttr(),
-            props: this.getProps(),
-            reactivity: this.getReactivity(),
-            validators: this.getValidators(),
-            converters: this.getConverters()
-        };
+        const out = {};
+        for (let prop of Object.getOwnPropertyNames(this._config)) {
+            out[prop] = typeof this._config[prop] === 'function' ? this._config[prop].apply(this) : this._config[prop];
+        }
+        return out;
+    }
+
+    static configure(config) {
+        return Object.assign(this._config, config);
     }
 
     static getIdAttr() { // id attr is a Primary Key. It is immutable and can't be modified once set
@@ -53,7 +63,7 @@ class BaseModel extends Base {
     constructor(data, options = {skipHooks: false, skipConvert: false, skipValidate: false}, config) {
         super(...arguments);
         if (config && Object.keys(config).length) { // if custom config provided store it in instance
-            this.__defineConfig(config);
+            this.__defineConfig({...this.constructor.getConfig(), ...config});
         }
         const fullConfig = this.getConfig();
         fullConfig.props && Object.keys(fullConfig.props).forEach(
@@ -67,7 +77,7 @@ class BaseModel extends Base {
      * @returns {any}
      */
     getConfig() {
-       return  this._config ? Object.assign(this.constructor.getConfig(), this._config) : this.constructor.getConfig();
+       return  this._config ? this._config : this.constructor.getConfig();
     }
 
     /**
@@ -76,7 +86,7 @@ class BaseModel extends Base {
      * @returns {*} Returns own config object
      */
     setConfig(config) {
-        return this._config ? Object.assign(this._config, config) : this.__defineConfig(config);
+        return this._config ? Object.assign(this._config, config) : this.__defineConfig({...this.constructor.getConfig(), ...config});
     }
 
     getId() {

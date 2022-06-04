@@ -1,4 +1,9 @@
 class BaseAdaptor {
+    static _config = {
+        collectionName() {
+            return this.getCollectionName()
+        }
+    }
 
     static getCollectionName() {
         return this.name.toLowerCase();
