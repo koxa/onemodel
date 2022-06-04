@@ -38,8 +38,5 @@
     "webpack": "*",
     "webpack-cli": "*",
     "webpack-node-externals": "*"
-  },
-  "dependencies": {
-    "events": "*"
   }
 }
