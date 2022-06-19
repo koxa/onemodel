@@ -26,8 +26,9 @@ class HttpModelAdaptor extends BaseAdaptor {
      * @param data
      * @returns {Promise<*>}
      */
-    static async create(params, data = {}) { //todo: optimize so that params and config is one
-        return await this.request({...this.getAdaptorParams(params), method: 'POST'}, data);
+    static async create(data = {}, params = {}) { //todo: optimize so that params and config is one
+        params.method = params.method || 'POST';
+        return await this.request({...this.getAdaptorParams(params)}, data);
     }
 
 
@@ -86,16 +87,6 @@ class HttpModelAdaptor extends BaseAdaptor {
         filter = filter || params.filter;
         method = method || 'GET';
 
-
-        // let id, hostname, prefix, port, collectionName, path;
-        //
-        // if (typeof mixed === 'object') {
-        //     ({id, hostname, prefix, port, collectionName, path} = params);
-        // } else if (typeof params === 'string' || typeof params === 'number') {
-        //     id = params;
-        // }
-        // return await this.request({...this.getAdaptorParams({id, hostname, prefix, port, collectionName, path}), method: 'GET'});
-
         const normalizedParams = this.getAdaptorParams({
             id,
             hostname,
@@ -110,15 +101,14 @@ class HttpModelAdaptor extends BaseAdaptor {
         return await this.request(normalizedParams);
     }
 
-    static async update({id, hostname, prefix, port, collectionName, path}, data = {}) { //todo: url or id for static calls
-        return await this.request({
-            ...this.getAdaptorParams({id, hostname, prefix, port, collectionName, path}),
-            method: 'PUT'
-        }, data);
+    static async update(data = {}, params = {}) { //todo: url or id for static calls
+        params.method = params.method || 'PUT';
+        return await this.request({...this.getAdaptorParams(params)}, data);
     }
 
-    static async delete(params) { //todo: url or id for static calls
-        return await this.request({...this.getAdaptorParams(params), method: 'DELETE'});
+    static async delete(params = {}) { //todo: url or id for static calls
+        params.method = params.method || 'DELETE';
+        return await this.request({...this.getAdaptorParams(params)});
     }
 
     static getAdaptorParams({ // maybe rename to 'normalizeParams'

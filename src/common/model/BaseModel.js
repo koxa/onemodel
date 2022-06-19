@@ -108,8 +108,10 @@ class BaseModel extends Base {
     getAll(...exclude) {
         let out = {}
         for (let prop in this) {
-            if (exclude.indexOf(prop) < 0) {
-                out[prop] = this[prop];
+            if (this.hasOwnProperty(prop)) { // to avoid prototype props since for...in walks prototype
+                if (exclude.indexOf(prop) < 0) {
+                    out[prop] = this[prop];
+                }
             }
         }
         return out;

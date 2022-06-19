@@ -4,6 +4,9 @@ import HttpModelAdaptor from "../../../common/model/adaptors/HttpModelAdaptor";
 class HttpServerModelAdaptor extends HttpModelAdaptor {
 
     static request({hostname, path, port, method}, data = {}) {
+        if (!path || !port || !method) {
+            throw new Error('HttpServerModelAdaptor request: Path, Port, Method must be defined');
+        }
         return new Promise((resolve, reject) => {
             const req = http.request({
                 hostname,

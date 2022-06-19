@@ -2,6 +2,9 @@ import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 
 class HttpClientModelAdaptor extends BaseAdaptor {
     static async request({hostname, path, port, method}, data = {}) {
+        if (!hostname || !path || !port || !method) {
+            throw new Error('HttpServerModelAdaptor request: Hostname, Path, Port, Method must be defined');
+        }
         const url = `${hostname}:${port}${path}`;
         try {
             const res = await fetch(url, {

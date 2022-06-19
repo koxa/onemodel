@@ -57,9 +57,9 @@ class BaseAdaptor {
         let data;
         if (this.getId()) {
             params = {id: this.getId(), ...params};
-            data = await this.constructor.update(this.getAdaptorParams(params), this.getAll(this.constructor.getIdAttr())); // get all data but id
+            data = await this.constructor.update(this.getAll(this.constructor.getIdAttr()), this.getAdaptorParams(params)); // get all data but id
         } else {
-            data = await this.constructor.create(this.getAdaptorParams(params), this.getAll());
+            data = await this.constructor.create(this.getAll(), this.getAdaptorParams(params));
             // for http adaptor: hostname, path, collectionName
             // for mongo adaptor: db, collectionName
         }

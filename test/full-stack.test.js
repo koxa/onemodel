@@ -44,40 +44,10 @@ describe('test block', () => {
         await server.close();
     });
 
-    test('should save model via http adaptor', async () => {
-        const user = new Model({name: 'John'});
-        expect(user.name).toBe('John');
-        const resp = await user.save({port});
-        expect(user.name).toBe('john');
-    });
-
-    test('should save User model via http adaptor', async () => {
-        class User extends Model {}
-        const user = new User({name: 'John'});
-        expect(user.name).toBe('John');
-        const resp = await user.save({port});
-        expect(user.name).toBe('michael');
-    });
-
+    /*** GET TESTS ***/
     test('should read Model by id', async() => {
        const user = await Model.read({id: 1, port});
        expect(user.name).toBe('ethan');
-    });
-
-    test('should save User model via http adaptor with converter', async () => {
-        class User extends Model {
-            static getConverters() { // converter kicks in after validator
-                return {
-                    name: (val) => {
-                        return val.toUpperCase();
-                    }
-                }
-            }
-        }
-        const user = new User({name: 'John'});
-        expect(user.name).toBe('JOHN');
-        const resp = await user.save({port});
-        expect(user.name).toBe('MICHAEL');
     });
 
     test('should read preconfigured Model by id', async() => {
@@ -96,6 +66,39 @@ describe('test block', () => {
         expect(user3.name).toBe('AARON');
         const user4 = await Model.read('name', 'aaron', {id: 1}); // id and params with filter
         expect(user4.name).toBe('AARON');
+    });
+
+
+    /*** POST TESTS ***/
+    test('should save model via http adaptor', async () => {
+        const user = new Model({name: 'John'});
+        expect(user.name).toBe('John');
+        await user.save({port});
+        expect(user.name).toBe('john');
+    });
+
+    test('should save User model via http adaptor', async () => {
+        class User extends Model {}
+        const user = new User({name: 'John'});
+        expect(user.name).toBe('John');
+        await user.save({port});
+        expect(user.name).toBe('michael');
+    });
+
+    test('should save User model via http adaptor with converter', async () => {
+        class User extends Model {
+            static getConverters() { // converter kicks in after validator
+                return {
+                    name: (val) => {
+                        return val.toUpperCase();
+                    }
+                }
+            }
+        }
+        const user = new User({name: 'John'});
+        expect(user.name).toBe('JOHN');
+        const resp = await user.save({port});
+        expect(user.name).toBe('MICHAEL');
     });
 
 });
