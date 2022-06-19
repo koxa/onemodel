@@ -9,11 +9,11 @@ class BaseAdaptor {
         return this.name.toLowerCase();
     }
 
-    static create(url, data, params) {
+    static create(params, data) {
         throw new Error('CREATE method must be implemented in child Adaptor');
     }
 
-    static read(url, params) {
+    static read(params) {
         throw new Error('READ method must be implemented in child Adaptor');
     }
 
@@ -21,11 +21,11 @@ class BaseAdaptor {
         throw new Error('READ_ONE method must be implemented in child Adaptor');
     }
 
-    static update(collectionName, id, data, params) {
+    static update(params, data) {
         throw new Error('UPDATE method must be implemented in child Adaptor');
     }
 
-    static delete(url, params) {
+    static delete(params) {
         throw new Error('DELETE method must be implemented in child Adaptor');
     }
 
@@ -45,11 +45,11 @@ class BaseAdaptor {
 
     async fetch(params) { // should only fetch by id so far //todo: support direct id along with params object
         //throw new Error('Fetch method must be implemented in a model/store class');
-        const id = this.getId() || params.id;
+        const id = this.getId() || params[this.constructor.getIdAttr()];
         if(!id) {
             throw new Error('ID must be provided to fetch a model');
         }
-        return this.setAll(await this.constructor.read(this.getURL(id)));
+        return this.setAll(await this.constructor.read(id));
     }
 
     async save(params) {

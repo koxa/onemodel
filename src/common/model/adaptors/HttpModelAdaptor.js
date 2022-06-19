@@ -20,52 +20,156 @@ class HttpModelAdaptor extends BaseAdaptor {
         return 3000;
     }
 
+    /**
+     *
+     * @param params
+     * @param data
+     * @returns {Promise<*>}
+     */
     static async create(params, data = {}) { //todo: optimize so that params and config is one
         return await this.request({...this.getAdaptorParams(params), method: 'POST'}, data);
     }
 
-    static async read(params) { //todo: url or id for static calls
-        return await this.request({...this.getAdaptorParams(params), method: 'GET'});
+
+    /**
+     * Issues GET REST call to read by params or ID
+     * Supported formats: [id] | [{params}] | [id, {params}] | [key, val] | [key, val, {params}]
+     * @param {object|string|number} [mixed1] ID or Params Object or Key
+     * @param {string|number|object} [mixed2] Value for a key in case first argument is key. Or Params object in case first param is id;
+     * @param {object} [mixed3]
+     * @returns {Promise<*>}
+     */
+    static async read(mixed1, mixed2, mixed3) {
+        //let id, hostname, prefix, port, collectionName, path, filter, raw, method; // possible supported params
+        let id, filter, params = {};
+
+        if (arguments.length > 3) {
+            throw new Error('HttModelAdaptor READ: Read method support maximum of 3 arguments')
+        }
+
+        if (arguments.length === 1) {
+            // either ID or Params Object
+            if (typeof mixed1 === 'number' || typeof mixed1 === 'string') {
+                //ID
+                id = mixed1;
+            } else if (typeof mixed1 === 'object') {
+                //Params object
+                params = mixed1;
+            } else {
+                throw new Error('HttModelAdaptor READ: Unsupported argument type for arguments length 1');
+            }
+        } else if (arguments.length === 2) {
+            //either key-val or (ID and Params Object)
+            if (typeof mixed1 === 'string' && ['number', 'string'].includes(typeof mixed2)) {
+                //key-val
+                filter = {[mixed1]: mixed2};
+            } else if (['number', 'string'].includes(typeof mixed1) && typeof mixed2 === 'object') {
+                //ID and Params Object
+                id = mixed1;
+                params = mixed2;
+            } else {
+                throw new Error('HttModelAdaptor READ: Unsupported argument type for arguments length 2');
+            }
+        } else if (arguments.length === 3) {
+            //key-val and Params object
+            if (typeof mixed1 === 'string' && ['number', 'string'].includes(typeof mixed2) && typeof mixed3 === 'object') {
+                //key-val and Params
+                filter = {[mixed1]: mixed2};
+                params = mixed3;
+            } else {
+                throw new Error('HttModelAdaptor READ: Unsupported argument type for arguments length 3');
+            }
+        }
+
+        let {hostname, prefix, port, collectionName, path, raw, method} = {...params};
+        id = id || params.id;
+        filter = filter || params.filter;
+        method = method || 'GET';
+
+
+        // let id, hostname, prefix, port, collectionName, path;
+        //
+        // if (typeof mixed === 'object') {
+        //     ({id, hostname, prefix, port, collectionName, path} = params);
+        // } else if (typeof params === 'string' || typeof params === 'number') {
+        //     id = params;
+        // }
+        // return await this.request({...this.getAdaptorParams({id, hostname, prefix, port, collectionName, path}), method: 'GET'});
+
+        const normalizedParams = this.getAdaptorParams({
+            id,
+            hostname,
+            prefix,
+            port,
+            collectionName,
+            path,
+            filter,
+            raw,
+            method
+        });
+        return await this.request(normalizedParams);
     }
 
-
-    static async update(params, data = {}) { //todo: url or id for static calls
-        return await this.request({...this.getAdaptorParams(params), method: 'PUT'}, data);
+    static async update({id, hostname, prefix, port, collectionName, path}, data = {}) { //todo: url or id for static calls
+        return await this.request({
+            ...this.getAdaptorParams({id, hostname, prefix, port, collectionName, path}),
+            method: 'PUT'
+        }, data);
     }
 
     static async delete(params) { //todo: url or id for static calls
         return await this.request({...this.getAdaptorParams(params), method: 'DELETE'});
     }
 
-    static getAdaptorParams({id, hostname, prefix, port, collectionName, path}) {
-        hostname = hostname || this.getConfig().hostname;
-        port = port || this.getConfig().port;
+    static getAdaptorParams({ // maybe rename to 'normalizeParams'
+                                id,
+                                path,
+                                hostname = this.getConfig().hostname,
+                                prefix = this.getConfig().prefix,
+                                port = this.getConfig().port,
+                                collectionName = this.getConfig().collectionName,
+                                filter,
+                                raw = false,
+                                method
+                            }) {
         if (!path) {
-            prefix = prefix || this.getConfig().prefix;
-            collectionName = collectionName || this.getConfig().collectionName;
-            path = path || (`/${prefix}/${collectionName}` + (id ? `/${id}` : ''));
+            path = `/${prefix}/${collectionName}` + (id ? `/${id}` : '');
+        }
+        if (filter && typeof filter === 'object' && Object.keys(filter).length) { // if filter is not empty
+            // convert filter to querystring
+            path += '?' + new URLSearchParams(filter);
         }
         return {
             id,
-            hostname,
             path,
-            port
+            hostname,
+            port,
+            method,
+            raw
         }
     }
 
-    getAdaptorParams({id, hostname, prefix, port, collectionName, path}) {
-        hostname = hostname || this.getConfig().hostname;
-        port = port || this.getConfig().port;
-        id = id || this.getId();
-        prefix = prefix || this.getConfig().prefix;
-        collectionName = collectionName || this.getConfig().collectionName;
+    getAdaptorParams({
+                         id = this.getId(),
+                         path,
+                         hostname = this.getConfig().hostname,
+                         prefix = this.getConfig().prefix,
+                         port = this.getConfig().port,
+                         collectionName = this.getConfig().collectionName,
+                         filter,
+                         raw = false,
+                         method
+                     }) {
         return {
             id,
+            path,
             hostname,
             port,
             prefix,
             collectionName,
-            path
+            filter,
+            raw,
+            method
         }
     }
 }

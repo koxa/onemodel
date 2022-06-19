@@ -5,6 +5,7 @@ import express from 'express';
 const app = express();
 const port = 9333
 
+/** POST **/
 app.post('/api/onemodel', (req, res) => {
     //save onemodel
     res.status(200).json({name: 'john'});
@@ -15,10 +16,22 @@ app.post('/api/user', (req, res) => {
     res.status(200).json({name: 'michael'});
 });
 
+/** GET **/
 app.get('/api/onemodel/1', (req, res) => {
     //read user by ID 1
-    res.status(200).json({name: 'ethan'});
+    if (req.query && req.query.name) { // for filter test
+        res.status(200).json({name: req.query.name.toUpperCase()});
+    } else { // for read tests
+        res.status(200).json({name: 'ethan'});
+    }
 });
+
+app.get('/api/onemodel', (req, res) => {
+    // find user by name using filter (querystring)
+    if (req.query && req.query.name) {
+        res.status(200).json({name: req.query.name});
+    }
+})
 
 describe('test block', () => {
     let server = null;
@@ -71,6 +84,18 @@ describe('test block', () => {
         Model.configure({port});
         const user = await Model.read({id: 1});
         expect(user.name).toBe('ethan');
+    });
+
+    test('should filter Model', async() => {
+        Model.configure({port});
+        const user = await Model.read('name', 'aaron'); // key-val format
+        expect(user.name).toBe('aaron');
+        const user2 = await Model.read({filter: {name: 'aaron'}}); // params object filter prop
+        expect(user2.name).toBe('aaron');
+        const user3 = await Model.read(1, {filter: {name: 'aaron'}}); // id and params with filter
+        expect(user3.name).toBe('AARON');
+        const user4 = await Model.read('name', 'aaron', {id: 1}); // id and params with filter
+        expect(user4.name).toBe('AARON');
     });
 
 });

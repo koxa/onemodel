@@ -1,8 +1,15 @@
-import BaseAdaptorMixin from "../../../common/adaptors/BaseAdaptor";
+import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
 
 //todo: move to separate package
 
-class MongoServerModelAdaptor extends BaseAdaptorMixin {
+class MongoServerModelAdaptor extends BaseAdaptor {
+
+    static _config = {
+        ...BaseAdaptor._config,
+        idAttr: this.getIdAttr(),
+        mongo: this.getMongo(),
+        driver: this.getDriver()
+    };
 
     static getMongo() {
         throw new Error('getMongo must be implemented in child class');
