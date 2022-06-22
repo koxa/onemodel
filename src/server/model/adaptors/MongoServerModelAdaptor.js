@@ -8,29 +8,30 @@ class MongoServerModelAdaptor extends BaseAdaptor {
         ...BaseAdaptor._config,
         idAttr: this.getIdAttr(),
         mongo: this.getMongo(),
-        driver: this.getDriver()
+        db: this.getDb()
     };
 
     static getMongo() {
-        throw new Error('getMongo must be implemented in child class');
+        return null;
     }
 
-    static getDriver() {
-        throw new Error('getDirver must be implemented in child class');
+    static getDb() {
+        return null;
     }
 
     static getIdAttr() {
         return '_id';
     }
 
-    static async create(data, params) {
-        return await this.getDriver().insertOne(data).then(result => {
+    static async create(data, {id, collectionName, filter, raw}) {
+        const normalizedParams = this.getAdaptorParams( {id, collectionName, filter, raw}); //todo: ability to save
+        return await this.getConfig().db.insertOne(data).then(result => {
             return {_id: result.insertedId};
         });
     }
 
     static async read(params) {
-        return (await this.getDriver().find(params).toArray()).map(b => new this(b));
+        return (await this.getConfig().db.find(params).toArray()).map(b => new this(b));
     }
 
     /**
@@ -53,18 +54,36 @@ class MongoServerModelAdaptor extends BaseAdaptor {
         } else if (key) { // if only key and it;s not object it's likely a numeric ID
             query = {[this.getIdAttr()]: new mongo.ObjectID(key)};
         }
-        const result = await this.getDriver().findOne(query);
+        const result = await this.getConfig().db.findOne(query);
         return new this(result);
     }
 
     static async update(id, data, params) {
         const mongo = this.getMongo();
         id = id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id);
-        return await this.getDriver().updateOne({[this.getIdAttr()]: id}, {$set: data});
+        return await this.getDb().updateOne({[this.getIdAttr()]: id}, {$set: data});
     }
 
     static delete(id, params) {
 
+    }
+
+    static getAdaptorParams({id, collectionName = this.getConfig().collectionName, filter, raw = false}) {
+        return {
+            id,
+            collectionName,
+            filter,
+            raw
+        }
+    }
+
+    getAdaptorParams({id = this.getId(), collectionName = this.getConfig().collectionName, filter, raw = false}) {
+        return {
+            id,
+            collectionName,
+            filter,
+            raw
+        }
     }
 }
 

@@ -36,11 +36,11 @@ app.get('/api/onemodel', (req, res) => {
 describe('test block', () => {
     let server = null;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         server = await app.listen(port, () => {});
     });
 
-    afterEach(async () => {
+    afterAll(async () => {
         await server.close();
     });
 
@@ -70,7 +70,14 @@ describe('test block', () => {
 
 
     /*** POST TESTS ***/
-    test('should save model via http adaptor', async () => {
+    test('should save model via http adaptor, port configured on model instance', async () => {
+        const user = new Model({name: 'John'}, {}, {port});
+        expect(user.name).toBe('John');
+        await user.save();
+        expect(user.name).toBe('john');
+    });
+
+    test('should save model via http adaptor, port configured on save', async () => {
         const user = new Model({name: 'John'});
         expect(user.name).toBe('John');
         await user.save({port});

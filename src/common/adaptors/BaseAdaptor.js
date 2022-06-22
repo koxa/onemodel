@@ -52,7 +52,7 @@ class BaseAdaptor {
         return this.setAll(await this.constructor.read(id));
     }
 
-    async save(params) {
+    async save(params = {}) {
         //throw new Error('Save method must be implemented in a model/store class');
         let data;
         if (this.getId()) {

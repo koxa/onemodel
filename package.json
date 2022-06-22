@@ -34,6 +34,7 @@
     "express": "*",
     "jest": "*",
     "mongodb": "*",
+    "mongodb-memory-server": "*",
     "regenerator-runtime": "*",
     "webpack": "*",
     "webpack-cli": "*",

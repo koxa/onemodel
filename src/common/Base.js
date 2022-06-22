@@ -48,7 +48,6 @@ function applyProps(accumulator, donor, excludeProps = [], mergeProps = []) {
     //console.log("applyProps", "accum:", accumulator, "donor: ", donor, "all enum keys: ", Object.keys(donor), "all own props", Object.getOwnPropertyNames(donor));
     for (let prop of Object.getOwnPropertyNames(donor)) { // get all props including non-enum es6 class methods
         if (!excludeProps.includes(prop)) {
-            //console.log('defining', prop, donor[prop]);
             if (prop in accumulator) { // if prop already exists
                 if (mergeProps.includes(prop)) {
                     if (typeof accumulator[prop] === 'object' && typeof donor[prop] === 'object') {
@@ -57,12 +56,19 @@ function applyProps(accumulator, donor, excludeProps = [], mergeProps = []) {
                         throw new Error('MergeProps prop types don\'t match');
                     }
                 } else {
-                    accumulator[prop] = donor[prop]; // override value of existing prop
+                    //UPDATE: Now assign all mixin methods and props as non-enum to be hidden by default
+                    Object.defineProperty(accumulator, prop, {
+                        value: donor[prop],
+                        enumerable: false,
+                        writable: true
+                    });
+                    //accumulator[prop] = donor[prop]; // override value of existing prop
                 }
             } else { // define prop from scratch with value
+                //UPDATE: Now assign all mixin methods and props as non-enum to be hidden by default
                 Object.defineProperty(accumulator, prop, {
                     value: donor[prop],
-                    enumerable: typeof donor[prop] !== 'function', // in es6 all class methods (both static and regular) are non enumerable, so we do same here
+                    enumerable: false, //typeof donor[prop] !== 'function', // in es6 all class methods (both static and regular) are non enumerable, so we do same here
                     writable: true
                 });
             }
@@ -83,7 +89,12 @@ class Base {
     static addMixins(mixins = []) {
         for (let mixin of mixins) {
             applyPrototypeChainProps(this, mixin, [...DEFAULT_FUNCTION_PROPS, ...DEFAULT_OBJECT_PROPS], ['_config']); // apply Static/Constructor(function) props excluding standard Function and Object props. Also merge config objects
-            applyPrototypeChainProps(this.prototype, new mixin(), DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
+            applyPrototypeChainProps(this.prototype, mixin.prototype, DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
+            if (!this.__appliedMixins) {
+                this.__appliedMixins = [mixin];
+            } else {
+                this.__appliedMixins = [...this.__appliedMixins, mixin]; // always define new array to avoid pushing to prototype (avoid sharing array among descendents)
+            }
         }
         return this;
     }
@@ -112,6 +123,14 @@ class Base {
             writable: false,
             configurable: false
         });
+
+        //apply mixin constructors (copy mixin instance properties to this, starting with oldest mixin)
+        for (let cls of this.constructor.__appliedMixins) {
+            // you can't apply es6 class constructor directly to this
+            // that's why you have to instantiate it and then copy own props to this
+            const clsObj = new cls(...arguments);
+            applyProps(this, clsObj);
+        }
     }
 
     toJSON() {
