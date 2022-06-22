@@ -1,8 +1,11 @@
 import {OneStore as Store, OneModel as Model} from '../src';
 
 class MyModel extends Model {
-    static getProps() {
-        return {make: 'toyota', model: 'camry'}
+    static _config = {
+        props: {
+            make: 'toyota',
+            model: 'camry'
+        }
     }
 }
 

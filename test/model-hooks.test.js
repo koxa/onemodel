@@ -1,8 +1,9 @@
 import {OneModel as Model} from "../src";
 
 class CarHookAfterSet extends Model {
-    static getProps() {
-        return {
+    static _config = {
+        ...Model._config,
+        props: {
             make: 'test',
             model: 'test'
         }
@@ -17,8 +18,9 @@ class CarHookAfterSet extends Model {
 }
 
 class CarHookBeforeSet extends Model {
-    static getProps() {
-        return {
+    static _config = {
+        ...Model._config,
+        props: {
             make: 'test',
             model: 'test',
             year: 1900

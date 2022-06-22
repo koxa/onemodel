@@ -1,33 +1,23 @@
 import {OneModel as Model} from "../src";
 
 class ReactiveModel extends Model {
-    static getConfig() {
-        return {
-            reactivity: true
-        }
-    }
-
-    static getProps() {
-        return {
+    static _config = {
+        ...Model._config,
+        reactivity: true,
+        props: {
             make: null,
             model: null,
             year: null
-        }
-    }
-
-    static getConverters() { // converter kicks in after validator
-        return {
+        },
+        converters: {  // converter kicks in after validator
             make: (val) => {
                 return val.toUpperCase();
             },
             model: (val) => {
                 return val.toUpperCase();
             }
-        }
-    }
-
-    static getValidators() {
-        return {
+        },
+        validators: {
             make: (val) => {
                 return ['toyota', 'ford'].indexOf(val.toLowerCase()) !== -1
             }

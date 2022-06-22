@@ -108,7 +108,7 @@ class Base {
     //     return cls;
     // }
 
-    static getClientIdAttr() {
+    static getClientIdAttr() { //todo: move to _config ?
         return '__cid';
     }
 

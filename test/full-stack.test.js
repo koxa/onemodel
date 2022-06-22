@@ -94,8 +94,9 @@ describe('test block', () => {
 
     test('should save User model via http adaptor with converter', async () => {
         class User extends Model {
-            static getConverters() { // converter kicks in after validator
-                return {
+            static _config = {
+                ...Model._config,
+                converters: {  // converter kicks in after validator
                     name: (val) => {
                         return val.toUpperCase();
                     }

@@ -1,7 +1,7 @@
 class BaseAdaptor {
     static _config = {
         collectionName() {
-            return this.getCollectionName()
+            return this.getCollectionName() // will be applied during getConfig against workable object
         }
     }
 

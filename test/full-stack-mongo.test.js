@@ -52,6 +52,9 @@ describe('test block', () => {
         if (mongoServer) {
             await mongoServer.stop();
         }
+        if (httpServer) {
+            await httpServer.close();
+        }
     });
 
     it('should successfully set & get information from the database', async () => {
