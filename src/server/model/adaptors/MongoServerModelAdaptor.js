@@ -1,4 +1,5 @@
 import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
+import {re} from "@babel/core/lib/vendor/import-meta-resolve";
 
 //todo: move to separate package
 
@@ -6,32 +7,27 @@ class MongoServerModelAdaptor extends BaseAdaptor {
 
     static _config = {
         ...BaseAdaptor._config,
-        idAttr: this.getIdAttr(),
-        mongo: this.getMongo(),
-        db: this.getDb()
+        idAttr: '_id',
+        mongo: null, // global Mongo reference
+        db: null // DB instance
     };
 
-    static getMongo() {
-        return null;
-    }
-
-    static getDb() {
-        return null;
-    }
-
-    static getIdAttr() {
-        return '_id';
+    static getCollection(collectionName = this.getConfig().collectionName) {
+        if(!this.getConfig().db || typeof collectionName !== 'string') {
+            throw new Error('MongoServerModelAdaptor: DB instance or CollectionName is not defined');
+        }
+        return this.getConfig().db.collection(this.getConfig().collectionName);
     }
 
     static async create(data, {id, collectionName, filter, raw}) {
-        const normalizedParams = this.getAdaptorParams( {id, collectionName, filter, raw}); //todo: ability to save
-        return await this.getConfig().db.insertOne(data).then(result => {
+        const params = this.getAdaptorParams( {id, collectionName, filter, raw}); //todo: ability to save
+        return await this.getCollection(params.collectionName).insertOne(data).then(result => {
             return {_id: result.insertedId};
         });
     }
 
     static async read(params) {
-        return (await this.getConfig().db.find(params).toArray()).map(b => new this(b));
+        return (await this.getCollection().find(params).toArray()).map(b => new this(b));
     }
 
     /**
@@ -42,26 +38,42 @@ class MongoServerModelAdaptor extends BaseAdaptor {
      */
     static async readOne(key, val) {
         let query;
-        const mongo = this.getMongo();
+        const mongo = this.getConfig().mongo;
         if (typeof key === 'object') { // e.g. {key: val} or Mongo.ObjectID
             if (key instanceof mongo.ObjectID) { // if ObjectID supplied
-                query = {[this.getIdAttr()]: val};
+                query = {[this.getConfig().idAttr]: val};
             } else { // if key in format {key: val, key2: val2,...}
                 query = key;
             }
         } else if (key && val !== undefined) {
             query = {[key]: val}
         } else if (key) { // if only key and it;s not object it's likely a numeric ID
-            query = {[this.getIdAttr()]: new mongo.ObjectID(key)};
+            query = {[this.getConfig().idAttr]: new mongo.ObjectID(key)};
         }
         const result = await this.getConfig().db.findOne(query);
         return new this(result);
     }
 
-    static async update(id, data, params) {
-        const mongo = this.getMongo();
-        id = id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id);
-        return await this.getDb().updateOne({[this.getIdAttr()]: id}, {$set: data});
+
+    static async update(data, {id, collectionName, filter, raw}) {
+        const params = this.getAdaptorParams( {id, collectionName, filter, raw}); //todo: ability to save
+        if (!params.id) {
+            throw new Error('MongoServerModelAdaptor update: ID must be defined to update model')
+        }
+        const mongo = this.getConfig().mongo;
+        const myID = params.id instanceof mongo.ObjectID ? params.id : new mongo.ObjectID(params.id); //todo: ObjectID is deprecated //todo: move to getAdaptorParams
+        let result
+        try {
+            result = await this.getCollection().updateOne({[this.getConfig().idAttr]: myID}, {$set: data});
+        } catch (err) {
+            throw new Error('MongoServerModelAdaptor update: MongoDB error during updateOne: ' + err.toString());
+        }
+        if (result.acknowledged && result.modifiedCount === 1 && result.matchedCount === 1) {
+            return true;
+        } else {
+            //todo: support Model changes rollback if unable to save OR implement sync/pending changes/versioning
+        }
+        throw new Error('MongoServerModelAdaptor update: Acknowledged false or modifiedCount/matchedCount not 1');
     }
 
     static delete(id, params) {

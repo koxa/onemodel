@@ -1,5 +1,9 @@
 import Base from '../Base';
 
+function isClass(v) {
+    return typeof v === 'function' && /^\s*class\s+/.test(v.toString());
+}
+
 class BaseModel extends Base {
     static _config = { //todo: make _config private ? but how to extend in children ?
         idAttr: 'id', //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
@@ -15,7 +19,7 @@ class BaseModel extends Base {
      */
     static getConfig(cfgProp) {
         const getCfgVal = (prop) => {
-            return typeof this._config[prop] === 'function' ? this._config[prop].apply(this) : this._config[prop];
+            return typeof this._config[prop] === 'function' && !isClass(this._config[prop]) ? this._config[prop].apply(this) : this._config[prop];
         }
         if (cfgProp) {
             return getCfgVal(cfgProp);
@@ -232,7 +236,7 @@ class BaseModel extends Base {
      *
      * @param data Object to copy data from
      * @param {Boolean} skipHooks Skip Hooks
-     * @return {Object} Array of modified props
+     * @return {Object} Array of modified props or {} if nothing was modified
      */
     setAll(data = {}, options = {skipHooks: false, skipValidate: false, skipConvert: false}) {
         const modifiedProps = {};

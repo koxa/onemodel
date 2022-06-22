@@ -1,12 +1,8 @@
 class BaseAdaptor {
     static _config = {
         collectionName() {
-            return this.getCollectionName() // will be applied during getConfig against workable object
+            return this.name.toLowerCase(); // will be applied during getConfig against workable object
         }
-    }
-
-    static getCollectionName() {
-        return this.name.toLowerCase();
     }
 
     static create(params, data) {
@@ -54,18 +50,20 @@ class BaseAdaptor {
 
     async save(params = {}) {
         //throw new Error('Save method must be implemented in a model/store class');
-        let data;
         if (this.getId()) {
             params = {id: this.getId(), ...params};
-            data = await this.constructor.update(this.getAll(this.constructor.getIdAttr()), this.getAdaptorParams(params)); // get all data but id
+            const result = await this.constructor.update(this.getAll(this.constructor.getConfig().idAttr), this.getAdaptorParams(params)); // get all data but id
+            if (typeof result !== 'boolean') {  // for example mongo on updateOne won't return full data but rather modifiedCount. matchedCount etc
+                throw new Error('BaseAdaptor save: update must return boolean');
+            }
+            return result; // if all ok true is returned
         } else {
-            data = await this.constructor.create(this.getAll(), this.getAdaptorParams(params));
-            // for http adaptor: hostname, path, collectionName
-            // for mongo adaptor: db, collectionName
+            const data = await this.constructor.create(this.getAll(), this.getAdaptorParams(params));
+            if (typeof data !== "object") {
+                throw new Error('BaseAdaptor save: create must return object with modified props or id')
+            }
+            return this.setAll(data); //todo: what are the cases where setting back data after it was stored on server is needed ? maybe only on create when ID was assigned ?
         }
-
-        return this.setAll(data);
-        //return data;
     }
 
     async destroy(params) {
