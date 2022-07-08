@@ -68,12 +68,16 @@ describe('test block', () => {
 
     it('should save new object to mongo db collection', async() => {
         let model = new MongoModel({firstName: 'Valery', 'lastName': 'Valentin'});
-        await model.save();
+        await model.save(); //create
         expect(model.getId()).toBeDefined();
-        model.set('firstName', 'HuiSobachiy');
-        const result2 = await model.save();
+        model.set('firstName', 'HuiSobachiy'); //todo: track only modified props and later save to server only them to reduce traffic
+        const result2 = await model.save(); // update
         expect(result2).toBe(true); //true means save is successfull
         expect(model.firstName).toBe('HuiSobachiy');
+    });
+
+    it('should', async() => {
+
     })
 
     // beforeAll(async () => {

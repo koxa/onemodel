@@ -1,4 +1,5 @@
 class VersionableMixin {
+    //todo: possible save strategoes: 'onSave' - stores version when model is saved to adaptor, 'onSet' - stores version on every set/setAll
 
     static getNextVersion(version) {
         return version ? ++version : 1;
@@ -12,7 +13,7 @@ class VersionableMixin {
         return this.__versionData[version];
     }
 
-    getModifiedData() {
+    getModifiedData() { //todo: maybe rename to get diff
         return this.__modified;
     }
 
@@ -29,7 +30,7 @@ class VersionableMixin {
         this.__modified = {}; // stores props that were modified since last version
     }
 
-    __hookAfterSet(modified, prop, val) {
+    __hookAfterSet(modified, prop, val) { //todo: maybe separate this into onSet strategy or different mixin
         if (modified) {
             this.__modified[prop] = val;
         }
