@@ -96,6 +96,7 @@ class Base {
                 this.__appliedMixins = [...this.__appliedMixins, mixin]; // always define new array to avoid pushing to prototype (avoid sharing array among descendents)
             }
         }
+        console.log('###mixin', this.__appliedMixins);
         return this;
     }
 

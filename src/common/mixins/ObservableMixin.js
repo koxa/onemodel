@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 
-class ObservableMixin extends EventEmitter {
+class ObservableMixin extends EventEmitter.EventEmitter {
 
     /**
      * Format: {UPDATE: 'update', ADD: 'add'}

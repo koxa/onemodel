@@ -6,8 +6,10 @@ import ClientModel from "./client/model/ClientModel";
  */
 let Parent;
 if (typeof window === "undefined" && module && module.exports) { // it's NodeJS
+    console.log("###OneModel it's NodeJS");
     Parent = ServerModel;
 } else if (window) {
+    console.log("###OneModel it's Webclient");
     Parent = ClientModel;
 } else {
     throw new Error('Unable to certainly determine environment to export OneModel');

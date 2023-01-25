@@ -1,11 +1,13 @@
-import BaseAdaptor from "../../../common/adaptors/BaseAdaptor";
+import HttpModelAdaptor from "../../../common/model/adaptors/HttpModelAdaptor";
 
-class HttpClientModelAdaptor extends BaseAdaptor {
+class HttpClientModelAdaptor extends HttpModelAdaptor {
     static async request({hostname, path, port, method}, data = {}) {
+        hostname = hostname || typeof location !== 'undefined' && location.hostname;
+        port = port || typeof location !== 'undefined' && location.port;
         if (!hostname || !path || !port || !method) {
             throw new Error('HttpServerModelAdaptor request: Hostname, Path, Port, Method must be defined');
         }
-        const url = `${hostname}:${port}${path}`;
+        const url = `${location.protocol}//${hostname}:${port}${path}`;
         try {
             const res = await fetch(url, {
                 method,

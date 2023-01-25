@@ -12,11 +12,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
         db: null // DB instance
     };
 
-    static getCollection(collectionName = this.getConfig().collectionName) {
-        if(!this.getConfig().db || typeof collectionName !== 'string') {
+    static getCollection(collectionName = this.getConfig().collectionName || typeof this.getCollectionName !== 'undefined' && this.getCollectionName()) {
+        const db = this.getConfig().db || this.db();
+        if(!db || typeof collectionName !== 'string') {
             throw new Error('MongoServerModelAdaptor: DB instance or CollectionName is not defined');
         }
-        return this.getConfig().db.collection(this.getConfig().collectionName);
+        return db.collection(this.getConfig().collectionName);
     }
 
     static async create(data, {id, collectionName, filter, raw}) {

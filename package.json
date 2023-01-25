@@ -1,13 +1,14 @@
 {
   "name": "onemodel",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "OneModel - Isomorphic Data Model and Store for Client and Server",
-  "main": "index.js",
+  "main": "dist/onemodel.umd.web.js",
   "scripts": {
     "test": "jest",
-    "webpack": "node node_modules/webpack/bin/webpack.js  --watch",
     "build": "webpack",
-    "prepublish": "npm run build"
+    "dev-build": "webpack --watch --mode development",
+    "prepublish": "npm run build",
+    "test-server": "node testapp/server"
   },
   "repository": {
     "type": "git",
@@ -29,13 +30,18 @@
     "@babel/preset-env": "*",
     "@babel/preset-react": "*",
     "@babel/register": "*",
+    "@types/node": "^18.11.18",
     "babel-loader": "*",
     "core-js": "*",
+    "eslint": "^8.3.0",
     "express": "*",
     "jest": "*",
     "mongodb": "*",
     "mongodb-memory-server": "*",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "regenerator-runtime": "*",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.4",
     "webpack": "*",
     "webpack-cli": "*",
     "webpack-node-externals": "*"

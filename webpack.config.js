@@ -1,121 +1,178 @@
-var webpack = require('webpack');
-var path = require('path');
-var nodeExternals = require('webpack-node-externals');
+const webpack = require("webpack");
+const path = require("path");
+const nodeExternals = require("webpack-node-externals");
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 module.exports = [
-    {
-        mode: 'development',
-        target: 'web',
-        entry: {
-            client: './testapp/client.js'
-        },
-        output: {
-            path: __dirname + '/public',
-            filename: '[name].js'
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.js?$/,
-                    loader: 'babel-loader',
-                    exclude: /node_modules/
-                }
-            ]
-        },
-        //devtool: 'eval-cheap-module-source-map',
-    }, {
-        mode: 'development',
-        target: 'web',
-        entry: {
-            index: './src/index.js'
-        },
-        output: {
-            library: 'OneModel',
-            libraryTarget: 'umd',
-            umdNamedDefine: true,
-            path: path.resolve('dist'),
-            filename: 'onemodel.umd.dev.js'
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.js?$/,
-                    loader: 'babel-loader',
-                    exclude: /node_modules/
-                }
-            ]
-        },
-        //devtool: ''
-        //externals: [nodeExternals()]
-    }, {
-        mode: 'production',
-        target: 'web',
-        entry: {
-            index: './src/index.js'
-        },
-        output: {
-            library: 'OneModel',
-            libraryTarget: 'umd',
-            umdNamedDefine: true,
-            path: path.resolve('dist'),
-            filename: 'onemodel.umd.js'
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.js?$/,
-                    loader: 'babel-loader',
-                    exclude: /node_modules/
-                }
-            ]
-        },
-        //devtool: ''
-        //externals: [nodeExternals()]
+  {
+    mode: "development",
+    target: "web",
+    entry: { client: "./testapp/client.js" },
+    output: {
+      path: path.resolve(__dirname, "public"),
+      filename: "[name]-web.js",
     },
-    {
-        mode: 'development',
-        target: 'node',
-        entry: {
-            index: './src/index.js'
-        },
-        output: {
-            libraryTarget: 'commonjs2',
-            path: path.resolve('dist'),
-            filename: 'onemodel.common.dev.js'
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.js?$/,
-                    loader: 'babel-loader',
-                    exclude: /node_modules/
-                }
-            ]
-        },
-        //devtool: ''
-        //externals: [nodeExternals()]
+    plugins: [new NodePolyfillPlugin()],
+    resolve: {
+      extensions: [".ts", ".js"],
     },
-    {
-        mode: 'production',
-        target: 'node',
-        entry: {
-            index: './src/index.js'
+    module: {
+      rules: [
+        {
+          test: /\.js?$/,
+          loader: "babel-loader",
+          exclude: /node_modules/,
         },
-        output: {
-            libraryTarget: 'commonjs2',
-            path: path.resolve('dist'),
-            filename: 'onemodel.common.js'
+        {
+          test: /\.ts?$/,
+          loader: "ts-loader",
+          exclude: /node_modules/,
         },
-        module: {
-            rules: [
-                {
-                    test: /\.js?$/,
-                    loader: 'babel-loader',
-                    exclude: /node_modules/
-                }
-            ]
+      ],
+    },
+    optimization: {
+      usedExports: true,
+      sideEffects: true,
+      concatenateModules: true,
+    },
+    devtool: "source-map",
+  },
+  {
+    mode: "development",
+    target: "web",
+    entry: {
+      index: "./src/index.js",
+    },
+    output: {
+      library: "OneModel",
+      libraryTarget: "umd",
+      umdNamedDefine: true,
+      path: path.resolve("dist"),
+      filename: "onemodel.umd.web.dev.js",
+    },
+    plugins: [new NodePolyfillPlugin()],
+    module: {
+      rules: [
+        {
+          test: /\.js?$/,
+          loader: "babel-loader",
+          exclude: /node_modules/,
         },
-        //devtool: ''
-        //externals: [nodeExternals()]
-    }
+        {
+          test: /\.ts?$/,
+          loader: "ts-loader",
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    optimization: {
+      usedExports: true,
+      sideEffects: true,
+      concatenateModules: true,
+    },
+    devtool: "source-map",
+    externals: [nodeExternals()],
+  },
+  {
+    mode: "production",
+    target: "web",
+    entry: {
+      index: "./src/index.js",
+    },
+    output: {
+      library: "OneModel",
+      libraryTarget: "umd",
+      umdNamedDefine: true,
+      path: path.resolve("dist"),
+      filename: "onemodel.umd.web.js",
+    },
+    plugins: [new NodePolyfillPlugin()],
+    module: {
+      rules: [
+        {
+          test: /\.js?$/,
+          loader: "babel-loader",
+          exclude: /node_modules/,
+        },
+        {
+          test: /\.ts?$/,
+          loader: "ts-loader",
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    optimization: {
+      usedExports: true,
+      sideEffects: true,
+      concatenateModules: true,
+    },
+    devtool: "source-map",
+    externals: [nodeExternals()],
+  },
+  {
+    mode: "development",
+    target: "node",
+    entry: {
+      index: "./src/index.js",
+    },
+    output: {
+      libraryTarget: "commonjs2",
+      path: path.resolve("dist"),
+      filename: "onemodel.common.node.dev.js",
+    },
+    module: {
+      rules: [
+        {
+          test: /.js?$/,
+          loader: "babel-loader",
+          exclude: /node_modules/,
+        },
+        {
+          test: /.ts?$/,
+          loader: "ts-loader",
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    optimization: {
+      usedExports: true,
+      sideEffects: true,
+      concatenateModules: true,
+    },
+    devtool: "source-map",
+    externals: [nodeExternals()],
+  },
+  {
+    mode: "production",
+    target: "node",
+    entry: {
+      index: "./src/index.js",
+    },
+    output: {
+      libraryTarget: "commonjs2",
+      path: path.resolve("dist"),
+      filename: "onemodel.common.node.js",
+    },
+    module: {
+      rules: [
+        {
+          test: /.js?$/,
+          loader: "babel-loader",
+          exclude: /node_modules/,
+        },
+        {
+          test: /.ts?$/,
+          loader: "ts-loader",
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    optimization: {
+      usedExports: true,
+      sideEffects: true,
+      concatenateModules: true,
+    },
+    devtool: "source-map",
+    externals: [nodeExternals()],
+  },
 ];

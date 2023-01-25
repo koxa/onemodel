@@ -6,8 +6,10 @@ import ClientStore from "./client/store/ClientStore";
  */
 let Parent;
 if (typeof window === "undefined" && module && module.exports) { // it's NodeJS
+    console.log("###OneStore it's NodeJS");
     Parent = ServerStore;
 } else if (window) {
+    console.log("###OneStore it's Webclient");
     Parent = ClientStore;
 } else {
     throw new Error('Unable to certainly determine environment to export OneModel');
