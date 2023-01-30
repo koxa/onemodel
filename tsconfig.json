@@ -1,25 +1,27 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "sourceMap": true,
-        "outDir": "./dist",
-        "strict": true,
-        "noImplicitAny": true,
-        "moduleResolution": "node",
-        "baseUrl": "./src",
-        "types": [
-            "node"
-        ],
-        "paths": {
-            "*": ["*", "src/*"]
-        },
-        "allowJs": true
-    },
-    "include": [
-        "./src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "composite": true,
+    "importHelpers": true,
+    "useDefineForClassFields": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ESNext", "DOM"],
+    "strict": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+  },
+  "include": ["lib", "src"],
+  "paths": {
+    "@lib/*": ["lib/*"]
+  },
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
