@@ -18,7 +18,6 @@ abstract class Base extends BaseConfig {
     for (const ref of refs) {
       const mixin = new ref() as BaseAdaptor;
       const mixinPrototype = mixin.constructor.prototype;
-      console.log('@@@addMixins', mixin, mixinPrototype, Object.getOwnPropertyNames(mixin));
       applyPrototypeChainProps(
         Base,
         mixin,

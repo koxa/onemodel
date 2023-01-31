@@ -28,7 +28,6 @@ export function applyProps(accumulator, donor, excludeProps = [], mergeProps = [
   if (!accumulator || !donor) {
     return;
   }
-  console.log('###donor', accumulator, donor, Object.getOwnPropertyNames(donor));
   //console.log("applyProps", "accum:", accumulator, "donor: ", donor, "all enum keys: ", Object.keys(donor), "all own props", Object.getOwnPropertyNames(donor));
   // Object.getOwnPropertyNames(Object.getPrototypeOf(mixin))
   for (let prop of Object.getOwnPropertyNames(donor)) {
@@ -51,14 +50,6 @@ export function applyProps(accumulator, donor, excludeProps = [], mergeProps = [
             }
 
             Object.assign(donor.constructor[prop], accumulator[prop]);
-            console.log(
-              '###mergeProps',
-              accumulator,
-              donor,
-              accumulator[prop],
-              donor.constructor[prop],
-              donor,
-            );
           } else {
             throw new Error("MergeProps prop types don't match");
           }
@@ -81,23 +72,6 @@ export function applyProps(accumulator, donor, excludeProps = [], mergeProps = [
         });
       }
     } else {
-      //   for (let propKey of Object.getOwnPropertyNames(donor[prop])) {
-      //     if (mergeProps.includes(propKey)) {
-      //       if (
-      //         typeof accumulator[propKey] === 'object' &&
-      //         typeof donor[prop][propKey] === 'object'
-      //       ) {
-      //         Object.assign(donor[prop][propKey], accumulator[propKey]);
-      //         console.log(
-      //           '###mergeProps2',
-      //           accumulator,
-      //           donor,
-      //           accumulator[propKey],
-      //           donor[prop][propKey],
-      //         );
-      //       }
-      //     }
-      //   }
       console.log('property excluded', prop, Object.getOwnPropertyNames(donor[prop]));
     }
   }

@@ -5,7 +5,6 @@ const ClientModelWrapper = <T>(schema: typeof BaseModel) => {
   class ClientModel extends schema {
     constructor(data: T, ...props) {
       super(data, ...props);
-      console.log('###!!!', data, this);
     }
   }
 
