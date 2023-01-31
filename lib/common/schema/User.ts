@@ -1,24 +1,23 @@
-import BaseModel from "../model/BaseModel";
+import BaseModel from '../model/BaseModel';
+
+export type UserModel = {
+  firstName: string;
+  lastName: string;
+};
 
 export default class User extends BaseModel {
-    
-    firstName: string;
-    lastName: string;
+  get model() {
+    return this as any as BaseModel & UserModel;
+  }
 
-    constructor(...props) {
-        super(...props);
-        this.firstName = '';
-        this.lastName = '';
-    }
-    
-    static getDefaultProps() {
-        return {
-            firstName: '',
-            lastName: ''
-        }
-    }
-    
-    getFullName() {
-        return `${this.firstName} ${this.lastName}`;
-    }
+  static getDefaultProps() {
+    return {
+      firstName: '',
+      lastName: '',
+    };
+  }
+
+  getFullName() {
+    return `${this.model.firstName} ${this.model.lastName}`;
+  }
 }

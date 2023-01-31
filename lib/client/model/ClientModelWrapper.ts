@@ -1,19 +1,19 @@
-import ObservableModel from "../../common/model/ObservableModel";
-import HttpAdaptor from "./adaptors/HttpClientModelAdaptor";
-import BaseModel from "../../common/model/BaseModel.js";
+import HttpAdaptor from './adaptors/HttpClientModelAdaptor';
+import BaseModel from '../../common/model/BaseModel.js';
 
-const ClientModelWrapper = (Base: BaseModel) => {
-    class ClientModel extends (Base || ObservableModel) {
-        constructor(...props) {
-            super(...props);
-        }
+const ClientModelWrapper = <T>(schema: typeof BaseModel) => {
+  class ClientModel extends schema {
+    constructor(data: T, ...props) {
+      super(data, ...props);
+      console.log('###!!!', data, this);
     }
+  }
 
-    ClientModel.addMixins([HttpAdaptor]);
+  ClientModel.addMixins([HttpAdaptor]);
 
-    // interface D extends BaseModel, HttpAdaptor {};
-    // const d: D = {};
-    return ClientModel;
+  // interface D extends BaseModel, HttpAdaptor {};
+  // const d: D = {};
+  return ClientModel;
 };
 
 export default ClientModelWrapper;
