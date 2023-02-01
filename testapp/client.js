@@ -9,9 +9,8 @@ import User from '../src/common/schema/User';
 //window.OneModel = OneModel;
 //window.Store = Store;
 
-
 setTimeout(() => {
-    class ClientUser extends ClientModelWrapper(User) {}
-    const user = new ClientUser({firstName: 'Eddie', lastName: 'Money1'});
-    user.save();
+  class ClientUser extends ClientModelWrapper(User) {}
+  const user = new ClientUser({ firstName: 'Eddie', lastName: 'Money1' });
+  user.save();
 }, 2000);

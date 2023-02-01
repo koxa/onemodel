@@ -1,0 +1,23 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "extends": ["eslint:recommended", "prettier"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": "latest"
+  },
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": ["warn", { "endOfLine": "auto", "singleQuote": true }],
+    "arrow-parens": ["error", "always"],
+    "no-trailing-spaces": ["error", { "skipBlankLines": true }],
+    "no-tabs": 0,
+    "quotes": ["warn", "single"],
+    "comma-dangle": ["error", "always-multiline"],
+    "semi": ["error", "always"]
+  }
+}

@@ -1,5 +1,6 @@
 .idea/
-public/index.html
+.vscode/
+public/
 node_modules/
 package-lock.json
-public/
+dist/

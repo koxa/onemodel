@@ -1,21 +1,19 @@
-import ServerModel from "./server/model/ServerModel";
-import ClientModel from "./client/model/ClientModel";
+import ServerModel from './server/model/ServerModel';
+import ClientModel from './client/model/ClientModel';
 
 /**
  * OneModel is a ClientModel when in Browser, otherwise it's ServerModel if common js modules exist
  */
 let Parent;
-if (typeof window === "undefined" && module && module.exports) { // it's NodeJS
-    console.log("###OneModel it's NodeJS");
-    Parent = ServerModel;
+if (typeof window === 'undefined' && module && module.exports) {
+  // it's NodeJS
+  Parent = ServerModel;
 } else if (window) {
-    console.log("###OneModel it's Webclient");
-    Parent = ClientModel;
+  Parent = ClientModel;
 } else {
-    throw new Error('Unable to certainly determine environment to export OneModel');
+  throw new Error('Unable to certainly determine environment to export OneModel');
 }
 
-class OneModel extends Parent {
-}
+class OneModel extends Parent {}
 
 export default OneModel;

@@ -1,31 +1,27 @@
-const webpack = require("webpack");
-const path = require("path");
-const nodeExternals = require("webpack-node-externals");
-const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
+// eslint-disable-next-line no-unused-vars
+const webpack = require('webpack');
+const path = require('path');
+const nodeExternals = require('webpack-node-externals');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = [
   {
-    mode: "development",
-    target: "web",
-    entry: { client: "./testapp/client.js" },
+    mode: 'development',
+    target: 'web',
+    entry: { client: './testapp/client.js' },
     output: {
-      path: path.resolve(__dirname, "public"),
-      filename: "[name]-web.js",
+      path: path.resolve(__dirname, 'public'),
+      filename: '[name]-web.js',
     },
     plugins: [new NodePolyfillPlugin()],
     resolve: {
-      extensions: [".ts", ".js"],
+      extensions: ['.js'],
     },
     module: {
       rules: [
         {
           test: /\.js?$/,
-          loader: "babel-loader",
-          exclude: /node_modules/,
-        },
-        {
-          test: /\.ts?$/,
-          loader: "ts-loader",
+          loader: 'babel-loader',
           exclude: /node_modules/,
         },
       ],
@@ -35,32 +31,27 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: "source-map",
+    devtool: 'source-map',
   },
   {
-    mode: "development",
-    target: "web",
+    mode: 'development',
+    target: 'web',
     entry: {
-      index: "./src/index.js",
+      index: './src/index.js',
     },
     output: {
-      library: "OneModel",
-      libraryTarget: "umd",
+      library: 'OneModel',
+      libraryTarget: 'umd',
       umdNamedDefine: true,
-      path: path.resolve("dist"),
-      filename: "onemodel.umd.web.dev.js",
+      path: path.resolve('dist'),
+      filename: 'onemodel.umd.dev.js',
     },
     plugins: [new NodePolyfillPlugin()],
     module: {
       rules: [
         {
           test: /\.js?$/,
-          loader: "babel-loader",
-          exclude: /node_modules/,
-        },
-        {
-          test: /\.ts?$/,
-          loader: "ts-loader",
+          loader: 'babel-loader',
           exclude: /node_modules/,
         },
       ],
@@ -70,33 +61,28 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: "source-map",
+    devtool: 'source-map',
     externals: [nodeExternals()],
   },
   {
-    mode: "production",
-    target: "web",
+    mode: 'production',
+    target: 'web',
     entry: {
-      index: "./src/index.js",
+      index: './src/index.js',
     },
     output: {
-      library: "OneModel",
-      libraryTarget: "umd",
+      library: 'OneModel',
+      libraryTarget: 'umd',
       umdNamedDefine: true,
-      path: path.resolve("dist"),
-      filename: "onemodel.umd.web.js",
+      path: path.resolve('dist'),
+      filename: 'onemodel.umd.js',
     },
     plugins: [new NodePolyfillPlugin()],
     module: {
       rules: [
         {
           test: /\.js?$/,
-          loader: "babel-loader",
-          exclude: /node_modules/,
-        },
-        {
-          test: /\.ts?$/,
-          loader: "ts-loader",
+          loader: 'babel-loader',
           exclude: /node_modules/,
         },
       ],
@@ -106,30 +92,25 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: "source-map",
+    devtool: 'source-map',
     externals: [nodeExternals()],
   },
   {
-    mode: "development",
-    target: "node",
+    mode: 'development',
+    target: 'node',
     entry: {
-      index: "./src/index.js",
+      index: './src/index.js',
     },
     output: {
-      libraryTarget: "commonjs2",
-      path: path.resolve("dist"),
-      filename: "onemodel.common.node.dev.js",
+      libraryTarget: 'commonjs2',
+      path: path.resolve('dist'),
+      filename: 'onemodel.common.dev.js',
     },
     module: {
       rules: [
         {
           test: /.js?$/,
-          loader: "babel-loader",
-          exclude: /node_modules/,
-        },
-        {
-          test: /.ts?$/,
-          loader: "ts-loader",
+          loader: 'babel-loader',
           exclude: /node_modules/,
         },
       ],
@@ -139,30 +120,25 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: "source-map",
+    devtool: 'source-map',
     externals: [nodeExternals()],
   },
   {
-    mode: "production",
-    target: "node",
+    mode: 'production',
+    target: 'node',
     entry: {
-      index: "./src/index.js",
+      index: './src/index.js',
     },
     output: {
-      libraryTarget: "commonjs2",
-      path: path.resolve("dist"),
-      filename: "onemodel.common.node.js",
+      libraryTarget: 'commonjs2',
+      path: path.resolve('dist'),
+      filename: 'onemodel.common.js',
     },
     module: {
       rules: [
         {
           test: /.js?$/,
-          loader: "babel-loader",
-          exclude: /node_modules/,
-        },
-        {
-          test: /.ts?$/,
-          loader: "ts-loader",
+          loader: 'babel-loader',
           exclude: /node_modules/,
         },
       ],
@@ -172,7 +148,7 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: "source-map",
+    devtool: 'source-map',
     externals: [nodeExternals()],
   },
 ];
