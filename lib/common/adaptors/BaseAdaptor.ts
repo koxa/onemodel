@@ -7,8 +7,6 @@ abstract class BaseAdaptor {
     },
   };
 
-  protected config: any;
-
   getBaseModel() {
     return this as any as BaseModel;
   }

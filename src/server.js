@@ -1,21 +1,21 @@
-import express from "express";
-import mongo, { MongoClient } from "mongodb";
-import { createServer } from "vite";
+import express from 'express';
+import mongo, { MongoClient } from 'mongodb';
+import { createServer } from 'vite';
 //import { OneModel } from '../lib/OneModelNode';
 //import ServerModelWrapper from '../lib/server/model/ServerModelWrapper';
 //import User from '../lib/common/schema/User';
-import "../dist/onemodel.cjs";
+import '../dist/onemodel.cjs';
 
 const app = express();
 const router = express.Router();
 
 async function run() {
-  const client = await MongoClient.connect("mongodb://127.0.0.1", {
+  const client = await MongoClient.connect('mongodb://127.0.0.1', {
     logger: console,
   });
-  const DB = client.db("universal-model");
+  const DB = client.db('universal-model');
 
-  app.use(express.static("dist"));
+  app.use(express.static('dist'));
   app.use(express.json());
 
   class ServerUser extends ServerModelWrapper(User) {
@@ -43,7 +43,7 @@ async function run() {
     }
 
     static getCollectionName() {
-      return "users";
+      return 'users';
     }
 
     constructor() {
@@ -86,11 +86,11 @@ async function run() {
             res.end(indexFile);
         });*/
 
-  app.route("/api/clientuser").post(async (req, res) => {
+  app.route(`/api/${ServerUser.getCollectionName()}`).post(async (req, res) => {
     const data = req.body;
-    console.log(">>> /api/clientuser", data);
+    console.log('>>> /api/users', data);
     const user = new ServerUser(data, undefined, {
-      db: "universal-model",
+      db: 'universal-model',
       mongo: ServerUser.getMongo(),
     });
     console.log(user.getFullName());
@@ -116,14 +116,14 @@ async function run() {
 
   const vite = await createServer({
     server: { middlewareMode: true },
-    appType: "custom",
-    base: "/",
+    appType: 'custom',
+    base: '/',
   });
-  app.use("*", router);
+  app.use('*', router);
   app.use(vite.middlewares);
 
   app.listen(3001, () => {
-    console.log("Mongo connected");
+    console.log('Mongo connected');
     console.log(`Server started at http://localhost:3001`);
   });
 }

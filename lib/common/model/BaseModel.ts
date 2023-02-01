@@ -1,10 +1,7 @@
 import Base from '../Base';
 import { Converters, Validators } from '../const/base';
-import { Config } from '../types/BaseConfig';
 
 abstract class BaseModel extends Base {
-  config: Config;
-
   static validate(prop: Validators, value: unknown): boolean {
     const validators = this.getConfig().validators;
     if (validators[prop]) {
@@ -24,12 +21,12 @@ abstract class BaseModel extends Base {
   constructor(
     data?: any,
     options = { skipHooks: false, skipConvert: false, skipValidate: false },
-    config = {},
+    config: any = {},
   ) {
     super();
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
-      this.__defineConfig({ ...this.getConfig(), ...config });
+      this.setConfig(config);
     }
     const fullConfig = this.getConfig();
     fullConfig.props &&
@@ -37,26 +34,6 @@ abstract class BaseModel extends Base {
         this.__defineProperty(prop, fullConfig.props[prop], fullConfig.reactivity),
       );
     data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
-  }
-
-  /**
-   * Returns FULL CONFIG (merge of class config and instance config)
-   * @returns {any}
-   */
-  getConfig() {
-    return this.config ? this.config : (this.constructor as typeof BaseModel).getConfig();
-  }
-
-  /**
-   * Sets any custom config properties
-   * @param config
-   * @returns {*} Returns own config object
-   */
-  setConfig(config: Config) {
-    //todo: only store overriden parts of config and merge on fly, because Model might be reconfigure later
-    return this.config
-      ? Object.assign(this.config, config)
-      : this.__defineConfig({ ...(this.constructor as typeof BaseModel).getConfig(), ...config });
   }
 
   getId(): string {
@@ -90,16 +67,6 @@ abstract class BaseModel extends Base {
       }
     }
     return out;
-  }
-
-  __defineConfig(config) {
-    Object.defineProperty(this, 'config', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: config, // initial value is assigned
-    });
-    return this['config'];
   }
 
   __defineId(val): string {

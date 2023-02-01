@@ -10,7 +10,11 @@ export default class User extends BaseModel {
     return this as any as BaseModel & UserModel;
   }
 
-  static getDefaultProps() {
+  getCollectionName() {
+    return 'users';
+  }
+
+  getDefaultProps() {
     return {
       firstName: '',
       lastName: '',

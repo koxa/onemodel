@@ -24,6 +24,21 @@ export function applyPrototypeChainProps(
   }
 }
 
+export function mergeProp(accumulator, donor, prop) {
+  if (typeof accumulator[prop] === 'object' && typeof donor.constructor[prop] === 'object') {
+    if (!donor[prop]) {
+      Object.defineProperty(donor, prop, {
+        value: {},
+        enumerable: false,
+        writable: true,
+      });
+    }
+    Object.assign(accumulator[prop], donor.constructor[prop]);
+  } else {
+    throw new Error("MergeProps prop types don't match");
+  }
+}
+
 export function applyProps(accumulator, donor, excludeProps = [], mergeProps = []) {
   if (!accumulator || !donor) {
     return;
@@ -36,23 +51,7 @@ export function applyProps(accumulator, donor, excludeProps = [], mergeProps = [
       if (prop in accumulator) {
         // if prop already exists
         if (mergeProps.includes(prop)) {
-          if (
-            typeof accumulator[prop] === 'object' &&
-            typeof donor.constructor[prop] === 'object'
-          ) {
-            // Object.assign(accumulator[prop], donor.constructor[prop]);
-            if (!donor[prop]) {
-              Object.defineProperty(donor, prop, {
-                value: {},
-                enumerable: false,
-                writable: true,
-              });
-            }
-
-            Object.assign(donor.constructor[prop], accumulator[prop]);
-          } else {
-            throw new Error("MergeProps prop types don't match");
-          }
+          mergeProp(accumulator, donor, prop);
         } else {
           //UPDATE: Now assign all mixin methods and props as non-enum to be hidden by default
           Object.defineProperty(accumulator, prop, {
@@ -72,7 +71,12 @@ export function applyProps(accumulator, donor, excludeProps = [], mergeProps = [
         });
       }
     } else {
-      console.log('property excluded', prop, Object.getOwnPropertyNames(donor[prop]));
+      for (const keyName of Object.getOwnPropertyNames(donor[prop])) {
+        if (mergeProps.includes(keyName)) {
+          mergeProp(accumulator, donor, keyName);
+        }
+      }
+      console.log('property excluded', prop);
     }
   }
 }

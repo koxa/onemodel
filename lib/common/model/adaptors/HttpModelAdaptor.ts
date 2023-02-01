@@ -1,3 +1,4 @@
+import getSchemaUtils from '../../../utils/schema';
 import BaseAdaptor from '../../adaptors/BaseAdaptor';
 import { HttpParams } from '../../types/Http';
 
@@ -129,11 +130,16 @@ abstract class HttpModelAdaptor extends BaseAdaptor {
     hostname = HttpModelAdaptor.config.hostname,
     prefix = HttpModelAdaptor.config.prefix,
     port = HttpModelAdaptor.config.port,
-    collectionName = HttpModelAdaptor.config?.collectionName.apply(this.constructor),
+    collectionName,
     filter,
     raw = false,
     method,
   }: Partial<HttpParams>) {
+    const { getDefaultCollectionName } = getSchemaUtils(this);
+    if (!collectionName) {
+      collectionName = getDefaultCollectionName();
+    }
+
     if (!path) {
       path = `/${prefix}/${collectionName}` + (id ? `/${id}` : '');
     }
@@ -151,30 +157,6 @@ abstract class HttpModelAdaptor extends BaseAdaptor {
       raw,
     };
   }
-
-  /*getAdaptorParams({
-                         id = this.getId(),
-                         path,
-                         hostname = this.getConfig().hostname,
-                         prefix = this.getConfig().prefix,
-                         port = this.getConfig().port,
-                         collectionName = this.getConfig().collectionName,
-                         filter,
-                         raw = false,
-                         method
-                     }) {
-        return {
-            id,
-            path,
-            hostname,
-            port,
-            prefix,
-            collectionName,
-            filter,
-            raw,
-            method
-        }
-    }*/
 }
 
 export default HttpModelAdaptor;

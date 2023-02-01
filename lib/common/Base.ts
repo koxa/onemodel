@@ -1,11 +1,15 @@
 import BaseConfig from './BaseConfig';
-import { applyProps, applyPrototypeChainProps } from '../utils/mixins';
+import { applyPrototypeChainProps } from '../utils/mixins';
 import { DEFAULT_FUNCTION_PROPS, DEFAULT_OBJECT_PROPS } from './const/base';
 import BaseAdaptor from './adaptors/BaseAdaptor';
+import { Config } from './types/BaseConfig';
 
 abstract class Base extends BaseConfig {
   static lastClientId: number;
   static appliedMixins: any[];
+  static config: Config = {
+    ...BaseConfig.config,
+  };
 
   /**
    * Applies a chain of prototypes for each object in array
@@ -17,14 +21,13 @@ abstract class Base extends BaseConfig {
   static addMixins(refs: any[] = []) {
     for (const ref of refs) {
       const mixin = new ref() as BaseAdaptor;
-      const mixinPrototype = mixin.constructor.prototype;
       applyPrototypeChainProps(
         Base,
         mixin,
         [...DEFAULT_FUNCTION_PROPS, ...DEFAULT_OBJECT_PROPS],
         ['config'],
       ); // apply Static/Constructor(function) props excluding standard Function and Object props. Also merge config objects
-      applyPrototypeChainProps(Base.prototype, mixinPrototype, DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
+      applyPrototypeChainProps(Base.prototype, mixin.constructor.prototype, DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
       if (!Base.appliedMixins) {
         Base.appliedMixins = [mixin];
       } else {
@@ -54,6 +57,8 @@ abstract class Base extends BaseConfig {
       writable: false,
       configurable: false,
     });
+
+    this.config = { ...Base.config };
   }
 }
 
