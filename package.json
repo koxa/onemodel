@@ -2,7 +2,7 @@
   "name": "onemodel",
   "version": "0.1.18",
   "description": "OneModel - Isomorphic Data Model and Store for Client and Server",
-  "main": "dist/onemodel.umd.js",
+  "main": "index.js",
   "scripts": {
     "test": "jest",
     "build": "webpack",
