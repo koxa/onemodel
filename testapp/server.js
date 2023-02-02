@@ -1,132 +1,26 @@
-require('@babel/register');
-require('core-js/stable');
-require('regenerator-runtime/runtime');
-const http = require('http');
-const cors = require('cors');
-const express = require('express');
-// const {OneModel} = require('../src');
-const User = require('../src/common/schema/User').default;
-const ServerModelWrapper = require('../src/server/model/ServerModelWrapper').default;
-const MongoClient = require('mongodb').MongoClient;
-const mongo = require('mongodb');
-const app = express();
-const router = express.Router();
+const { OneModel } = require('../dist/onemodel.common.dev');
+const createServer = require('./express');
 
-async function run() {
-  let indexFile;
-  const client = await MongoClient.connect('mongodb://127.0.0.1', { logger: console });
-  const DB = client.db('universal-model');
-
-  app.use(
-    cors({
-      origin: '*',
-    }),
-  );
-  app.use(express.static('public'));
-  app.use('/src', express.static('src'));
-  app.use('/dist', express.static('dist'));
-  app.use(express.json());
-
-  class ServerUser extends ServerModelWrapper(User) {
-    static getDriver() {
-      return DB.collection(this.getCollectionName());
-    }
-
-    static db() {
-      return DB;
-    }
-
-    static getMongo() {
-      return mongo;
-    }
-
-    static getModelConfig() {
-      return { ...super.getModelConfig(), lockProps: true };
-    }
-
-    static getDefaultProps() {
-      return {
-        title: undefined,
-        author: undefined,
-      };
-    }
-
-    static getCollectionName() {
-      return 'users';
-    }
-
-    constructor() {
-      super(...arguments);
-    }
-  }
-
-  // class Book extends OneModel {
-  //     static getDriver() {
-  //         return DB.collection(this.getCollectionName());
-  //     }
-
-  //     static getMongo() {
-  //         return mongo;
-  //     }
-
-  //     static getModelConfig() {
-  //         return {...super.getModelConfig(), lockProps: true};
-  //     }
-
-  //     static getDefaultProps() {
-  //         return {
-  //             title: undefined,
-  //             author: undefined
-  //         }
-  //     }
-
-  //     static getCollectionName() {
-  //         return 'books';
-  //     }
-
-  //     constructor() {
-  //         super(...arguments);
-  //     }
-  // }
-  app.route('/').get((req, res) => {
-    res.setHeader('Content-Type', 'text/html');
-    res.writeHead(200);
-    res.end(indexFile);
+createServer().then(({ app, mongodb, db }) => {
+  OneModel.configure({
+    db: db,
+    mongo: mongodb,
+    //collectionName: 'user'
   });
 
-  app.route('/api/clientuser').post(async (req, res) => {
-    const data = req.body;
-    console.log('>>> /api/clientuser', data);
-    const user = new ServerUser(data, undefined, {
-      db: 'universal-model',
-      mongo: ServerUser.getMongo(),
+  app.post('/api/user', async (req, res) => {
+    console.log('POST /api/user', req.body);
+    const user = new OneModel(req.body, undefined, {
+      collectionName: 'user',
     });
-    console.log(user.getFullName());
-    user.save();
+    res.json(await user.save());
   });
 
-  // app.route('/books/:id?')
-  //     .get(async (req, res) => {
-  //         const books = await Book.read();
-  //         res.json(books);
-  //     })
-  //     .post(async (req, res) => {
-  //         //const book = req.data();
-  //         const book = new Book(req.body);
-  //         res.json(await book.save());
-  //     })
-  //     .put(async (req, res) => {
-  //         const id = req.params.id;
-  //         const book = await Book.findById(id);
-  //         book.setAll(req.body);
-  //         res.json(await book.save());
-  //     });
-
-  app.use('*', router);
-  console.log('Mongo connected');
-  http.createServer(app).listen(3000, '0.0.0.0', () => {
-    console.log('Listening on port 3000');
+  app.get('/api/user', async (req, res) => {
+    console.log('GET /api/user');
+    const user = await OneModel.readOne('lastName', 'Money1');
+    res.json(user);
   });
-}
 
-run().catch((err) => console.error(err));
+  console.log('Server Started');
+});

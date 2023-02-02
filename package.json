@@ -6,11 +6,9 @@
   "scripts": {
     "test": "jest",
     "build": "webpack",
-    "build.dev": "webpack --watch --mode development",
     "prepublish": "npm run build",
-    "server": "nodemon --inspect testapp/server.js",
-    "server2": "nodemon --inspect testapp/server2.js",
-    "client": "webpack-dev-server --config webpack.dev.config.js"
+    "test.build": "webpack --watch --mode development --config webpack.dev.config.js",
+    "test.server": "nodemon --inspect testapp/server.js"
   },
   "repository": {
     "type": "git",
@@ -36,7 +34,6 @@
     "babel-eslint": "^10.1.0",
     "babel-loader": "*",
     "core-js": "*",
-    "cors": "^2.8.5",
     "eslint": "^8.33.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -48,9 +45,10 @@
     "nodemon": "^2.0.20",
     "prettier": "2.8.3",
     "regenerator-runtime": "*",
-    "webpack": "*",
+    "webpack": "^5.75.0",
     "webpack-cli": "*",
-    "webpack-dev-server": "^4.11.1",
+    "webpack-dev-middleware": "^6.0.1",
+    "webpack-hot-middleware": "^2.25.3",
     "webpack-node-externals": "*"
   }
 }

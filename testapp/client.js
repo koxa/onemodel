@@ -1,17 +1,12 @@
-//import {ClientModel, OneModel, ObservableModel, Store} from '../src';
-// import { OneModel } from '../src/index.js';
-import ClientModelWrapper from '../src/client/model/ClientModelWrapper';
-import User from '../src/common/schema/User';
+import { OneModel } from '../src/index';
 
-//window.ClientModel = ClientModel;
-//window.ObservableModel = ObservableModel;
-//window.OneModel = OneModel;
-//window.OneModel = OneModel;
-//window.Store = Store;
+if (module['hot']) {
+  module['hot'].accept();
+}
 
 setTimeout(() => {
   console.log('>>> Client');
-  class ClientUser extends ClientModelWrapper(User) {}
-  const user = new ClientUser({ firstName: 'Eddie@', lastName: 'Money1' });
+  class User extends OneModel {}
+  const user = new User({ firstName: 'Eddie', lastName: 'Money' });
   user.save();
 }, 2000);

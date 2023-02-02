@@ -8,7 +8,7 @@ let Parent;
 if (typeof window === 'undefined' && module) {
   // it's NodeJS
   Parent = ServerStore;
-} else if (window) {
+} else if (typeof window !== 'undefined') {
   Parent = ClientStore;
 } else {
   throw new Error('Unable to certainly determine environment to export OneModel');
