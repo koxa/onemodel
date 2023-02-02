@@ -9,6 +9,7 @@
     "build.dev": "webpack --watch --mode development",
     "prepublish": "npm run build",
     "server": "nodemon --inspect testapp/server.js",
+    "server2": "nodemon --inspect testapp/server2.js",
     "client": "webpack-dev-server --config webpack.dev.config.js"
   },
   "repository": {
