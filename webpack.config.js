@@ -8,34 +8,6 @@ module.exports = [
   {
     mode: 'development',
     target: 'web',
-    entry: { client: './testapp/client.js' },
-    output: {
-      path: path.resolve(__dirname, 'public'),
-      filename: '[name]-web.js',
-    },
-    plugins: [new NodePolyfillPlugin()],
-    resolve: {
-      extensions: ['.js'],
-    },
-    module: {
-      rules: [
-        {
-          test: /\.js?$/,
-          loader: 'babel-loader',
-          exclude: /node_modules/,
-        },
-      ],
-    },
-    optimization: {
-      usedExports: true,
-      sideEffects: true,
-      concatenateModules: true,
-    },
-    devtool: 'source-map',
-  },
-  {
-    mode: 'development',
-    target: 'web',
     entry: {
       index: './src/index.js',
     },
@@ -92,7 +64,7 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: 'source-map',
+    // devtool: 'source-map',
     externals: [nodeExternals()],
   },
   {
@@ -148,7 +120,7 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    devtool: 'source-map',
+    // devtool: 'source-map',
     externals: [nodeExternals()],
   },
 ];

@@ -20,13 +20,18 @@ class HttpServerModelAdaptor extends HttpModelAdaptor {
           },
         },
         (res) => {
-          res.on('data', (d) => {
+          let responseData = '';
+          res.on('data', (chunk) => {
+            responseData += chunk;
+          });
+          res.on('end', () => {
             try {
-              const data = JSON.parse(d);
+              const data = JSON.parse(responseData);
               resolve(data);
             } catch (err) {
               reject('error parsing response JSON: ', err);
             }
+            req.end();
           });
         },
       );

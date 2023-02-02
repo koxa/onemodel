@@ -2,7 +2,7 @@ require('@babel/register');
 require('core-js/stable');
 require('regenerator-runtime/runtime');
 const http = require('http');
-const fs = require('fs').promises;
+const cors = require('cors');
 const express = require('express');
 // const {OneModel} = require('../src');
 const User = require('../src/common/schema/User').default;
@@ -17,6 +17,11 @@ async function run() {
   const client = await MongoClient.connect('mongodb://127.0.0.1', { logger: console });
   const DB = client.db('universal-model');
 
+  app.use(
+    cors({
+      origin: '*',
+    }),
+  );
   app.use(express.static('public'));
   app.use('/src', express.static('src'));
   app.use('/dist', express.static('dist'));
@@ -119,20 +124,9 @@ async function run() {
 
   app.use('*', router);
   console.log('Mongo connected');
-  const server = http.createServer(app); //.listen(3000, "0.0.0.0");
-
-  fs.readFile(__dirname + '/index.html')
-    .then((contents) => {
-      indexFile = contents;
-      server.listen(3000, '0.0.0.0', () => {
-        console.log('Listening on port 3000');
-      });
-    })
-    .catch((err) => {
-      console.error(`Could not read index.html file: ${err}`);
-      process.exit(1);
-    });
-  // console.log('Listening on port 3000');
+  http.createServer(app).listen(3000, '0.0.0.0', () => {
+    console.log('Listening on port 3000');
+  });
 }
 
 run().catch((err) => console.error(err));

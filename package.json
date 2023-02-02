@@ -8,7 +8,8 @@
     "build": "webpack",
     "build.dev": "webpack --watch --mode development",
     "prepublish": "npm run build",
-    "test.server": "node testapp/server"
+    "server": "nodemon --inspect testapp/server.js",
+    "client": "webpack-dev-server --config webpack.dev.config.js"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
     "babel-eslint": "^10.1.0",
     "babel-loader": "*",
     "core-js": "*",
+    "cors": "^2.8.5",
     "eslint": "^8.33.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -42,10 +44,12 @@
     "mongodb": "*",
     "mongodb-memory-server": "*",
     "node-polyfill-webpack-plugin": "^2.0.1",
+    "nodemon": "^2.0.20",
     "prettier": "2.8.3",
     "regenerator-runtime": "*",
     "webpack": "*",
     "webpack-cli": "*",
+    "webpack-dev-server": "^4.11.1",
     "webpack-node-externals": "*"
   }
 }

@@ -1,6 +1,4 @@
 .idea/
-.vscode/
-public/
 node_modules/
 package-lock.json
 dist/

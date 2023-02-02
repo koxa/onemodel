@@ -10,7 +10,8 @@ import User from '../src/common/schema/User';
 //window.Store = Store;
 
 setTimeout(() => {
+  console.log('>>> Client');
   class ClientUser extends ClientModelWrapper(User) {}
-  const user = new ClientUser({ firstName: 'Eddie', lastName: 'Money1' });
+  const user = new ClientUser({ firstName: 'Eddie@', lastName: 'Money1' });
   user.save();
 }, 2000);

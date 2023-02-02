@@ -11,17 +11,19 @@ class HttpClientModelAdaptor extends HttpModelAdaptor {
     }
     const url = `${location.protocol}//${hostname}:${port}${path}`;
     try {
-      const res = await fetch(url, {
+      const response = await fetch(url, {
         method,
+        cache: 'no-cache',
+        credentials: 'same-origin',
         headers: {
           //todo: extra headers support
-          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Type': 'application/json;charset=utf-8',
           //'Content-Length': data.length,
         },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        return res.json();
+      if (response.ok) {
+        return response.json();
       } else {
         throw new Error('HttpClientModelAdaptor: Response is not ok');
       }
