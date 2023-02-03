@@ -8,11 +8,13 @@ export default function createTable({ name, addClick, updateClick, removeClick, 
   const updateButtonClick = async (id) => {
     const inputs = document.querySelectorAll(`#i${id} input`);
     if (inputs.length) {
-      const value = {};
+      const value = {
+        _id: id,
+      };
       inputs.forEach((input) => {
         value[input.name] = input.value;
       });
-      await updateClick({ id, value });
+      await updateClick(value);
     }
   };
 

@@ -21,16 +21,17 @@ createServer().then(({ app, mongodb, db }) => {
     res.json(await user.save());
   });
 
-  app.put('/api/user', async (req, res) => {
-    const { id, value } = req.body;
-    console.log('PUT /api/user', id, value);
-    res.json(await User.update(value, { id }));
+  app.put('/api/user/:_id', async (req, res) => {
+    const { _id } = req.params;
+    console.log('PUT /api/user', _id, req.body);
+    const user = new User({ _id, ...req.body });
+    res.json(await user.save());
   });
 
-  app.delete('/api/user/:id', async (req, res) => {
-    const { id } = req.params;
-    console.log('DELETE /api/user', id);
-    res.json(await User.deleteOne(id));
+  app.delete('/api/user/:_id', async (req, res) => {
+    const { _id } = req.params;
+    console.log('DELETE /api/user', _id);
+    res.json(await User.deleteOne(_id));
   });
 
   console.log('Server Started');
