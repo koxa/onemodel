@@ -20,7 +20,7 @@ class HttpClientModelAdaptor extends HttpModelAdaptor {
           'Content-Type': 'application/json;charset=utf-8',
           //'Content-Length': data.length,
         },
-        body: JSON.stringify(data),
+        body: method === 'GET' ? undefined : JSON.stringify(data),
       });
       if (response.ok) {
         return response.json();

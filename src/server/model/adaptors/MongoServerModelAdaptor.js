@@ -91,6 +91,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
 
   static delete(id, params) {}
 
+  static async deleteOne(id) {
+    const mongo = this.getConfig().mongo;
+    const _id = new mongo.ObjectID(id);
+    return await this.getCollection().deleteOne({ _id });
+  }
+
   static getAdaptorParams({
     id,
     collectionName = this.getConfig().collectionName,

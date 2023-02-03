@@ -1,5 +1,5 @@
 const webpack = require('webpack');
-const webpackConfig = require('../webpack.dev.config.js');
+const webpackConfig = require('../../webpack.dev.config.js');
 const compiler = webpack(webpackConfig);
 const path = require('path');
 const mongodb = require('mongodb');
