@@ -13,7 +13,10 @@ const loaded = async () => {
   const { list } = createTable({
     name: USERS,
     refreshClick: async () => list(await User.read()),
-    removeClick: ({ id }) => User.delete({ id }),
+    removeClick: ({ _id }) => {
+      const user = new User({ _id });
+      return user.delete();
+    },
     addClick: async ({ firstName, lastName }) => {
       const user = new User({ firstName, lastName });
       return await user.save();

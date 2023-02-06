@@ -18,12 +18,12 @@ export default function createTable({ name, addClick, updateClick, removeClick, 
     }
   };
 
-  const removeButtonClick = async (id) => {
-    const { deletedCount } = await removeClick({ id });
+  const removeButtonClick = async (_id) => {
+    const { deletedCount } = await removeClick({ _id });
     if (deletedCount > 0) {
       const table = document.getElementById(name);
       for (let i = 0; i < table.rows.length; i++) {
-        if (table.rows[i].id === `i${id}`) {
+        if (table.rows[i].id === `i${_id}`) {
           table.deleteRow(i);
           break;
         }

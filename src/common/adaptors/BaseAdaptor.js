@@ -71,6 +71,14 @@ class BaseAdaptor {
     }
   }
 
+  async delete(params = {}) {
+    if (this.getId()) {
+      params = { id: this.getId(), ...params };
+      return this.constructor.delete(this.getAdaptorParams(params));
+    }
+    throw new Error(`BaseAdaptor delete: missing ${this.constructor.getConfig().idAttr} parameter`);
+  }
+
   async destroy(params) {
     return await this.constructor.delete(this.getURL(this.getId()), params);
   }
