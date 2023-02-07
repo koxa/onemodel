@@ -95,7 +95,7 @@ class BaseModel extends Base {
   }
 
   getId() {
-    return this[this.constructor.getConfig().idAttr];
+    return this[this.constructor.getConfig().idAttr] || this['id'] || this['_id'];
   }
 
   getClientId() {

@@ -60,14 +60,20 @@
             margin: 0 2px;
         }
 
-        .form-add-user {
+        .form-add {
             display: flex;
             min-width: 60%;
             margin: 15px 0;
         }
 
-        .form-add-user button {
+        .form-add button {
             width: 50px;
+        }
+
+        .block {
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
         }
     </style>
 </head>
@@ -76,24 +82,49 @@
     <script src="client-web.js">
     </script>
     <div class="center">
-        <h1>OneModel client</h1>
-        <table id="users">
-            <thead>
-                <tr>
-                    <th colspan="2">Users</th>
-                    <th colspan="1"><button id="refresh" type="button">refresh</button></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-        <form class="form-add-user">
-            <label for="firstName">First name:</label><br>
-            <input type="text" id="firstName" name="firstName"><br>
-            <label for="lastName">Last name:</label><br>
-            <input type="text" id="lastName" name="lastName">
-            <button id="addButton" type="button">Add</button>
-          </form>
+        <h1>OneModel</h1>
+        <div class="block">
+            <h2>Users (HttpAdaptor - MongoDb)</h2>
+            <form class="form-add users">
+                <label for="firstName">First name:</label><br>
+                <input type="text" id="firstName" name="firstName"><br>
+                <label for="lastName">Last name:</label><br>
+                <input type="text" id="lastName" name="lastName">
+                <button id="add-button" type="button">Add</button>
+            </form>
+            <table id="users">
+                <thead>
+                    <tr>
+                        <th colspan="2">Users</th>
+                        <th colspan="1"><button id="refresh" type="button">refresh</button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="block">
+            <h2>Emails (HttpAdaptor - Sequelize (MariaDb))</h2>
+            <form class="form-add emails">
+                <label for="user">User:</label><br>
+                <input type="text" id="user" name="user"><br>
+                <label for="email">Email:</label><br>
+                <input type="text" id="email" name="email">
+                <label for="date">Date:</label><br>
+                <input type="text" id="date" name="date">
+                <button id="add-button" type="button">Add</button>
+            </form>
+            <table id="emails">
+                <thead>
+                    <tr>
+                        <th colspan="2">Emails</th>
+                        <th colspan="1"><button id="refresh" type="button">refresh</button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 

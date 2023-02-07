@@ -1,15 +1,22 @@
-export default function createTable({ name, addClick, updateClick, removeClick, refreshClick }) {
+export default function createTable({
+  name,
+  addClick,
+  updateClick,
+  removeClick,
+  refreshClick,
+  idAttr = '_id',
+  skipColumns = ['_id', 'id', 'createdAt', 'updatedAt'],
+}) {
   const tableBody = document.querySelector(`#${name} > tbody`);
-  const addButton = document.getElementById('addButton');
-  const firstName = document.getElementById('firstName');
-  const lastName = document.getElementById('lastName');
-  document.getElementById('refresh').onclick = refreshClick;
+  const addButton = document.querySelector(`.form-add.${name} button`);
+  const inputs = document.querySelectorAll(`.form-add.${name} input`);
+  document.querySelector(`#${name} button`).onclick = refreshClick;
 
   const updateButtonClick = async (id) => {
     const inputs = document.querySelectorAll(`#i${id} input`);
     if (inputs.length) {
       const value = {
-        _id: id,
+        [idAttr]: id,
       };
       inputs.forEach((input) => {
         value[input.name] = input.value;
@@ -19,7 +26,7 @@ export default function createTable({ name, addClick, updateClick, removeClick, 
   };
 
   const removeButtonClick = async (_id) => {
-    const { deletedCount } = await removeClick({ _id });
+    const { deletedCount } = await removeClick({ [idAttr]: _id });
     if (deletedCount > 0) {
       const table = document.getElementById(name);
       for (let i = 0; i < table.rows.length; i++) {
@@ -46,9 +53,9 @@ export default function createTable({ name, addClick, updateClick, removeClick, 
 
   const addRow = (item) => {
     const tr = document.createElement('tr');
-    tr.id = `i${item._id}`;
+    tr.id = `i${item._id || item.id}`;
     for (const key in item) {
-      if (key === '_id') continue;
+      if (skipColumns.includes(key)) continue;
       const td = document.createElement('td');
       const input = document.createElement('input');
       input.name = key;
@@ -56,7 +63,7 @@ export default function createTable({ name, addClick, updateClick, removeClick, 
       td.appendChild(input);
       tr.appendChild(td);
     }
-    tr.appendChild(appendControlButtons(item._id));
+    tr.appendChild(appendControlButtons(item._id || item.id));
     tableBody.appendChild(tr);
   };
 
@@ -68,12 +75,17 @@ export default function createTable({ name, addClick, updateClick, removeClick, 
   };
 
   addButton.onclick = async () => {
-    if (firstName.value === '' && lastName.value === '') return;
-    const { _id } = await addClick({ firstName: firstName.value, lastName: lastName.value });
-    if (_id) {
-      addRow({ _id, firstName: firstName.value, lastName: lastName.value });
-      firstName.value = '';
-      lastName.value = '';
+    const data = {};
+    inputs.forEach((input) => {
+      data[input.name] = input.value;
+    });
+    if (!Object.keys(data).length) return;
+    const result = await addClick(data);
+    if (result[idAttr]) {
+      addRow({ [idAttr]: result[idAttr], ...data });
+      inputs.forEach((input) => {
+        input.value = '';
+      });
     }
   };
 
