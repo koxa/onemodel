@@ -35,7 +35,8 @@ class BaseModel extends Base {
   }
 
   static configure(config) {
-    return Object.assign(this._config, config);
+    this.config = { ...this.config, ...config };
+    return this.config;
   }
 
   static validate(prop, val) {
@@ -95,7 +96,11 @@ class BaseModel extends Base {
   }
 
   getId() {
-    return this[this.constructor.getConfig().idAttr] || this['id'] || this['_id'];
+    let idAttr = this.constructor.getConfig().idAttr;
+    if (this.constructor.config && this.constructor.config.idAttr) {
+      idAttr = this.constructor.config.idAttr;
+    }
+    return this[idAttr];
   }
 
   getClientId() {
@@ -103,7 +108,7 @@ class BaseModel extends Base {
   }
 
   setId(id) {
-    return this.set(this.constructor.getConfig().idAttr, id);
+    return this.set(this.constructor.config.idAttr, id);
   }
 
   get(prop) {

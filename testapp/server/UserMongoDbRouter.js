@@ -9,13 +9,12 @@ async function userMongoDbRouter() {
   const mongodbConnect = await mongodb.MongoClient.connect(mongoServer.getUri(), {});
   const mongodbInstance = mongodbConnect.db(mongoServer.instanceInfo.dbName);
 
-  OneModel.configure({
+  class User extends OneModel {}
+  User.configure({
     mongo: mongodb,
     db: mongodbInstance,
     idAttr: '_id',
   });
-
-  class User extends OneModel {}
 
   router.get('/api/user', async (req, res) => {
     console.log('GET /api/user');

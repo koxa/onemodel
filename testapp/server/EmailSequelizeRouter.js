@@ -8,6 +8,7 @@ async function emailSequelizeRouter() {
   const sequelize = new Sequelize('onemodel', 'root', 'root', {
     host: 'localhost',
     dialect: 'mariadb',
+    port: 3306,
   });
 
   const EmailSchema = sequelize.define('email', {
@@ -30,15 +31,12 @@ async function emailSequelizeRouter() {
     },
   });
 
-  ServerSequelizeModel.configure({
-    sequelize: {
-      instance: sequelize,
-      schemas: [EmailSchema],
-      idAttr: 'id',
-    },
-  });
-
   class Email extends ServerSequelizeModel {}
+  Email.configure({
+    db: sequelize,
+    schemas: [EmailSchema],
+    idAttr: 'id',
+  });
 
   router.get('/api/email', async (req, res) => {
     console.log('GET /api/email');

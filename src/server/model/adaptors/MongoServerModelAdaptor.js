@@ -13,7 +13,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     collectionName = this.getConfig().collectionName ||
       (typeof this.getCollectionName !== 'undefined' && this.getCollectionName()),
   ) {
-    const db = this.getConfig().db || this.db();
+    const { db } = this.config;
     if (!db || typeof collectionName !== 'string') {
       throw new Error('MongoServerModelAdaptor: DB instance or CollectionName is not defined');
     }
@@ -41,12 +41,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    */
   static async readOne(key, val) {
     let query;
-    const mongo = this.getConfig().mongo;
+    const { mongo } = this.config;
     if (typeof key === 'object') {
       // e.g. {key: val} or Mongo.ObjectID
       if (key instanceof mongo.ObjectID) {
         // if ObjectID supplied
-        query = { [this.getConfig().idAttr]: val };
+        query = { [this.config.idAttr]: val };
       } else {
         // if key in format {key: val, key2: val2,...}
         query = key;
@@ -55,9 +55,9 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       query = { [key]: val };
     } else if (key) {
       // if only key and it;s not object it's likely a numeric ID
-      query = { [this.getConfig().idAttr]: new mongo.ObjectID(key) };
+      query = { [this.config.idAttr]: new mongo.ObjectID(key) };
     }
-    const result = await this.getConfig().db.findOne(query);
+    const result = await this.config.db.findOne(query);
     return new this(result);
   }
 
@@ -66,13 +66,15 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     if (!params.id) {
       throw new Error('MongoServerModelAdaptor update: ID must be defined to update model');
     }
-    const mongo = this.getConfig().mongo;
+    const { mongo } = this.config;
     const myID = params.id instanceof mongo.ObjectID ? params.id : new mongo.ObjectID(params.id); //todo: ObjectID is deprecated //todo: move to getAdaptorParams
+    const myData = structuredClone(data);
+    delete myData[this.config.idAttr];
     let result;
     try {
       result = await this.getCollection().updateOne(
-        { [this.getConfig().idAttr]: myID },
-        { $set: data },
+        { [this.config.idAttr]: myID },
+        { $set: myData },
       );
     } catch (err) {
       throw new Error(
@@ -92,7 +94,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   static delete(id, params) {}
 
   static async deleteOne(id) {
-    const mongo = this.getConfig().mongo;
+    const { mongo } = this.config;
     const _id = new mongo.ObjectID(id);
     return await this.getCollection().deleteOne({ _id });
   }

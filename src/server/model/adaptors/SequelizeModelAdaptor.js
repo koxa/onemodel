@@ -3,22 +3,20 @@ import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
 class SequelizeModelAdaptor extends BaseAdaptor {
   static _config = {
     ...BaseAdaptor._config,
-    sequelize: {
-      instance: null,
-      schemas: [],
-      schemasParser: {},
-      idAttr: '_id',
-    },
+    db: null,
+    schemas: [],
+    schemasParser: {},
+    idAttr: '_id',
   };
 
   static _firstSync = true;
 
   static idAttr() {
-    return this.getConfig().sequelize.idAttr;
+    return this.config.idAttr;
   }
 
   static async sync() {
-    return this.getConfig().sequelize.instance.sync();
+    return this.config.db.sync();
   }
 
   static async fistSync() {
@@ -27,6 +25,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
       try {
         return await this.sync();
       } catch (e) {
+        console.error(e);
         throw new Error('SequelizeModelAdaptor: Database synchronization error', e);
       }
     }
@@ -37,10 +36,10 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     collectionName = this.getConfig().collectionName ||
       (typeof this.getCollectionName !== 'undefined' && this.getCollectionName()),
   ) {
-    if (!this.getConfig().sequelize.schemasParser) {
-      this.getConfig().sequelize['schemasParser'] = {};
+    if (!this.config.schemasParser) {
+      this.config.schemasParser = {};
     }
-    const { schemas, schemasParser } = this.getConfig().sequelize;
+    const { schemas, schemasParser } = this.config;
     if (!schemasParser[collectionName]) {
       schemas.forEach((schema) => {
         schemasParser[schema.name.toLocaleLowerCase()] = schema;
@@ -108,7 +107,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   getAdaptorParams({
-    id = this.getConfig().sequelize.idAttr,
+    id = this.getId(),
     collectionName = this.getConfig().collectionName,
     raw = true,
   }) {

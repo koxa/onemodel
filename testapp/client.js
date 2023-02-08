@@ -6,10 +6,16 @@ if (module['hot']) {
 }
 const USERS = 'users';
 const EMAILS = 'emails';
+const BOOKS = 'book';
 
 const loaded = async () => {
   class User extends OneModel {}
   class Email extends OneModel {}
+  class Book extends OneModel {}
+
+  User.configure({
+    idAttr: '_id',
+  });
 
   const { list: userList } = createTable({
     name: USERS,
@@ -46,8 +52,27 @@ const loaded = async () => {
     },
   });
 
+  const { list: bookList } = createTable({
+    name: BOOKS,
+    idAttr: 'id',
+    refreshClick: async () => bookList(await Book.read()),
+    removeClick: ({ id }) => {
+      const book = new Book({ id });
+      return book.delete();
+    },
+    addClick: async (data) => {
+      const book = new Book(data);
+      return await book.save();
+    },
+    updateClick: async (data) => {
+      const book = new Book(data);
+      return await book.save();
+    },
+  });
+
   userList(await User.read());
   emailList(await Email.read());
+  bookList(await Book.read());
 };
 
 document.addEventListener('DOMContentLoaded', loaded);

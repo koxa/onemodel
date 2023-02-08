@@ -16,6 +16,7 @@ async function createServer() {
 
   app.use(await require('./server/UserMongoDbRouter')());
   app.use(await require('./server/EmailSequelizeRouter')());
+  app.use(await require('./server/BookMariaDbRouter')());
 
   app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '../public/index.html')));
   app.use('*', router);
