@@ -9,6 +9,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     db: null, // DB instance
   };
 
+  /**
+   * Returns the collection instance from MongoDB
+   * @param {string} [collectionName=this.getConfig().collectionName || this.getCollectionName()] - The name of the collection to return. Defaults to the one defined in the configuration object or in the instance of the class
+   * @returns {MongoDB.Collection} - The MongoDB Collection instance
+   * @throws {Error} - If DB instance or CollectionName is not defined
+   */
   static getCollection(
     collectionName = this.getConfig().collectionName ||
       (typeof this.getCollectionName !== 'undefined' && this.getCollectionName()),
@@ -20,6 +26,11 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     return db.collection(this.getConfig().collectionName);
   }
 
+  /**
+   * Creates a new document in the MongoDB collection
+   * @param {object} data - The data to be inserted in the collection
+   * @returns {Promise<object>} - Returns the result of the insertion
+   */
   static async create(data, { id, collectionName, filter, raw }) {
     const params = this.getAdaptorParams({ id, collectionName, filter, raw }); //todo: ability to save
     return await this.getCollection(params.collectionName)
@@ -29,8 +40,37 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       });
   }
 
-  static async read(params) {
-    return (await this.getCollection().find(params).toArray()).map((b) => new this(b));
+  /**
+   * Executes a request to read data from a collection
+   * @param {object} [params.sort] Object containing sort fields, e.g. { name: 1, age: -1 }
+   * @param {number} [params.limit] Maximum number of documents to return
+   * @param {number} [params.start] Index of the first document to return
+   * @param {number} [params.end] Index of the last document to return
+   * @param {object} [params={}] Object containing the query parameters, e.g. { id: '123', name: 'John' }. Returns all values by default
+   * @returns {Promise<Array>} Array of document objects returned by the query
+   */
+  static async read(params = {}) {
+    const { sort, limit, start, end, ...query } = params;
+    const cursor = this.getCollection().find(query);
+
+    if (sort) {
+      cursor.sort(sort);
+    }
+
+    if (limit) {
+      cursor.limit(limit);
+    }
+
+    if (start) {
+      cursor.skip(start);
+    }
+
+    if (end) {
+      cursor.limit(end - (start || 0));
+    }
+
+    const documents = await cursor.toArray();
+    return documents.map((doc) => new this(doc));
   }
 
   /**
@@ -61,6 +101,13 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     return new this(result);
   }
 
+  /**
+   * Updates an existing document in the MongoDB collection
+   * @param {object} data - The data to be updated
+   * @param {string} [id] - The identifier of the document to be updated
+   * @returns {Promise<boolean>} - Returns true if the document was updated, false otherwise
+   * @throws {Error} - If the ID of the document to be updated is not defined
+   */
   static async update(data, { id, collectionName, filter, raw }) {
     const params = this.getAdaptorParams({ id, collectionName, filter, raw }); //todo: ability to save
     if (!params.id) {
@@ -68,7 +115,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     }
     const { mongo } = this.config;
     const myID = params.id instanceof mongo.ObjectID ? params.id : new mongo.ObjectID(params.id); //todo: ObjectID is deprecated //todo: move to getAdaptorParams
-    const myData = structuredClone(data);
+    const myData = { ...data };
     delete myData[this.config.idAttr];
     let result;
     try {
@@ -91,8 +138,28 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     );
   }
 
-  static delete(id, params) {}
+  /**
+   * Counts the number of documents in the MongoDB collection
+   * @returns {Promise<number>} - Returns the number of documents in the collection
+   */
+  static async count() {
+    return await this.getCollection().count();
+  }
 
+  /**
+   * Deletes one or more documents from the MongoDB collection
+   * @param {object} params - The filter to be applied to the documents to be deleted
+   * @returns {Promise<object>} - Returns the result of the deletion
+   */
+  static async delete(params) {
+    return await this.getCollection().deleteMany(params);
+  }
+
+  /**
+   * Deletes one document from the MongoDB collection
+   * @param {string} id - The identifier of the document to be deleted
+   * @returns {Promise<object>} - Returns the result of the deletion
+   */
   static async deleteOne(id) {
     const { mongo } = this.config;
     const _id = new mongo.ObjectID(id);
