@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "coverage": "jest --coverage",
     "build": "webpack",
     "prepublish": "npm run build",
     "test.build": "webpack --watch --mode development --config webpack.dev.config.js",
@@ -39,18 +40,18 @@
     "eslint-plugin-prettier": "^4.2.1",
     "express": "*",
     "jest": "*",
+    "mariadb": "^3.0.2",
     "mongodb": "*",
     "mongodb-memory-server": "*",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "nodemon": "^2.0.20",
     "prettier": "2.8.3",
     "regenerator-runtime": "*",
+    "sequelize": "^6.28.0",
     "webpack": "^5.75.0",
     "webpack-cli": "*",
     "webpack-dev-middleware": "^6.0.1",
     "webpack-hot-middleware": "^2.25.3",
-    "webpack-node-externals": "*",
-    "mariadb": "^3.0.2",
-    "sequelize": "^6.28.0"
+    "webpack-node-externals": "*"
   }
 }

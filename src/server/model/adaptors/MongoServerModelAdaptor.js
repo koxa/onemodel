@@ -46,11 +46,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * @param {number} [params.limit] Maximum number of documents to return
    * @param {number} [params.start] Index of the first document to return
    * @param {number} [params.end] Index of the last document to return
+   * @param {number} [params.skip] Count records to skip
    * @param {object} [params={}] Object containing the query parameters, e.g. { id: '123', name: 'John' }. Returns all values by default
    * @returns {Promise<Array>} Array of document objects returned by the query
    */
   static async read(params = {}) {
-    const { sort, limit, start, end, ...query } = params;
+    const { sort, limit, start, skip, end, ...query } = params;
     const cursor = this.getCollection().find(query);
 
     if (sort) {
@@ -61,8 +62,8 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       cursor.limit(limit);
     }
 
-    if (start) {
-      cursor.skip(start);
+    if (skip || start) {
+      cursor.skip(skip || start);
     }
 
     if (end) {
@@ -86,7 +87,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       // e.g. {key: val} or Mongo.ObjectID
       if (key instanceof mongo.ObjectID) {
         // if ObjectID supplied
-        query = { [this.config.idAttr]: val };
+        query = { [this.config.idAttr]: val ? val : key };
       } else {
         // if key in format {key: val, key2: val2,...}
         query = key;
@@ -97,8 +98,9 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       // if only key and it;s not object it's likely a numeric ID
       query = { [this.config.idAttr]: new mongo.ObjectID(key) };
     }
-    const result = await this.config.db.findOne(query);
-    return new this(result);
+
+    const result = await this.getCollection().findOne(query);
+    return result ? new this(result) : null;
   }
 
   /**
