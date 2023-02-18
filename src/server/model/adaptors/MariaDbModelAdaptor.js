@@ -161,8 +161,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @param {object} [params.filters] An object containing filters to apply, e.g. { age: 18, gender: 'female' }
    * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of rows to return
-   * @param {number} [params.start] Index of the first row to return
-   * @param {number} [params.end] Index of the last row to return
+   * @param {number} [params.skip] Number of rows to skip before returning results
    * @param {object} [params={}] Returns all values by default
    * @returns {Promise<Array>} A promise that resolves to an array of row objects returned by the query
    */
@@ -192,30 +191,25 @@ class MariaDbModelAdaptor extends BaseAdaptor {
           .map(([key, value]) => `${key} ${value === 1 ? 'ASC' : 'DESC'}`)
           .join(',')
       : '';
-    const start = params.start || 0;
+    const skip = params.skip || 0;
     const maxLimit = Number(9223372036854775807n);
-    const end = params.end || maxLimit;
 
     let query = `SELECT ${columns} FROM ${collectionName}`;
     if (filters) query += ` WHERE ${filters}`;
     query += ' GROUP BY id';
     if (sort) query += ` ORDER BY ${sort}`;
 
-    if (limit && !start) {
+    if (limit && !skip) {
       query += ` LIMIT ${limit}`;
-    } else if (limit && start) {
-      query += ` LIMIT ${start}, ${limit}`;
-    } else if (!limit && start && !end) {
-      query += ` LIMIT ${start}, ${maxLimit}`;
-    } else if (!limit && start && end) {
-      query += ` LIMIT ${start}, ${end - start}`;
-    } else if (!limit && !start && end) {
-      query += ` LIMIT ${end}`;
+    } else if (limit && skip) {
+      query += ` LIMIT ${skip}, ${limit}`;
+    } else if (!limit && skip) {
+      query += ` LIMIT ${skip}, ${maxLimit}`;
     }
 
     const rows = await connection.query(query);
     connection.end();
-    return rows.map((item) => item);
+    return rows.map((item) => new this(item));
   }
 
   /**
@@ -306,18 +300,24 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     return Number(result.count);
   }
 
-  static getAdaptorParams({ id, collectionName = this.getCollection(), raw = true }) {
+  static getAdaptorParams({ id, collectionName = this.getCollection(), raw = true, ...props }) {
     return {
       id,
       collectionName,
       raw,
+      ...props,
     };
   }
 
-  getAdaptorParams({ id = this.getId(), collectionName = this.getConfig().collectionName }) {
+  getAdaptorParams({
+    id = this.getId(),
+    collectionName = this.getConfig().collectionName,
+    ...props
+  }) {
     return {
       id,
       collectionName,
+      ...props,
     };
   }
 }

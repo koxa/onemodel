@@ -97,7 +97,7 @@ describe('MongoServerModelAdaptor', () => {
       expect(result[2]).toHaveProperty('firstName', testManyDocs[5].firstName);
 
       // Get the last 3 documents
-      result = await MongoModel.read({ limit: 3, skip: 6, end: 3 });
+      result = await MongoModel.read({ limit: 3, skip: 6 });
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(3);
       expect(result[0]).toHaveProperty('_id');
@@ -116,12 +116,10 @@ describe('MongoServerModelAdaptor', () => {
       expect(result[0]).toHaveProperty('firstName', `firstName ${testManyDocs.length}`);
     });
 
-    describe('readOne()', () => {
-      it('should find a document in the MongoDB collection by ID', async () => {
-        const result = await MongoModel.create({ ...testData }, {});
-        const document = await MongoModel.readOne(result._id);
-        expect(document).toHaveProperty('_id');
-      });
+    it('readOne(): should find a document in the MongoDB collection by ID', async () => {
+      const result = await MongoModel.create({ ...testData }, {});
+      const document = await MongoModel.readOne(result._id);
+      expect(document).toHaveProperty('_id');
     });
 
     it('readOne(): should find and return one document by param or set of params', async () => {
