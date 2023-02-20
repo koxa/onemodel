@@ -81,15 +81,36 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   /**
-   * Read model instances from the database
-   * @param {object} params - Additional parameters for the read operation (optional)
-   * @returns {Promise<object[]>} - A promise that resolves to an array of model instances
+   * Executes a request to read data from a collection
+   * @param {string} [params.collectionName] The name of the table to select data from
+   * @param {object} [params.columns] An object containing columns to select and their values, e.g. { id: 1, name: 1, email: 0 }
+   * @param {object} [params.filters] An object containing filters to apply, e.g. { age: 18, gender: 'female' }
+   * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
+   * @param {number} [params.limit] Maximum number of rows to return
+   * @param {number} [params.skip] Number of rows to skip before returning results
+   * @param {object} [params={}] Returns all values by default
+   * @returns {Promise<Array>} A promise that resolves to an array of row objects returned by the query
    */
   static async read(params = {}) {
-    await this.fistSync();
-    const collection = this.getCollection();
-    const { raw } = this.getAdaptorParams(params);
-    return await collection.findAll({ ...params, raw });
+    const { collectionName, raw, columns, filters, sort, limit, skip } =
+      this.getAdaptorParams(params);
+    const collection = this.getCollection(collectionName);
+    const query = {
+      raw,
+      limit: limit ? Number(limit) : undefined,
+      offset: skip,
+      attributes: columns,
+      where: filters,
+      order:
+        typeof sort === 'object'
+          ? Object.entries(sort).map(([column, direction]) => [
+              column,
+              direction === 1 ? 'ASC' : 'DESC',
+            ])
+          : undefined,
+    };
+
+    return await collection.findAll(query);
   }
 
   /**
@@ -100,8 +121,6 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @throws {Error} - Throws an error if the WHERE parameters are not defined or the result array is empty
    */
   static async update(data, params) {
-    await this.fistSync();
-
     // filter properties that are not related to the data model.
     const where = Object.entries(params)
       .filter(([key]) => key !== 'raw' && key !== 'collectionName')
@@ -133,12 +152,29 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   /**
+   * Counts the number of documents in the collection
+   * @returns {Promise<number>} - Returns the number of documents in the collection
+   */
+  static async count() {
+    return await this.getCollection().count();
+  }
+
+  /**
+   * Deletes one or more documents from the MongoDB collection
+   * @param {object} params - The filter to be applied to the documents to be deleted
+   * @returns {Promise<object>} - Returns the result of the deletion
+   */
+  static async delete(params) {
+    const deleted = await this.getCollection().destroy({ where: params });
+    return { deletedCount: deleted };
+  }
+
+  /**
    * Delete a model instance from the database based on a specified condition
    * @param {(number|object)} idOrCondition - The ID of the model instance to delete or an object containing the condition to match for the record to delete, e.g. { name: 'John', age: 25 }
    * @returns {Promise<object>} - A promise that resolves to an object containing the number of deleted records
    */
   static async deleteOne(idOrCondition) {
-    await this.fistSync();
     const where =
       typeof idOrCondition !== 'object' ? { [this.idAttr()]: idOrCondition } : idOrCondition;
     const result = await this.getCollection().destroy({
@@ -150,11 +186,17 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     };
   }
 
-  static getAdaptorParams({ id, collectionName = this.getConfig().collectionName, raw = true }) {
+  static getAdaptorParams({
+    id,
+    collectionName = this.getConfig().collectionName,
+    raw = true,
+    ...props
+  }) {
     return {
       id,
       collectionName,
       raw,
+      ...props,
     };
   }
 
@@ -162,11 +204,13 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     id = this.getId(),
     collectionName = this.getConfig().collectionName,
     raw = true,
+    ...props
   }) {
     return {
       id,
       collectionName,
       raw,
+      ...props,
     };
   }
 }

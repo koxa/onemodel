@@ -181,12 +181,14 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     collectionName = this.getConfig().collectionName,
     filter,
     raw = false,
+    ...props
   }) {
     return {
       id,
       collectionName,
       filter,
       raw,
+      ...props,
     };
   }
 }

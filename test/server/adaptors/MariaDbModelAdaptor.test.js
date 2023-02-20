@@ -15,11 +15,7 @@ describe('MariaDbModelAdaptor', () => {
 
   beforeAll(async () => {
     pool = await mariadb.createPool({
-      host: 'localhost',
-      port: 3306,
-      user: 'root',
-      password: 'root',
-      database: 'onemodel',
+      ...global.config.mariadb,
     });
     connection = await pool.getConnection();
     connection.release();

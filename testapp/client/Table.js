@@ -13,7 +13,7 @@ export default function createTable({
   document.querySelector(`#${name} button`).onclick = refreshClick;
 
   const updateButtonClick = async (id) => {
-    const inputs = document.querySelectorAll(`#i${id} input`);
+    const inputs = document.querySelectorAll(`#${name} #i${id} input`);
     if (inputs.length) {
       const value = {
         [idAttr]: id,
