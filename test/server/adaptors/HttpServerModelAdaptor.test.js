@@ -57,7 +57,7 @@ describe('HttpServerModelAdaptor', () => {
       expect(response).toEqual({ name: 'test-get' });
     });
 
-    it('', async () => {
+    it('should correctly handle a POST request with data', async () => {
       const response = await HttpServerModelAdaptor.request(
         mockPostParams.params,
         mockPostParams.data,
