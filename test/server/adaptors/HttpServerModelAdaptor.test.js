@@ -16,11 +16,15 @@ app.post('/test', (req, res) => {
 });
 
 describe('HttpServerModelAdaptor', () => {
+  const params = {
+    hostname: 'localhost',
+    port: port,
+    path: '/test',
+  };
+
   const mockGetParams = {
     params: {
-      hostname: 'localhost',
-      port: port,
-      path: '/test',
+      ...params,
       method: 'GET',
     },
     data: undefined,
@@ -28,9 +32,7 @@ describe('HttpServerModelAdaptor', () => {
 
   const mockPostParams = {
     params: {
-      hostname: 'localhost',
-      port: port,
-      path: '/test',
+      ...params,
       method: 'POST',
     },
     data: { text: 'test' },
