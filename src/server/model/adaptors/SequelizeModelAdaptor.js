@@ -160,7 +160,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   /**
-   * Deletes one or more documents from the MongoDB collection
+   * Deletes one or more documents from the collection
    * @param {object} params - The filter to be applied to the documents to be deleted
    * @returns {Promise<object>} - Returns the result of the deletion
    */
