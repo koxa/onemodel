@@ -35,7 +35,7 @@ class BaseAdaptor {
     return await this.read(url, id, params);
   }
 
-  static async count() {
+  static count() {
     throw new Error('COUNT method must be implemented in child Adaptor');
   }
 

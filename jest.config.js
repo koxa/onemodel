@@ -10,6 +10,9 @@ const settings = {
         database: 'onemodel',
       },
     },
+    location: {
+      protocol: 'http',
+    },
   },
 };
 
