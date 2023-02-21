@@ -19,16 +19,17 @@ class BaseModel extends Base {
    * @returns {{}} New object consisting of static _config copy + dynamic config functions
    */
   static getConfig(cfgProp) {
+    const config = { ...this._config, ...this.config };
     const getCfgVal = (prop) => {
-      return typeof this._config[prop] === 'function' && !isClass(this._config[prop])
-        ? this._config[prop].apply(this)
-        : this._config[prop];
+      return typeof config[prop] === 'function' && !isClass(config[prop])
+        ? config[prop].apply(this)
+        : config[prop];
     };
     if (cfgProp) {
       return getCfgVal(cfgProp);
     }
     const out = {};
-    for (let prop of Object.getOwnPropertyNames(this._config)) {
+    for (let prop of Object.getOwnPropertyNames(config)) {
       out[prop] = getCfgVal(prop);
     }
     return out;

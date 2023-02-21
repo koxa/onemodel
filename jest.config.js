@@ -11,7 +11,8 @@ const settings = {
       },
     },
     location: {
-      protocol: 'http',
+      hostname: 'localhost',
+      protocol: 'http:',
     },
   },
 };
