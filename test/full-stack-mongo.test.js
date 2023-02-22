@@ -43,7 +43,7 @@ describe('test block', () => {
     db = con.db(mongoServer.instanceInfo.dbName);
 
     /** CONFIGURE MODEL TO USE MONGO **/
-    MongoModel.configure({ mongo: mongodb, db: db });
+    MongoModel.configure({ mongo: mongodb, db: db, idAttr: '_id' });
   });
 
   afterAll(async () => {
