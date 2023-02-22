@@ -1,4 +1,4 @@
-import BaseAdaptor from '../../../../src/common/adaptors/BaseAdaptor';
+import BaseAdaptor from '../../../src/common/adaptors/BaseAdaptor';
 
 const setMockDataToAdaptor = (adaptor, id) => {
   adaptor.getId = jest.fn(() => id);
