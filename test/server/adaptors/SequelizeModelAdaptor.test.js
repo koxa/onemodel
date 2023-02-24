@@ -39,6 +39,7 @@ describe('SequelizeModelAdaptor', () => {
     });
 
     SequelizeModelTestModel.configure({
+      sequelize: Sequelize,
       db: sequelize,
       schemas: [userSchema],
       idAttr: 'id',
@@ -124,6 +125,50 @@ describe('SequelizeModelAdaptor', () => {
       expect(result.length).toBe(maxDocs + 1);
       expect(result[0]).toHaveProperty('id');
       expect(result[0]).toHaveProperty('firstName', `firstName ${testManyDocs.length}`);
+    });
+
+    it('checking filter parameters: $eq, $ne, $gt, $lt, $in, $regex', async () => {
+      const resultWhere = await SequelizeModelTestModel.read({
+        filter: { firstName: 'firstName 2' },
+      });
+      const resultEq = await SequelizeModelTestModel.read({
+        filter: { firstName: { $eq: 'firstName 3' } },
+      });
+      const resultNe = await SequelizeModelTestModel.read({
+        filter: { firstName: { $ne: 'firstName 4' } },
+      });
+      const resultGt = await SequelizeModelTestModel.read({
+        filter: { firstName: { $gt: 'firstName 4' } },
+      });
+      const resultLt = await SequelizeModelTestModel.read({
+        filter: { firstName: { $lt: 'firstName 4' } },
+      });
+      const resultRegexAll = await SequelizeModelTestModel.read({
+        filter: { firstName: { $regex: 'firstName' } },
+      });
+      const resultRegexOne = await SequelizeModelTestModel.read({
+        filter: { firstName: { $regex: '5' } },
+      });
+      const resultIn = await SequelizeModelTestModel.read({
+        filter: { firstName: { $in: ['firstName 4', 'firstName 5'] } },
+      });
+
+      expect(resultWhere[0].firstName).toBe('firstName 2');
+
+      expect(resultEq.length).toBe(1);
+      expect(resultEq[0].firstName).toBe('firstName 3');
+
+      expect(resultNe.length).toBe(9);
+      expect(resultNe.filter((result) => result.firstName === 'firstName 4').length).toBe(0);
+
+      expect(resultGt.length).toBe(5);
+      expect(resultLt.length).toBe(4);
+
+      expect(resultIn.length).toBe(2);
+      expect(resultIn.map((res) => res.firstName)).toStrictEqual(['firstName 4', 'firstName 5']);
+
+      expect(resultRegexAll.length).toBe(10);
+      expect(resultRegexOne.length).toBe(1);
     });
   });
 

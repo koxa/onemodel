@@ -27,6 +27,30 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     return db.collection(this.getConfig().collectionName);
   }
 
+  static buildFilter(filter) {
+    if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
+      return {};
+    }
+    const mongoOperators = ['$eq', '$ne', '$gt', '$lt', '$in', '$regex'];
+    const result = {};
+
+    Object.entries(filter).forEach(([key, val]) => {
+      if (mongoOperators.includes(key)) {
+        Object.entries(val).forEach(([op, value]) => {
+          if (op === '$regex') {
+            result[key] = new RegExp(value, 'i');
+          } else {
+            result[op === '$in' ? key : `${key}.${op}`] = value;
+          }
+        });
+      } else {
+        result[key] = val;
+      }
+    });
+
+    return getFilter(result);
+  }
+
   /**
    * Creates a new document in the MongoDB collection
    * @param {object} data - The data to be inserted in the collection
@@ -48,7 +72,11 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * @param {object} [params.sort] Object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of documents to return
    * @param {number} [params.skip] Count records to skip
-   * @param {object} [params.filter] An object containing filters to apply, e.g. { age: 18, gender: 'female' }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params={}] Object containing the query parameters, returns all values by default
    * @returns {Promise<Array>} Array of document objects returned by the query
@@ -64,8 +92,8 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       });
     }
 
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
-    const cursor = this.getCollection(collectionName).find(filters || {}, projection);
+    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const cursor = this.getCollection(collectionName).find(filters, projection);
 
     if (sort) {
       cursor.sort(sort);
@@ -116,7 +144,11 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * Updates an existing document in the MongoDB collection
    * @param {object} data - The data to be updated
    * @param {object} [params.id] The identifier of the document to be updated
-   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<boolean>} - Returns true if the document was updated, false otherwise
    * @throws {Error} - If the ID of the document to be updated is not defined
@@ -125,7 +157,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     const { id, collectionName, filter } = this.getAdaptorParams(params); //todo: ability to save
     const { mongo } = this.config;
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
+    const filters = this.buildFilter({ [this.config.idAttr]: mongoId, ...filter });
     if (!filters || !Object.keys(filters).length) {
       throw new Error(
         'MongoServerModelAdaptor update: "id" or "filter" must be defined to update model',
@@ -162,7 +194,11 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   /**
    * Deletes one or more documents from the MongoDB collection
    * @param {object} [params.id] The identifier of the document to be deleted
-   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
@@ -170,8 +206,8 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     const { mongo } = this.config;
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
-    return await this.getCollection(collectionName).deleteMany(filters || {});
+    const filters = this.buildFilter({ [this.config.idAttr]: mongoId, ...filter });
+    return await this.getCollection(collectionName).deleteMany(filters);
   }
 
   /**

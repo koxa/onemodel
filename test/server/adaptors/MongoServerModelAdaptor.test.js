@@ -116,6 +116,38 @@ describe('MongoServerModelAdaptor', () => {
       expect(result[0]).toHaveProperty('firstName', `firstName ${testManyDocs.length}`);
     });
 
+    it('checking filter parameters: $eq, $ne, $gt, $lt, $in, $regex', async () => {
+      const resultWhere = await MongoModel.read({ filter: { firstName: 'firstName 2' } });
+      const resultEq = await MongoModel.read({ filter: { firstName: { $eq: 'firstName 3' } } });
+      const resultNe = await MongoModel.read({ filter: { firstName: { $ne: 'firstName 4' } } });
+      const resultGt = await MongoModel.read({ filter: { firstName: { $gt: 'firstName 4' } } });
+      const resultLt = await MongoModel.read({ filter: { firstName: { $lt: 'firstName 4' } } });
+      const resultRegexAll = await MongoModel.read({
+        filter: { firstName: { $regex: 'firstName' } },
+      });
+      const resultRegexOne = await MongoModel.read({ filter: { firstName: { $regex: '5' } } });
+      const resultIn = await MongoModel.read({
+        filter: { firstName: { $in: ['firstName 4', 'firstName 5'] } },
+      });
+
+      expect(resultWhere[0].firstName).toBe('firstName 2');
+
+      expect(resultEq.length).toBe(1);
+      expect(resultEq[0].firstName).toBe('firstName 3');
+
+      expect(resultNe.length).toBe(9);
+      expect(resultNe.filter((result) => result.firstName === 'firstName 4').length).toBe(0);
+
+      expect(resultGt.length).toBe(5);
+      expect(resultLt.length).toBe(4);
+
+      expect(resultIn.length).toBe(2);
+      expect(resultIn.map((res) => res.firstName)).toStrictEqual(['firstName 4', 'firstName 5']);
+
+      expect(resultRegexAll.length).toBe(10);
+      expect(resultRegexOne.length).toBe(1);
+    });
+
     it('readOne(): should find a document in the MongoDB collection by ID', async () => {
       const result = await MongoModel.create({ ...testData }, {});
       const document = await MongoModel.readOne(result._id);
@@ -146,6 +178,17 @@ describe('MongoServerModelAdaptor', () => {
       const updateData = { ...testData, name: 'Updated User' };
       const updated = await MongoModel.update(updateData, { id: result._id });
       expect(updated).toBe(true);
+    });
+
+    it('should update a document in the collection', async () => {
+      const updateData = { ...testManyDocs[2], name: 'Updated User2' };
+      const updated = await MongoModel.update(updateData, {
+        filter: { firstName: 'firstName 3' },
+      });
+      const result = await MongoModel.read({ filter: { name: 'Updated User2' } });
+
+      expect(updated).toBe(true);
+      expect(result[0].name).toBe('Updated User2');
     });
   });
 

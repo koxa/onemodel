@@ -33,6 +33,7 @@ async function emailSequelizeRouter() {
 
   class Email extends ServerSequelizeModel {}
   Email.configure({
+    sequelize: Sequelize,
     db: sequelize,
     schemas: [EmailSchema],
     idAttr: 'id',

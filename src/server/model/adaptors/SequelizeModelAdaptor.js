@@ -4,6 +4,7 @@ import { getFilter, parseQuery } from '../../../utils';
 class SequelizeModelAdaptor extends BaseAdaptor {
   static _config = {
     ...BaseAdaptor._config,
+    sequelize: null,
     db: null,
     schemas: [],
     schemasParser: {},
@@ -63,6 +64,35 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     return schemasParser[collectionName];
   }
 
+  static buildFilter(filters) {
+    if (!filters || typeof filters !== 'object' || !Object.keys(filters).length) {
+      return undefined;
+    }
+    const { sequelize } = this.config;
+    const operators = {
+      $eq: sequelize.Op.eq,
+      $ne: sequelize.Op.ne,
+      $gt: sequelize.Op.gt,
+      $lt: sequelize.Op.lt,
+      $in: sequelize.Op.in,
+      $regex: sequelize.Op.regexp,
+    };
+    const result = {};
+    Object.entries(filters).forEach(([key, value]) => {
+      if (typeof value === 'object') {
+        const [operator, val] = Object.entries(value)[0];
+        if (operators[operator]) {
+          result[key] = { [operators[operator]]: val };
+        } else {
+          result[key] = value;
+        }
+      } else {
+        result[key] = value;
+      }
+    });
+    return getFilter(result);
+  }
+
   /**
    * Create a new model instance in the database
    * @param {object} data - The data for the new model instance
@@ -89,7 +119,11 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of rows to return
    * @param {number} [params.skip] Number of rows to skip before returning results
-   * @param {object} [params.filter] An object containing filters to apply, e.g. { age: 18, gender: 'female' }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {object} [params={}] Object containing the query parameters. Returns all values by default
    * @returns {Promise<Array>} A promise that resolves to an array of row objects returned by the query
    */
@@ -97,13 +131,13 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     const { id, collectionName, raw, columns, sort, limit, skip, filter } =
       this.getAdaptorParams(params);
     const collection = this.getCollection(collectionName);
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
     const query = {
       raw,
       limit: limit ? Number(limit) : undefined,
       offset: skip,
       attributes: columns,
-      where: getFilter(filters),
+      where: filters,
       order:
         typeof sort === 'object'
           ? Object.entries(sort).map(([column, direction]) => [
@@ -120,14 +154,18 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * Update model instances in the database
    * @param {object} data - The data to update the model instance with
    * @param {object} [params.id] The identifier of the document to be updated
-   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    * @throws {Error} - Throws an error if the WHERE parameters are not defined or the result array is empty
    */
   static async update(data, params) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
     const where = filters
       ? Object.entries(filters)
           .filter(([key]) => key !== 'raw' && key !== 'collectionName')
@@ -170,13 +208,17 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   /**
    * Deletes one or more documents from the collection
    * @param {object} [params.id] The identifier of the document to be deleted
-   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
   static async delete(params) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter }) || {};
+    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter }) || {};
     const deleted = await this.getCollection(collectionName).destroy({ where: filters });
     return { deletedCount: deleted };
   }

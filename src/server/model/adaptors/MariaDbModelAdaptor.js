@@ -128,6 +128,44 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     return collectionName;
   }
 
+  static buildFilter(data) {
+    const filter = getFilter(data);
+    if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
+      return '';
+    }
+    const filterKeys = Object.keys(filter);
+    const conditions = filterKeys.map((key) => {
+      const value = filter[key];
+      if (typeof value === 'object' && value !== null) {
+        const conditionKeys = Object.keys(value);
+        if (conditionKeys.length === 0) {
+          return '';
+        }
+        const operator = conditionKeys[0];
+        const conditionValue = value[operator];
+        switch (operator) {
+          case '$eq':
+            return `${key} = '${conditionValue}'`;
+          case '$ne':
+            return `${key} <> '${conditionValue}'`;
+          case '$gt':
+            return `${key} > '${conditionValue}'`;
+          case '$lt':
+            return `${key} < '${conditionValue}'`;
+          case '$in':
+            return `${key} IN (${conditionValue.map((val) => `'${val}'`).join(', ')})`;
+          case '$regex':
+            return `${key} REGEXP '${conditionValue}'`;
+          default:
+            return '';
+        }
+      } else {
+        return `${key} = '${value}'`;
+      }
+    });
+    return `WHERE ${conditions.filter((c) => c !== '').join(' AND ')}`;
+  }
+
   /**
    * Creates a new document in the collection
    * @param {object} data - Object containing the data to be inserted
@@ -159,7 +197,11 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @param {string} [params.id] Filter by id
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.columns] An object containing columns to select and their values, e.g. { id: true, name: true, email: false }
-   * @param {object} [params.filter] An object containing filter to apply, e.g. { age: 18, gender: 'female' }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of rows to return
    * @param {number} [params.skip] Number of rows to skip before returning results
@@ -174,20 +216,13 @@ class MariaDbModelAdaptor extends BaseAdaptor {
       this.getConnection(),
     ]);
 
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
-
+    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
     const columnsQuery = columns
       ? Object.entries(columns)
           .filter(([, value]) => value)
           .map(([key]) => key)
           .join(',')
       : '*';
-    const filterQuery = filters
-      ? Object.entries(filters)
-          .filter(([, value]) => value)
-          .map(([key, value]) => `${key} = '${value}'`)
-          .join(' AND ')
-      : '';
     const sortQuery = sort
       ? Object.entries(sort)
           .filter(([, value]) => value)
@@ -197,7 +232,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     const maxLimit = Number(9223372036854775807n);
 
     let query = `SELECT ${columnsQuery} FROM ${collectionName}`;
-    if (filterQuery) query += ` WHERE ${filterQuery}`;
+    if (filterQuery) query += ` ${filterQuery}`;
     query += ' GROUP BY id';
     if (sortQuery) query += ` ORDER BY ${sortQuery}`;
 
@@ -219,30 +254,30 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @param {object} data - Object containing the data to be updated
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.id] Filter by id
-   * @param {object} [params.filter] An object containing filter to apply, e.g. { age: 18, gender: 'female' }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @param {object} [params] - Object containing query parameters
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    */
   static async update(data, params) {
     const { id, collectionName, raw, filter } = this.getAdaptorParams(params);
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
-    if (!filters || !Object.keys(filters).length) {
+    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    if (!filterQuery) {
       throw new Error(
         'MariaDbModelAdaptor update: "id" or "filter" must be defined to update model',
       );
     }
-    const whereClause = Object.keys(filters)
-      .map((key) => `${key}='${filters[key]}'`)
-      .join(' AND ');
 
     const connection = await this.getConnection();
-
     const sets = Object.keys(data)
       .filter((key) => key !== 'id')
       .map((key) => `${key}='${data[key]}'`)
       .join(', ');
 
-    const query = `UPDATE ${collectionName} SET ${sets} WHERE ${whereClause}`;
+    const query = `UPDATE ${collectionName} SET ${sets} ${filterQuery}`;
 
     const { affectedRows } = await connection.query(query, raw);
     connection.end();
@@ -274,21 +309,19 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * Executes a request to delete documents from a collection.
    * @param {string} params.collectionName - The name of the collection to delete documents from.
    * @param {object} [params.id] Filter by id
-   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
+   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
+   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
+   *   { firstName: { $regex: 'firstName' } },
    * @returns {Promise<object>} - An object containing information about the operation, including the number of documents deleted.
    */
   static async delete(params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
     const connection = await this.getConnection();
-    const whereClause = filters
-      ? `WHERE ${Object.keys(filters)
-          .map((key) => `${key} = ?`)
-          .join(' AND ')}`
-      : '';
-    const values = filters ? Object.values(filters) : undefined;
-    const query = `DELETE FROM ${collectionName} ${whereClause}`;
-    const { affectedRows } = await connection.query(query, values);
+    const query = `DELETE FROM ${collectionName} ${filterQuery}`;
+    const { affectedRows } = await connection.query(query);
     connection.end();
     return {
       deletedCount: affectedRows,

@@ -143,7 +143,51 @@ describe('MariaDbModelAdaptor', () => {
       expect(result[2]).toHaveProperty('firstName', testDocs[8].firstName);
     });
 
-    it('read(): should return a sorted array of documents from the MongoDB collection', async () => {
+    it('checking filter parameters: $eq, $ne, $gt, $lt, $in, $regex', async () => {
+      const resultWhere = await TestTableMariaDbModel.read({
+        filter: { firstName: 'firstName2' },
+      });
+      const resultEq = await TestTableMariaDbModel.read({
+        filter: { firstName: { $eq: 'firstName3' } },
+      });
+      const resultNe = await TestTableMariaDbModel.read({
+        filter: { firstName: { $ne: 'firstName4' } },
+      });
+      const resultGt = await TestTableMariaDbModel.read({
+        filter: { firstName: { $gt: 'firstName4' } },
+      });
+      const resultLt = await TestTableMariaDbModel.read({
+        filter: { firstName: { $lt: 'firstName4' } },
+      });
+      const resultRegexAll = await TestTableMariaDbModel.read({
+        filter: { firstName: { $regex: 'firstName' } },
+      });
+      const resultRegexOne = await TestTableMariaDbModel.read({
+        filter: { firstName: { $regex: '5' } },
+      });
+      const resultIn = await TestTableMariaDbModel.read({
+        filter: { firstName: { $in: ['firstName4', 'firstName5'] } },
+      });
+
+      expect(resultWhere[0].firstName).toBe('firstName2');
+
+      expect(resultEq.length).toBe(1);
+      expect(resultEq[0].firstName).toBe('firstName3');
+
+      expect(resultNe.length).toBe(8);
+      expect(resultNe.filter((result) => result.firstName === 'firstName4').length).toBe(0);
+
+      expect(resultGt.length).toBe(5);
+      expect(resultLt.length).toBe(3);
+
+      expect(resultIn.length).toBe(2);
+      expect(resultIn.map((res) => res.firstName)).toStrictEqual(['firstName4', 'firstName5']);
+
+      expect(resultRegexAll.length).toBe(9);
+      expect(resultRegexOne.length).toBe(1);
+    });
+
+    it('read(): should return a sorted array of documents from the collection', async () => {
       const sortOptions = { firstName: -1 };
       const result = await TestTableMariaDbModel.read({ sort: sortOptions });
 
@@ -155,15 +199,26 @@ describe('MariaDbModelAdaptor', () => {
   });
 
   describe('update()', () => {
-    it('should update a document in the MongoDB collection', async () => {
+    it('should update a document in the collection', async () => {
       const updateData = { ...testDocs[0], comment: 'Updated User' };
       const updated = await TestTableMariaDbModel.update(updateData, { id: 1 });
       expect(updated).toBe(true);
     });
+
+    it('should update a document in the collection', async () => {
+      const updateData = { ...testDocs[1], comment: 'Updated User2' };
+      const updated = await TestTableMariaDbModel.update(updateData, {
+        filter: { firstName: 'firstName2' },
+      });
+      const result = await TestTableMariaDbModel.read({ filter: { firstName: 'firstName2' } });
+
+      expect(updated).toBe(true);
+      expect(result[0].comment).toBe('Updated User2');
+    });
   });
 
   describe('count()', () => {
-    it('should return the number of documents in the MongoDB collection', async () => {
+    it('should return the number of documents in the collection', async () => {
       const count = await TestTableMariaDbModel.count();
       // several documents are created during testing
       expect(count).toBe(maxUsers);
@@ -171,18 +226,23 @@ describe('MariaDbModelAdaptor', () => {
   });
 
   describe('delete()', () => {
-    it('delete(): should delete a document from the MongoDB collection', async () => {
+    it('delete(): should delete a document from the collection', async () => {
       const deleted = await TestTableMariaDbModel.delete({ id: 1 });
       expect(deleted).toStrictEqual({ deletedCount: 1 });
     });
 
-    it('deleteOne(): should delete a document from the MongoDB collection', async () => {
+    it('delete(): should remove document from collection by filter', async () => {
+      const deleted = await TestTableMariaDbModel.delete({ filter: { firstName: 'firstName3' } });
+      expect(deleted).toStrictEqual({ deletedCount: 1 });
+    });
+
+    it('deleteOne(): should delete a document from the collection', async () => {
       const deleted = await TestTableMariaDbModel.deleteOne(2);
       expect(deleted).toStrictEqual({ deletedCount: 1 });
     });
 
     it('delete all documents', async () => {
-      expect(await TestTableMariaDbModel.delete()).toStrictEqual({ deletedCount: 7 });
+      expect(await TestTableMariaDbModel.delete()).toStrictEqual({ deletedCount: 6 });
     });
 
     it('throws an error when ID is not defined', async () => {
