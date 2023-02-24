@@ -38,9 +38,16 @@ async function emailSequelizeRouter() {
     idAttr: 'id',
   });
 
+  router.get('/api/email/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log('GET /api/email', { id, ...req.query });
+    const user = await Email.read({ id, ...req.query });
+    res.json(user);
+  });
+
   router.get('/api/email', async (req, res) => {
-    console.log('GET /api/email');
-    const user = await Email.read();
+    console.log('GET /api/email', req.query);
+    const user = await Email.read(req.query);
     res.json(user);
   });
 

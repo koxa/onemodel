@@ -156,5 +156,10 @@ describe('SequelizeModelAdaptor', () => {
       const deleted = await SequelizeModelTestModel.deleteOne(result.id);
       expect(deleted).toStrictEqual({ deletedCount: 1 });
     });
+
+    it('delete(): delete all documents', async () => {
+      const deleted = await SequelizeModelTestModel.delete();
+      expect(deleted).toStrictEqual({ deletedCount: 11 });
+    });
   });
 });

@@ -1,4 +1,5 @@
 import BaseAdaptor from '../../adaptors/BaseAdaptor';
+import { getFilter } from '../../../utils';
 
 class HttpModelAdaptor extends BaseAdaptor {
   static _config = {
@@ -88,9 +89,10 @@ class HttpModelAdaptor extends BaseAdaptor {
       }
     }
 
-    let { hostname, prefix, port, collectionName, path, raw, method } = { ...params };
+    let { hostname, prefix, port, collectionName, path, raw, method, sort, limit, skip, columns } =
+      { ...params };
     id = id || params.id;
-    filter = filter || params.filter;
+    filter = { ...filter, ...params.filter };
     method = method || 'GET';
 
     const normalizedParams = this.getAdaptorParams({
@@ -103,6 +105,10 @@ class HttpModelAdaptor extends BaseAdaptor {
       filter,
       raw,
       method,
+      sort,
+      limit,
+      skip,
+      columns,
     });
     return await this.request(normalizedParams);
   }
@@ -127,18 +133,20 @@ class HttpModelAdaptor extends BaseAdaptor {
     prefix = this.getConfig().prefix,
     port = this.getConfig().port,
     collectionName = this.getConfig().collectionName,
-    filter,
     raw = false,
     method,
+    filter,
+    sort,
+    limit,
+    skip,
+    columns,
   }) {
     if (!path) {
       path = `/${prefix}/${collectionName}` + (id ? `/${id}` : '');
     }
-    if (filter && typeof filter === 'object' && Object.keys(filter).length) {
-      // if filter is not empty
-      // convert filter to querystring
-      path += '?' + new URLSearchParams(filter);
-    }
+
+    const queryParams = getFilter({ filter, sort, limit, skip, columns });
+
     return {
       id,
       path,
@@ -146,6 +154,7 @@ class HttpModelAdaptor extends BaseAdaptor {
       port,
       method,
       raw,
+      queryParams,
     };
   }
 
@@ -156,10 +165,20 @@ class HttpModelAdaptor extends BaseAdaptor {
     prefix = this.getConfig().prefix,
     port = this.getConfig().port,
     collectionName = this.getConfig().collectionName,
-    filter,
     raw = false,
     method,
+    filter,
+    sort,
+    limit,
+    skip,
+    columns,
   }) {
+    if (!path) {
+      path = `/${prefix}/${collectionName}` + (id ? `/${id}` : '');
+    }
+
+    const queryParams = getFilter({ filter, sort, limit, skip, columns });
+
     return {
       id,
       path,
@@ -167,9 +186,9 @@ class HttpModelAdaptor extends BaseAdaptor {
       port,
       prefix,
       collectionName,
-      filter,
       raw,
       method,
+      queryParams,
     };
   }
 }

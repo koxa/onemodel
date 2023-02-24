@@ -1,41 +1,74 @@
+import fetch from 'cross-fetch';
 const mongodb = require('mongodb');
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { OneModel } from '../src';
 import { BaseModel } from '../src';
 import express from 'express';
 import MongoServerModelAdaptor from '../src/server/model/adaptors/MongoServerModelAdaptor';
+import HttpClientModelAdaptor from '../src/client/model/adaptors/HttpClientModelAdaptor';
 const app = express();
-const port = 9444;
+const port = 9445;
+const maxDocs = 9;
+
+global.window = {};
+global.fetch = fetch;
 
 //todo: configure OneModel to use Mongo Adaptor
 class MongoModel extends BaseModel {}
 MongoModel.addMixins([MongoServerModelAdaptor]);
 
-// /** POST **/
-// app.post('/api/onemodel',async (req, res) => {
-//     //save onemodel to mongo
-//     try {
-//         const john = new MongoModel(req.data);
-//         await john.save();
-//     } catch (err) {
-//         console.log(err);
-//     }
-//     res.status(200).json({name: 'JOHN saved'});
-// });
-//
-// app.post('/api/user', (req, res) => {
-//     //save user
-//     res.status(200).json({name: 'michael'});
-// });
+class OneModel extends BaseModel {}
+OneModel.addMixins([HttpClientModelAdaptor]);
+
+/** POST **/
+/*app.post('/api/onemodel', async (req, res) => {
+  //save onemodel to mongo
+  try {
+    const john = new MongoModel(req.data);
+    await john.save();
+  } catch (err) {
+    console.log(err);
+  }
+  res.status(200).json({ name: 'JOHN saved' });
+});
+
+*/
+
+/*app.post('/api/user', (req, res) => {
+  //save user
+  res.status(200).json({ name: 'michael' });
+});*/
+
+app.get(`/api/${OneModel.name}`, async (req, res) => {
+  const params = req.params;
+  const user = await MongoModel.read(params);
+  res.json(user);
+});
+
+app.post(`/api/${OneModel.name}`, async (req, res) => {
+  const user = new MongoModel(req.body);
+  res.json(await user.save());
+});
+
+app.put(`/api/${OneModel.name}/:_id`, async (req, res) => {
+  const { _id } = req.params;
+  const user = new MongoModel({ _id, ...req.body });
+  res.json(await user.save());
+});
+
+app.delete(`/api/${OneModel.name}/:_id`, async (req, res) => {
+  const { _id } = req.params;
+  res.json(await MongoModel.deleteOne(_id));
+});
 
 describe('test block', () => {
   let httpServer;
   let con;
   let mongoServer;
   let db;
+  const testDocs = [];
 
   beforeAll(async () => {
-    //httpServer = await app.listen(port, () => {});
+    httpServer = await app.listen(port, () => {});
 
     /** STAR MONGO MEMORY SERVER **/
     mongoServer = await MongoMemoryServer.create();
@@ -44,6 +77,19 @@ describe('test block', () => {
 
     /** CONFIGURE MODEL TO USE MONGO **/
     MongoModel.configure({ mongo: mongodb, db: db, idAttr: '_id' });
+
+    /** CONFIGURE CLIENT MODEL **/
+    OneModel.configure({ port }); // preconfigure port for all tests
+
+    /** CREATE TEST DATA */
+    [...Array(maxDocs).keys()].forEach((i) => {
+      const user = { firstName: `firstName ${i + 1}`, lastName: `lastName ${i + 1}` };
+      testDocs.push(user);
+    });
+
+    await testDocs.reduce((prevPromise, value) => {
+      return prevPromise.then(() => MongoModel.create({ ...value }, {}));
+    }, Promise.resolve());
   });
 
   afterAll(async () => {
@@ -53,9 +99,9 @@ describe('test block', () => {
     if (mongoServer) {
       await mongoServer.stop();
     }
-    // if (httpServer) {
-    //     await httpServer.close();
-    // }
+    if (httpServer) {
+      await httpServer.close();
+    }
   });
 
   it('should successfully set & get information from the database', async () => {
@@ -76,36 +122,10 @@ describe('test block', () => {
     expect(model.firstName).toBe('HuiSobachiy');
   });
 
-  it('should', async () => {});
-
-  // beforeAll(async () => {
-  //     httpServer = await app.listen(port, () => {});
-  //
-  //     /** STAR MONGO MEMORY SERVER **/
-  //     mongoServer = await MongoMemoryServer.create();
-  //     mongoConnection = await MongoClient.connect(mongoServer.getUri(), {});
-  //     db = mongoConnection.db(mongoServer.instanceInfo.dbName);
-  //
-  //     /** CONFIGURE MODEL TO USE MONGO **/
-  //     MongoModel.configure({mongo: MongoClient, driver: db});
-  //
-  //     /** CONFIGURE CLIENT MODEL **/
-  //     Model.configure({port}); // preconfigure port for all tests
-  // });
-  //
-  // afterAll(async () => {
-  //     await httpServer.close();
-  //     if (mongoConnection) {
-  //         await mongoConnection.close();
-  //     }
-  //     if (mongoServer) {
-  //         await mongoServer.stop();
-  //     }
-  // });
-  //
-  // test('should save model to mongo', async ()  => {
-  //     const user = new Model({name: 'John'});
-  //     await user.save();
-  //     expect(user.name).toBe('JOHN saved');
-  // });
+  it('should save model to mongo', async () => {
+    const user = new OneModel({ firstName: 'ValeryTest', lastName: 'ValentinTest' });
+    const result = await user.save();
+    expect(user.firstName).toBe('ValeryTest');
+    expect(result).toHaveProperty('_id');
+  });
 });

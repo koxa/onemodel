@@ -160,7 +160,7 @@ describe('MongoServerModelAdaptor', () => {
   describe('delete()', () => {
     it('delete(): should delete a document from the MongoDB collection', async () => {
       const result = await MongoModel.create({ ...testData }, {});
-      const deleted = await MongoModel.delete({ _id: result._id });
+      const deleted = await MongoModel.delete({ id: result._id });
       expect(deleted).toStrictEqual({ acknowledged: true, deletedCount: 1 });
     });
 
@@ -168,6 +168,11 @@ describe('MongoServerModelAdaptor', () => {
       const result = await MongoModel.create({ ...testData }, {});
       const deleted = await MongoModel.deleteOne(result._id);
       expect(deleted).toStrictEqual({ acknowledged: true, deletedCount: 1 });
+    });
+
+    it('delete(): delete all documents', async () => {
+      const deleted = await MongoModel.delete();
+      expect(deleted).toStrictEqual({ acknowledged: true, deletedCount: 12 });
     });
   });
 });

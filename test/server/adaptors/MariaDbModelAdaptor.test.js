@@ -109,8 +109,8 @@ describe('MariaDbModelAdaptor', () => {
       expect(result[0].firstName).toBe('firstName2');
     });
 
-    it('read(): testing only the filters parameter', async () => {
-      const result = await TestTableMariaDbModel.read({ filters: { firstName: 'firstName4' } });
+    it('read(): testing only the filter parameter', async () => {
+      const result = await TestTableMariaDbModel.read({ filter: { firstName: 'firstName4' } });
       expect(result[0].firstName).toBe('firstName4');
     });
 
@@ -172,7 +172,7 @@ describe('MariaDbModelAdaptor', () => {
 
   describe('delete()', () => {
     it('delete(): should delete a document from the MongoDB collection', async () => {
-      const deleted = await TestTableMariaDbModel.delete({ where: { id: 1 } });
+      const deleted = await TestTableMariaDbModel.delete({ id: 1 });
       expect(deleted).toStrictEqual({ deletedCount: 1 });
     });
 
@@ -181,10 +181,8 @@ describe('MariaDbModelAdaptor', () => {
       expect(deleted).toStrictEqual({ deletedCount: 1 });
     });
 
-    it('throws an error when ID is not defined', async () => {
-      await expect(TestTableMariaDbModel.delete()).rejects.toThrow(
-        'MariaDbModelAdaptor delete: "where" parameter must be provided',
-      );
+    it('delete all documents', async () => {
+      expect(await TestTableMariaDbModel.delete()).toStrictEqual({ deletedCount: 7 });
     });
 
     it('throws an error when ID is not defined', async () => {

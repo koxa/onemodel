@@ -1,4 +1,5 @@
 import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
+import { getFilter, parseQuery } from '../../../utils';
 //todo: move to separate package
 
 class MongoServerModelAdaptor extends BaseAdaptor {
@@ -42,15 +43,29 @@ class MongoServerModelAdaptor extends BaseAdaptor {
 
   /**
    * Executes a request to read data from a collection
+   * @param {object} [params.id] Filter by id
+   * @param {object} [params.columns] An object containing columns to select and their values, e.g. { name: true, email: false }
    * @param {object} [params.sort] Object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of documents to return
    * @param {number} [params.skip] Count records to skip
-   * @param {object} [params={}] Object containing the query parameters, e.g. { id: '123', name: 'John' }. Returns all values by default
+   * @param {object} [params.filter] An object containing filters to apply, e.g. { age: 18, gender: 'female' }
+   * @param {string} [params.collectionName] The name of the table to select data from
+   * @param {object} [params={}] Object containing the query parameters, returns all values by default
    * @returns {Promise<Array>} Array of document objects returned by the query
    */
   static async read(params = {}) {
-    const { sort, limit, skip, ...query } = params;
-    const cursor = this.getCollection().find(query);
+    const { id, collectionName, sort, limit, skip, filter, columns } =
+      this.getAdaptorParams(params);
+    const projection = {};
+
+    if (columns) {
+      Object.keys(columns).forEach((key) => {
+        projection[key] = columns[key] ? 1 : 0;
+      });
+    }
+
+    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    const cursor = this.getCollection(collectionName).find(filters || {}, projection);
 
     if (sort) {
       cursor.sort(sort);
@@ -100,25 +115,27 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   /**
    * Updates an existing document in the MongoDB collection
    * @param {object} data - The data to be updated
-   * @param {string} [id] - The identifier of the document to be updated
+   * @param {object} [params.id] The identifier of the document to be updated
+   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<boolean>} - Returns true if the document was updated, false otherwise
    * @throws {Error} - If the ID of the document to be updated is not defined
    */
-  static async update(data, { id, collectionName, filter, raw }) {
-    const params = this.getAdaptorParams({ id, collectionName, filter, raw }); //todo: ability to save
-    if (!params.id) {
-      throw new Error('MongoServerModelAdaptor update: ID must be defined to update model');
-    }
+  static async update(data, params = {}) {
+    const { id, collectionName, filter } = this.getAdaptorParams(params); //todo: ability to save
     const { mongo } = this.config;
-    const myID = params.id instanceof mongo.ObjectID ? params.id : new mongo.ObjectID(params.id); //todo: ObjectID is deprecated //todo: move to getAdaptorParams
+    const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
+    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
+    if (!filters || !Object.keys(filters).length) {
+      throw new Error(
+        'MongoServerModelAdaptor update: "id" or "filter" must be defined to update model',
+      );
+    }
     const myData = { ...data };
     delete myData[this.config.idAttr];
     let result;
     try {
-      result = await this.getCollection().updateOne(
-        { [this.config.idAttr]: myID },
-        { $set: myData },
-      );
+      result = await this.getCollection(collectionName).updateOne({ ...filters }, { $set: myData });
     } catch (err) {
       throw new Error(
         'MongoServerModelAdaptor update: MongoDB error during updateOne: ' + err.toString(),
@@ -144,45 +161,60 @@ class MongoServerModelAdaptor extends BaseAdaptor {
 
   /**
    * Deletes one or more documents from the MongoDB collection
-   * @param {object} params - The filter to be applied to the documents to be deleted
+   * @param {object} [params.id] The identifier of the document to be deleted
+   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
+   * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
   static async delete(params) {
-    return await this.getCollection().deleteMany(params);
+    const { mongo } = this.config;
+    const { id, collectionName, filter } = this.getAdaptorParams(params);
+    const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
+    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
+    return await this.getCollection(collectionName).deleteMany(filters || {});
   }
 
   /**
    * Deletes one document from the MongoDB collection
    * @param {string} id - The identifier of the document to be deleted
+   * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
-  static async deleteOne(id) {
+  static async deleteOne(id, params = {}) {
+    if (!id) {
+      throw new Error('MongoServerModelAdaptor deleteOne: "id" must be defined');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
     const { mongo } = this.config;
     const _id = new mongo.ObjectID(id);
-    return await this.getCollection().deleteOne({ _id });
+    return await this.getCollection(collectionName).deleteOne({ _id });
   }
 
-  static getAdaptorParams({
-    id,
-    collectionName = this.getConfig().collectionName,
-    filter,
-    raw = false,
-  }) {
+  static getAdaptorParams(params = {}) {
+    const {
+      id,
+      collectionName = this.getConfig().collectionName,
+      filter,
+      raw = false,
+      ...props
+    } = parseQuery(params);
     return {
       id,
       collectionName,
       filter,
       raw,
+      ...props,
     };
   }
 
-  getAdaptorParams({
-    id = this.getId(),
-    collectionName = this.getConfig().collectionName,
-    filter,
-    raw = false,
-    ...props
-  }) {
+  getAdaptorParams(params = {}) {
+    const {
+      id = this.getId(),
+      collectionName = this.getConfig().collectionName,
+      filter,
+      raw = false,
+      ...props
+    } = parseQuery(params);
     return {
       id,
       collectionName,

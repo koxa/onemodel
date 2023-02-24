@@ -1,5 +1,5 @@
 import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
-
+import { getFilter, parseQuery } from '../../../utils';
 class MariaDbModelAdaptor extends BaseAdaptor {
   static _config = {
     ...BaseAdaptor._config,
@@ -156,9 +156,10 @@ class MariaDbModelAdaptor extends BaseAdaptor {
 
   /**
    * Executes a request to read data from a collection
+   * @param {string} [params.id] Filter by id
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.columns] An object containing columns to select and their values, e.g. { id: true, name: true, email: false }
-   * @param {object} [params.filters] An object containing filters to apply, e.g. { age: 18, gender: 'female' }
+   * @param {object} [params.filter] An object containing filter to apply, e.g. { age: 18, gender: 'female' }
    * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of rows to return
    * @param {number} [params.skip] Number of rows to skip before returning results
@@ -166,45 +167,46 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @returns {Promise<Array>} A promise that resolves to an array of row objects returned by the query
    */
   static async read(params = {}) {
-    const { collectionName } = this.getAdaptorParams(params);
+    const { id, collectionName, columns, filter, sort, limit, skip } =
+      this.getAdaptorParams(params);
     const [, connection] = await Promise.all([
       this.firstCheckAndCreateTable(collectionName),
       this.getConnection(),
     ]);
 
-    const limit = params.limit || null;
-    const columns = params.columns
-      ? Object.entries(params.columns)
+    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+
+    const columnsQuery = columns
+      ? Object.entries(columns)
           .filter(([, value]) => value)
           .map(([key]) => key)
           .join(',')
       : '*';
-    const filters = params.filters
-      ? Object.entries(params.filters)
+    const filterQuery = filters
+      ? Object.entries(filters)
           .filter(([, value]) => value)
           .map(([key, value]) => `${key} = '${value}'`)
           .join(' AND ')
       : '';
-    const sort = params.sort
-      ? Object.entries(params.sort)
+    const sortQuery = sort
+      ? Object.entries(sort)
           .filter(([, value]) => value)
           .map(([key, value]) => `${key} ${value === 1 ? 'ASC' : 'DESC'}`)
           .join(',')
       : '';
-    const skip = params.skip || 0;
     const maxLimit = Number(9223372036854775807n);
 
-    let query = `SELECT ${columns} FROM ${collectionName}`;
-    if (filters) query += ` WHERE ${filters}`;
+    let query = `SELECT ${columnsQuery} FROM ${collectionName}`;
+    if (filterQuery) query += ` WHERE ${filterQuery}`;
     query += ' GROUP BY id';
-    if (sort) query += ` ORDER BY ${sort}`;
+    if (sortQuery) query += ` ORDER BY ${sortQuery}`;
 
     if (limit && !skip) {
-      query += ` LIMIT ${limit}`;
+      query += ` LIMIT ${Number(limit)}`;
     } else if (limit && skip) {
-      query += ` LIMIT ${skip}, ${limit}`;
+      query += ` LIMIT ${Number(skip)}, ${Number(limit)}`;
     } else if (!limit && skip) {
-      query += ` LIMIT ${skip}, ${maxLimit}`;
+      query += ` LIMIT ${Number(skip)}, ${maxLimit}`;
     }
 
     const rows = await connection.query(query);
@@ -215,18 +217,23 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   /**
    * Updates an existing document in the collection
    * @param {object} data - Object containing the data to be updated
+   * @param {string} [params.collectionName] The name of the table to select data from
+   * @param {object} [params.id] Filter by id
+   * @param {object} [params.filter] An object containing filter to apply, e.g. { age: 18, gender: 'female' }
    * @param {object} [params] - Object containing query parameters
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    */
   static async update(data, params) {
-    const { collectionName, raw, ...whereParams } = this.getAdaptorParams(params);
-    const whereClause = Object.keys(whereParams)
-      .map((key) => `${key}='${whereParams[key]}'`)
-      .join(' AND ');
-
-    if (!whereClause) {
-      throw new Error('MariaDbModelAdaptor update: WHERE clause must be defined to update model');
+    const { id, collectionName, raw, filter } = this.getAdaptorParams(params);
+    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    if (!filters || !Object.keys(filters).length) {
+      throw new Error(
+        'MariaDbModelAdaptor update: "id" or "filter" must be defined to update model',
+      );
     }
+    const whereClause = Object.keys(filters)
+      .map((key) => `${key}='${filters[key]}'`)
+      .join(' AND ');
 
     const connection = await this.getConnection();
 
@@ -245,6 +252,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   /**
    * Deletes a document with the given ID from the collection
    * @param {number} id - The ID of the document to delete
+   * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params={}] - Object containing parameters that affect the behavior of the function, e.g. { collectionName: 'test' }
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the deletion was successful
    */
@@ -265,19 +273,20 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   /**
    * Executes a request to delete documents from a collection.
    * @param {string} params.collectionName - The name of the collection to delete documents from.
-   * @param {object} params.where - An object specifying the filter criteria, e.g. { id: 1 }
+   * @param {object} [params.id] Filter by id
+   * @param {object} [params.filter] - An object specifying the filter criteria, e.g. { age: 1 }
    * @returns {Promise<object>} - An object containing information about the operation, including the number of documents deleted.
    */
   static async delete(params = {}) {
-    const { collectionName, where } = this.getAdaptorParams(params);
-    if (!where || Object.keys(where).length === 0) {
-      throw new Error('MariaDbModelAdaptor delete: "where" parameter must be provided');
-    }
+    const { id, collectionName, filter } = this.getAdaptorParams(params);
+    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
     const connection = await this.getConnection();
-    const whereClause = `WHERE ${Object.keys(where)
-      .map((key) => `${key} = ?`)
-      .join(' AND ')}`;
-    const values = Object.values(where);
+    const whereClause = filters
+      ? `WHERE ${Object.keys(filters)
+          .map((key) => `${key} = ?`)
+          .join(' AND ')}`
+      : '';
+    const values = filters ? Object.values(filters) : undefined;
     const query = `DELETE FROM ${collectionName} ${whereClause}`;
     const { affectedRows } = await connection.query(query, values);
     connection.end();
@@ -300,23 +309,34 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     return Number(result.count);
   }
 
-  static getAdaptorParams({ id, collectionName = this.getCollection(), raw = true, ...props }) {
+  static getAdaptorParams(params = {}) {
+    const {
+      id,
+      collectionName = this.getCollection(),
+      raw = true,
+      filter,
+      ...props
+    } = parseQuery(params);
     return {
       id,
       collectionName,
       raw,
+      filter,
       ...props,
     };
   }
 
-  getAdaptorParams({
-    id = this.getId(),
-    collectionName = this.getConfig().collectionName,
-    ...props
-  }) {
+  getAdaptorParams(params = {}) {
+    const {
+      id = this.getId(),
+      collectionName = this.getConfig().collectionName,
+      filter,
+      ...props
+    } = parseQuery(params);
     return {
       id,
       collectionName,
+      filter,
       ...props,
     };
   }

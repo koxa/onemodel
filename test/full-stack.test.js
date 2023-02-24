@@ -1,9 +1,10 @@
+import express from 'express';
 import fetch from 'cross-fetch';
 global.window = {}; // simulate window here
 global.fetch = fetch;
 //import { OneModel as Model } from '../src';
 import Model from '../src/client/model/ClientModel';
-import express from 'express';
+import { parseQuery } from '../src/utils';
 
 const app = express();
 const port = 9333;
@@ -23,9 +24,10 @@ app.post('/api/user', (req, res) => {
 /** GET **/
 app.get(`/api/${name}/1`, (req, res) => {
   //read user by ID 1
-  if (req.query && req.query.name) {
+  const { filter } = parseQuery(req.query);
+  if (filter && filter.name) {
     // for filter test
-    res.status(200).json({ name: req.query.name.toUpperCase() });
+    res.status(200).json({ name: filter.name.toUpperCase() });
   } else {
     // for read tests
     res.status(200).json({ name: 'ethan' });
@@ -34,8 +36,9 @@ app.get(`/api/${name}/1`, (req, res) => {
 
 app.get(`/api/${name}`, (req, res) => {
   // find user by name using filter (querystring)
-  if (req.query && req.query.name) {
-    res.status(200).json({ name: req.query.name });
+  const { filter } = parseQuery(req.query);
+  if (filter && filter.name) {
+    res.status(200).json({ name: filter.name });
   }
 });
 
@@ -99,7 +102,7 @@ describe('test block', () => {
     await user.save({ port });
     expect(user.name).toBe('michael');
   });
-  `   `;
+
   test('should save User model via http adaptor with converter', async () => {
     class User extends Model {
       static _config = {

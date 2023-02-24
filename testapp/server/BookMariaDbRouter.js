@@ -23,9 +23,16 @@ async function bookMariaDbRouter() {
     },
   });
 
+  router.get('/api/book/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log('GET /api/book', { id, ...req.query });
+    const book = await Book.read({ id, ...req.query });
+    res.json(book);
+  });
+
   router.get('/api/book', async (req, res) => {
-    console.log('GET /api/book');
-    const book = await Book.read();
+    console.log('GET /api/book', req.query);
+    const book = await Book.read(req.query);
     res.json(book);
   });
 

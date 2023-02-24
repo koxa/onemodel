@@ -16,9 +16,16 @@ async function userMongoDbRouter() {
     idAttr: '_id',
   });
 
+  router.get('/api/user/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log('GET /api/user', { id, ...req.query });
+    const user = await User.read({ id, ...req.query });
+    res.json(user);
+  });
+
   router.get('/api/user', async (req, res) => {
-    console.log('GET /api/user');
-    const user = await User.read();
+    console.log('GET /api/user', req.query);
+    const user = await User.read(req.query);
     res.json(user);
   });
 

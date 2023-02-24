@@ -1,7 +1,9 @@
 import HttpModelAdaptor from '../../../common/model/adaptors/HttpModelAdaptor';
+import { convertToUrlQuery } from '../../../utils';
 
 class HttpClientModelAdaptor extends HttpModelAdaptor {
-  static async request({ hostname, path, port, method, protocol }, data = {}) {
+  static async request({ hostname, path, port, method, protocol, queryParams }, data = {}) {
+    let queryString = '';
     hostname = hostname || (typeof location !== 'undefined' && location.hostname);
     port = port || (typeof location !== 'undefined' && location.port);
     if (!hostname || !path || !port || !method) {
@@ -10,7 +12,13 @@ class HttpClientModelAdaptor extends HttpModelAdaptor {
       );
     }
     protocol = protocol || (typeof location !== 'undefined' && location.protocol) || '';
-    const url = `${protocol}//${hostname}:${port}${path}`;
+
+    if (queryParams) {
+      queryString = convertToUrlQuery(queryParams);
+    }
+
+    const url = `${protocol}//${hostname}:${port}${path}${queryString}`;
+
     try {
       const response = await fetch(url, {
         method,
