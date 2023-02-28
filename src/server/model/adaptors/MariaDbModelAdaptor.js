@@ -1,5 +1,5 @@
 import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
-import { getFilter, parseQuery } from '../../../utils';
+import { getFilter } from '../../../utils';
 class MariaDbModelAdaptor extends BaseAdaptor {
   static _config = {
     ...BaseAdaptor._config,
@@ -342,14 +342,13 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     return Number(result.count);
   }
 
-  static getAdaptorParams(params = {}) {
-    const {
-      id,
-      collectionName = this.getCollection(),
-      raw = true,
-      filter,
-      ...props
-    } = parseQuery(params);
+  static getAdaptorParams({
+    id,
+    collectionName = this.getCollection(),
+    raw = true,
+    filter,
+    ...props
+  }) {
     return {
       id,
       collectionName,
@@ -359,13 +358,12 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     };
   }
 
-  getAdaptorParams(params = {}) {
-    const {
-      id = this.getId(),
-      collectionName = this.getConfig().collectionName,
-      filter,
-      ...props
-    } = parseQuery(params);
+  getAdaptorParams({
+    id = this.getId(),
+    collectionName = this.getConfig().collectionName,
+    filter,
+    ...props
+  }) {
     return {
       id,
       collectionName,

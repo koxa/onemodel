@@ -18,7 +18,12 @@ module.exports = [
       path: path.resolve('dist'),
       filename: 'onemodel.umd.js',
     },
-    plugins: [new NodePolyfillPlugin()],
+    plugins: [
+      new NodePolyfillPlugin(),
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('web'),
+      }),
+    ],
     module: {
       rules: [
         {
@@ -61,6 +66,11 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
+    plugins: [
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('node'),
+      }),
+    ],
     // devtool: 'source-map',
     externals: [nodeExternals()],
   },

@@ -1,6 +1,7 @@
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 const { ServerSequelizeModel } = require('../../dist/onemodel.common.dev');
+const { getQueryParams } = require('../../src/utils/node/index');
 
 async function emailSequelizeRouter() {
   const router = express.Router();
@@ -41,14 +42,16 @@ async function emailSequelizeRouter() {
 
   router.get('/api/email/:id', async (req, res) => {
     const { id } = req.params;
-    console.log('GET /api/email', { id, ...req.query });
-    const user = await Email.read({ id, ...req.query });
+    const searchParams = getQueryParams(req);
+    console.log('GET /api/email', { id, ...searchParams });
+    const user = await Email.read({ id, ...searchParams });
     res.json(user);
   });
 
   router.get('/api/email', async (req, res) => {
-    console.log('GET /api/email', req.query);
-    const user = await Email.read(req.query);
+    const searchParams = getQueryParams(req);
+    console.log('GET /api/email', searchParams);
+    const user = await Email.read(searchParams);
     res.json(user);
   });
 

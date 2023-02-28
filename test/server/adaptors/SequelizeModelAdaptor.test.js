@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 import SequelizeModelAdaptor from '../../../src/server/model/adaptors/SequelizeModelAdaptor';
-import { BaseModel } from '../../../src';
+import BaseModel from '../../../src/common/model/BaseModel';
 
 class SequelizeModelTestModel extends BaseModel {}
 SequelizeModelTestModel.addMixins([SequelizeModelAdaptor]);

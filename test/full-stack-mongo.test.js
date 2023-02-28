@@ -1,7 +1,9 @@
+process.env.WEBPACK_TARGET = 'node';
+
 import fetch from 'cross-fetch';
 const mongodb = require('mongodb');
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { BaseModel } from '../src';
+import BaseModel from '../src/common/model/BaseModel';
 import express from 'express';
 import MongoServerModelAdaptor from '../src/server/model/adaptors/MongoServerModelAdaptor';
 import HttpClientModelAdaptor from '../src/client/model/adaptors/HttpClientModelAdaptor';

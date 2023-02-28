@@ -1,14 +1,13 @@
 import express from 'express';
 import fetch from 'cross-fetch';
-global.window = {}; // simulate window here
-global.fetch = fetch;
-//import { OneModel as Model } from '../src';
 import Model from '../src/client/model/ClientModel';
-import { parseQuery } from '../src/utils';
+global.fetch = fetch;
+const { getQueryParams } = require('../src/utils/node/index');
 
 const app = express();
 const port = 9333;
 const name = Model.name;
+const queryId = 10;
 
 /** POST **/
 app.post(`/api/${name}`, (req, res) => {
@@ -24,7 +23,7 @@ app.post('/api/user', (req, res) => {
 /** GET **/
 app.get(`/api/${name}/1`, (req, res) => {
   //read user by ID 1
-  const { filter } = parseQuery(req.query);
+  const { filter } = getQueryParams(req);
   if (filter && filter.name) {
     // for filter test
     res.status(200).json({ name: filter.name.toUpperCase() });
@@ -36,10 +35,15 @@ app.get(`/api/${name}/1`, (req, res) => {
 
 app.get(`/api/${name}`, (req, res) => {
   // find user by name using filter (querystring)
-  const { filter } = parseQuery(req.query);
+  const { filter } = getQueryParams(req);
   if (filter && filter.name) {
     res.status(200).json({ name: filter.name });
   }
+});
+
+app.get(`/api/${name}/${queryId}`, (req, res) => {
+  const queryParams = getQueryParams(req);
+  res.status(200).json(queryParams);
 });
 
 describe('test block', () => {
@@ -119,5 +123,80 @@ describe('test block', () => {
     expect(user.name).toBe('JOHN');
     const resp = await user.save({ port });
     expect(user.name).toBe('MICHAEL');
+  });
+
+  test('should check URL query params', async () => {
+    const queryTestEmpty = {};
+
+    const queryTestFull = {
+      limit: 5,
+      sort: { name: 1, comment: -1, testField: 0 },
+      columns: { fields: 1, fields2: 0 },
+      filter: {
+        field1: { $lt: 5 },
+        field2: { $ne: 5 },
+        field3: 'field3',
+        field4: { $eq: 'test1' },
+        name: { $regex: 'test2' },
+        name2: 'name2',
+        comment: 'test',
+        comment2: 333,
+        user: { $in: ['last', 'first', 'next'] },
+      },
+      skip: 10,
+    };
+
+    const queryTestFullWithId = {
+      ...queryTestFull,
+      id: queryId,
+    };
+
+    const queryTestLimit = {
+      limit: 5,
+    };
+
+    const queryTestSort = {
+      sort: { ...queryTestFull.sort },
+    };
+
+    const queryTestColumns = {
+      columns: { ...queryTestFull.columns },
+    };
+
+    const queryTestFilter = {
+      filter: {
+        name: { $regex: 'test2' },
+        name2: 'name2',
+        user: { $in: ['last', 'first', 'next'] },
+      },
+    };
+
+    const queryTestSkip = {
+      skip: 10,
+    };
+
+    const queryTestPagination = {
+      limit: 20,
+      skip: 40,
+    };
+
+    const queryTestPaginationAndSort = {
+      sort: { ...queryTestFull.sort },
+      limit: 20,
+      skip: 40,
+    };
+
+    expect(await Model.read(queryId, queryTestEmpty)).toStrictEqual(queryTestEmpty);
+    expect(await Model.read(queryId, queryTestFull)).toStrictEqual(queryTestFull);
+    expect(await Model.read(queryTestFullWithId)).toStrictEqual(queryTestFull);
+    expect(await Model.read(queryId, queryTestLimit)).toStrictEqual(queryTestLimit);
+    expect(await Model.read(queryId, queryTestSort)).toStrictEqual(queryTestSort);
+    expect(await Model.read(queryId, queryTestColumns)).toStrictEqual(queryTestColumns);
+    expect(await Model.read(queryId, queryTestFilter)).toStrictEqual(queryTestFilter);
+    expect(await Model.read(queryId, queryTestSkip)).toStrictEqual(queryTestSkip);
+    expect(await Model.read(queryId, queryTestPagination)).toStrictEqual(queryTestPagination);
+    expect(await Model.read(queryId, queryTestPaginationAndSort)).toStrictEqual(
+      queryTestPaginationAndSort,
+    );
   });
 });

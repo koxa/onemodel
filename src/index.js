@@ -1,10 +1,18 @@
-export { default as BaseModel } from './common/model/BaseModel';
-export { default as ObservableModel } from './common/model/ObservableModel';
-export { default as ClientModel } from './client/model/ClientModel';
-export { default as ClientModelWrapper } from './client/model/ClientModelWrapper';
-export { default as ServerModel } from './server/model/ServerModel';
-export { default as ServerModelWrapper } from './server/model/ServerModelWrapper';
-export { default as ServerSequelizeModel } from './server/model/ServerSequelizeModel';
-export { default as ServerMariaDbModel } from './server/model/ServerMariaDbModel';
-export { default as OneModel } from './OneModel';
-export { default as OneStore } from './OneStore';
+const exports = {
+  BaseModel: require('./common/model/BaseModel').default,
+  ObservableModel: require('./common/model/ObservableModel').default,
+  OneModel: require('./OneModel').default,
+  OneStore: require('./OneStore').default,
+};
+
+if (process.env.WEBPACK_TARGET === 'node') {
+  exports.ServerModel = require('./server/model/ServerModel').default;
+  exports.ServerModelWrapper = require('./server/model/ServerModelWrapper').default;
+  exports.ServerSequelizeModel = require('./server/model/ServerSequelizeModel').default;
+  exports.ServerMariaDbModel = require('./server/model/ServerMariaDbModel').default;
+} else if (process.env.WEBPACK_TARGET === 'web') {
+  exports.ClientModel = require('./client/model/ClientModel').default;
+  exports.ClientModelWrapper = require('./client/model/ClientModelWrapper').default;
+}
+
+module.exports = exports;

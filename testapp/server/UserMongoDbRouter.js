@@ -2,6 +2,7 @@ const express = require('express');
 const mongodb = require('mongodb');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const { OneModel } = require('../../dist/onemodel.common.dev');
+const { getQueryParams } = require('../../src/utils/node/index');
 
 async function userMongoDbRouter() {
   const router = express.Router();
@@ -18,14 +19,16 @@ async function userMongoDbRouter() {
 
   router.get('/api/user/:id', async (req, res) => {
     const { id } = req.params;
-    console.log('GET /api/user', { id, ...req.query });
-    const user = await User.read({ id, ...req.query });
+    const searchParams = getQueryParams(req);
+    console.log('GET /api/user', { id, ...searchParams });
+    const user = await User.read({ id, ...searchParams });
     res.json(user);
   });
 
   router.get('/api/user', async (req, res) => {
-    console.log('GET /api/user', req.query);
-    const user = await User.read(req.query);
+    const searchParams = getQueryParams(req);
+    console.log('GET /api/user', searchParams);
+    const user = await User.read(searchParams);
     res.json(user);
   });
 

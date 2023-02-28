@@ -1,6 +1,5 @@
 import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
-import { getFilter, parseQuery } from '../../../utils';
-//todo: move to separate package
+import { getFilter } from '../../../utils';
 
 class MongoServerModelAdaptor extends BaseAdaptor {
   static _config = {
@@ -202,7 +201,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
-  static async delete(params) {
+  static async delete(params = {}) {
     const { mongo } = this.config;
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
@@ -226,14 +225,13 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     return await this.getCollection(collectionName).deleteOne({ _id });
   }
 
-  static getAdaptorParams(params = {}) {
-    const {
-      id,
-      collectionName = this.getConfig().collectionName,
-      filter,
-      raw = false,
-      ...props
-    } = parseQuery(params);
+  static getAdaptorParams({
+    id,
+    collectionName = this.getConfig().collectionName,
+    filter,
+    raw = false,
+    ...props
+  }) {
     return {
       id,
       collectionName,
@@ -243,14 +241,13 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     };
   }
 
-  getAdaptorParams(params = {}) {
-    const {
-      id = this.getId(),
-      collectionName = this.getConfig().collectionName,
-      filter,
-      raw = false,
-      ...props
-    } = parseQuery(params);
+  getAdaptorParams({
+    id = this.getId(),
+    collectionName = this.getConfig().collectionName,
+    filter,
+    raw = false,
+    ...props
+  }) {
     return {
       id,
       collectionName,

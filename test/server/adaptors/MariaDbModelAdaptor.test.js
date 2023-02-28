@@ -1,6 +1,6 @@
 const mariadb = require('mariadb');
 
-import { BaseModel } from '../../../src';
+import BaseModel from '../../../src/common/model/BaseModel';
 import MariaDbModelAdaptor from '../../../src/server/model/adaptors/MariaDbModelAdaptor';
 
 class TestTableMariaDbModel extends BaseModel {}

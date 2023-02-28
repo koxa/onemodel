@@ -1,5 +1,6 @@
 const express = require('express');
 const mariadb = require('mariadb');
+const { getQueryParams } = require('../../src/utils/node/index');
 const db = mariadb.createPool({
   host: 'localhost',
   database: 'onemodel',
@@ -25,14 +26,16 @@ async function bookMariaDbRouter() {
 
   router.get('/api/book/:id', async (req, res) => {
     const { id } = req.params;
-    console.log('GET /api/book', { id, ...req.query });
-    const book = await Book.read({ id, ...req.query });
+    const searchParams = getQueryParams(req);
+    console.log('GET /api/book', { id, ...searchParams });
+    const book = await Book.read({ id, ...searchParams });
     res.json(book);
   });
 
   router.get('/api/book', async (req, res) => {
-    console.log('GET /api/book', req.query);
-    const book = await Book.read(req.query);
+    const searchParams = getQueryParams(req);
+    console.log('GET /api/book', searchParams);
+    const book = await Book.read(searchParams);
     res.json(book);
   });
 

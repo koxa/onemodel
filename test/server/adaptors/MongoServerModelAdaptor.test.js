@@ -1,7 +1,7 @@
 const mongodb = require('mongodb');
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import MongoServerModelAdaptor from '../../../src/server/model/adaptors/MongoServerModelAdaptor';
-import { BaseModel } from '../../../src';
+import BaseModel from '../../../src/common/model/BaseModel';
 
 class MongoModel extends BaseModel {}
 MongoModel.addMixins([MongoServerModelAdaptor]);

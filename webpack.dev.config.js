@@ -32,7 +32,12 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
-    plugins: [new NodePolyfillPlugin()],
+    plugins: [
+      new NodePolyfillPlugin(),
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('web'),
+      }),
+    ],
     devtool: 'source-map',
     externals: [nodeExternals()],
   },
@@ -62,6 +67,11 @@ module.exports = [
       sideEffects: true,
       concatenateModules: true,
     },
+    plugins: [
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('node'),
+      }),
+    ],
     devtool: 'source-map',
     externals: [nodeExternals()],
   },
@@ -82,7 +92,13 @@ module.exports = [
       hotUpdateChunkFilename: '.hot/[id].[hash].hot-update.js',
       hotUpdateMainFilename: '.hot/[hash].hot-update.json',
     },
-    plugins: [new NodePolyfillPlugin(), new webpack.HotModuleReplacementPlugin()],
+    plugins: [
+      new NodePolyfillPlugin(),
+      new webpack.HotModuleReplacementPlugin(),
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('web'),
+      }),
+    ],
     module: {
       rules: [
         {
@@ -100,6 +116,7 @@ module.exports = [
   {
     name: 'server',
     mode: 'development',
+    target: 'node',
     entry: {
       server: './testapp/server.js',
     },
@@ -108,8 +125,12 @@ module.exports = [
       filename: '[name].js',
       publicPath: '/',
     },
-    target: 'node',
-    plugins: [new NodePolyfillPlugin()],
+    plugins: [
+      new NodePolyfillPlugin(),
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('node'),
+      }),
+    ],
     externals: [nodeExternals()],
     module: {
       rules: [

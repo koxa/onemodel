@@ -10,42 +10,21 @@ export function getFilter(filterObj) {
   }
 }
 
-export function convertToUrlQuery(query) {
-  if (typeof query === 'object' && Object.keys(query).length) {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(query)) {
-      if (typeof value === 'object') {
-        if (Object.keys(value).length) {
-          params.append(key, JSON.stringify(value));
-        }
-      } else if (typeof value !== 'undefined' && value !== '') {
-        params.append(key, value);
-      }
-    }
-    const queryStr = params.toString();
-    return queryStr ? '?' + params.toString() : '';
-  }
-  return '';
-}
+export function convertToQueryString(params, parentKey = null) {
+  let queryString = '';
 
-export function parseObject(obj) {
-  if (typeof obj === 'string') {
-    try {
-      return JSON.parse(obj);
-    } catch {
-      return obj;
-    }
-  }
-  return obj;
-}
+  for (let key in params) {
+    let value = params[key];
+    let fullKey = parentKey ? `${parentKey}.${key}` : key;
 
-export function parseQuery(obj) {
-  if (typeof obj === 'object') {
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
-      result[key] = parseObject(value);
+    if (Array.isArray(value)) {
+      queryString += `${encodeURIComponent(fullKey)}=${encodeURIComponent(value.join(','))}&`;
+    } else if (typeof value === 'object') {
+      queryString += convertToQueryString(value, fullKey);
+    } else {
+      queryString += `${encodeURIComponent(fullKey)}=${encodeURIComponent(value)}&`;
     }
-    return result;
   }
-  return obj;
+
+  return queryString;
 }

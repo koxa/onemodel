@@ -1,5 +1,5 @@
 import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
-import { getFilter, parseQuery } from '../../../utils';
+import { getFilter } from '../../../utils';
 
 class SequelizeModelAdaptor extends BaseAdaptor {
   static _config = {
@@ -216,7 +216,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
-  static async delete(params) {
+  static async delete(params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter }) || {};
     const deleted = await this.getCollection(collectionName).destroy({ where: filters });
@@ -243,14 +243,13 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     };
   }
 
-  static getAdaptorParams(params = {}) {
-    const {
-      id,
-      collectionName = this.getConfig().collectionName,
-      raw = true,
-      filter,
-      ...props
-    } = parseQuery(params);
+  static getAdaptorParams({
+    id,
+    collectionName = this.getConfig().collectionName,
+    raw = true,
+    filter,
+    ...props
+  }) {
     return {
       id,
       collectionName,
@@ -260,14 +259,13 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     };
   }
 
-  getAdaptorParams(params = {}) {
-    const {
-      id = this.getId(),
-      collectionName = this.getConfig().collectionName,
-      raw = true,
-      filter,
-      ...props
-    } = parseQuery(params);
+  getAdaptorParams({
+    id = this.getId(),
+    collectionName = this.getConfig().collectionName,
+    raw = true,
+    filter,
+    ...props
+  }) {
     return {
       id,
       collectionName,

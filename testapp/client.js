@@ -1,4 +1,4 @@
-import { OneModel } from '../src/index';
+import { OneModel } from '../src';
 import createTable from './client/Table';
 
 if (module['hot']) {

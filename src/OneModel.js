@@ -1,15 +1,12 @@
-import ServerModel from './server/model/ServerModel';
-import ClientModel from './client/model/ClientModel';
-
 /**
  * OneModel is a ClientModel when in Browser, otherwise it's ServerModel if common js modules exist
  */
 let Parent;
-if (typeof window === 'undefined' && module) {
+if (process.env.WEBPACK_TARGET === 'node') {
   // it's NodeJS
-  Parent = ServerModel;
-} else if (typeof window !== 'undefined') {
-  Parent = ClientModel;
+  Parent = require('./server/model/ServerModel').default;
+} else if (process.env.WEBPACK_TARGET === 'web') {
+  Parent = require('./client/model/ClientModel').default;
 } else {
   throw new Error('Unable to certainly determine environment to export OneModel');
 }

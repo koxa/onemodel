@@ -1,5 +1,5 @@
 import HttpModelAdaptor from '../../../common/model/adaptors/HttpModelAdaptor';
-import { convertToUrlQuery } from '../../../utils';
+import { convertToQueryString } from '../../../utils';
 
 class HttpClientModelAdaptor extends HttpModelAdaptor {
   static async request({ hostname, path, port, method, protocol, queryParams }, data = {}) {
@@ -13,11 +13,11 @@ class HttpClientModelAdaptor extends HttpModelAdaptor {
     }
     protocol = protocol || (typeof location !== 'undefined' && location.protocol) || '';
 
-    if (queryParams) {
-      queryString = convertToUrlQuery(queryParams);
+    if (queryParams && Object.keys(queryParams).length) {
+      queryString = convertToQueryString(queryParams);
     }
 
-    const url = `${protocol}//${hostname}:${port}${path}${queryString}`;
+    const url = `${protocol}//${hostname}:${port}${path}${queryString ? `?${queryString}` : ''}`;
 
     try {
       const response = await fetch(url, {
