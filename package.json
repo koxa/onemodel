@@ -49,6 +49,7 @@
     "prettier": "2.8.3",
     "regenerator-runtime": "*",
     "sequelize": "^6.28.0",
+    "sqlite3": "^5.1.4",
     "webpack": "^5.75.0",
     "webpack-cli": "*",
     "webpack-dev-middleware": "^6.0.1",
