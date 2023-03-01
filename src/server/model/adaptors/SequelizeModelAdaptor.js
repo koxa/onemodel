@@ -76,6 +76,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
       $lt: sequelize.Op.lt,
       $in: sequelize.Op.in,
       $regex: sequelize.Op.regexp,
+      $like: sequelize.Op.like,
     };
     const result = {};
     Object.entries(filters).forEach(([key, value]) => {

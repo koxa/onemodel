@@ -122,7 +122,7 @@ describe('SequelizeModelAdaptor', () => {
       expect(result[0]).toHaveProperty('firstName', `firstName ${testManyDocs.length}`);
     });
 
-    it('checking filter parameters: $eq, $ne, $gt, $lt, $in', async () => {
+    it('checking filter parameters: $eq, $ne, $gt, $lt, $in, $like', async () => {
       const resultWhere = await SequelizeModelTestModel.read({
         filter: { firstName: 'firstName 2' },
       });
@@ -141,6 +141,12 @@ describe('SequelizeModelAdaptor', () => {
       const resultIn = await SequelizeModelTestModel.read({
         filter: { firstName: { $in: ['firstName 4', 'firstName 5'] } },
       });
+      const resultRegexAll = await SequelizeModelTestModel.read({
+        filter: { firstName: { $like: '%firstName%' } },
+      });
+      const resultRegexOne = await SequelizeModelTestModel.read({
+        filter: { firstName: { $like: '%5%' } },
+      });
 
       expect(resultWhere[0].firstName).toBe('firstName 2');
 
@@ -154,6 +160,9 @@ describe('SequelizeModelAdaptor', () => {
       expect(resultLt.length).toBe(4);
 
       expect(resultIn.length).toBe(2);
+
+      expect(resultRegexAll.length).toBe(10);
+      expect(resultRegexOne.length).toBe(1);
     });
   });
 
