@@ -1,7 +1,7 @@
-import BaseModel from '../../common/model/BaseModel';
 import SQLiteServerModelAdaptor from './adaptors/SQLiteServerModelAdaptor';
+import ServerModel from "./ServerModel";
 
-class ServerSQLiteModel extends BaseModel {}
+class ServerSQLiteModel extends ServerModel {}
 ServerSQLiteModel.addMixins([SQLiteServerModelAdaptor]);
 
 export default ServerSQLiteModel;

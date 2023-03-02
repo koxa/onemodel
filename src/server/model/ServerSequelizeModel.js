@@ -1,7 +1,7 @@
-import BaseModel from '../../common/model/BaseModel';
 import SequelizeModelAdaptor from './adaptors/SequelizeModelAdaptor';
+import ServerModel from "./ServerModel";
 
-class ServerSequelizeModel extends BaseModel {}
+class ServerSequelizeModel extends ServerModel {}
 ServerSequelizeModel.addMixins([SequelizeModelAdaptor]);
 
 export default ServerSequelizeModel;
