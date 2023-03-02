@@ -84,7 +84,7 @@
     <div class="center">
         <h1>OneModel</h1>
         <div class="block">
-            <h2>Users (HttpAdaptor - MongoDb)</h2>
+            <h2>Users (HttpAdaptor - (mongodb-memory-server))</h2>
             <form class="form-add users">
                 <label for="firstName">First name:</label><br>
                 <input type="text" id="firstName" name="firstName"><br>
@@ -118,6 +118,26 @@
                 <thead>
                     <tr>
                         <th colspan="2">Emails</th>
+                        <th colspan="1"><button id="refresh" type="button">refresh</button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="block">
+            <h2>Comments (HttpAdaptor - SQlite3 (sqlite::memory:))</h2>
+            <form class="form-add comments">
+                <label for="title1">Title:</label><br>
+                <input type="text" id="title1" name="title1"><br>
+                <label for="comment_text">Comment text:</label><br>
+                <input type="text" id="comment_text" name="comment_text">
+                <button id="add-button" type="button">Add</button>
+            </form>
+            <table id="comments">
+                <thead>
+                    <tr>
+                        <th colspan="2">Comments</th>
                         <th colspan="1"><button id="refresh" type="button">refresh</button></th>
                     </tr>
                 </thead>

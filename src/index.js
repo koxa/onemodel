@@ -10,6 +10,7 @@ if (process.env.WEBPACK_TARGET === 'node') {
   exports.ServerModelWrapper = require('./server/model/ServerModelWrapper').default;
   exports.ServerSequelizeModel = require('./server/model/ServerSequelizeModel').default;
   exports.ServerMariaDbModel = require('./server/model/ServerMariaDbModel').default;
+  exports.ServerSQLiteModel = require('./server/model/ServerSQLiteModel').default;
 } else if (process.env.WEBPACK_TARGET === 'web') {
   exports.ClientModel = require('./client/model/ClientModel').default;
   exports.ClientModelWrapper = require('./client/model/ClientModelWrapper').default;

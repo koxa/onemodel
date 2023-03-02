@@ -7,11 +7,13 @@ if (module['hot']) {
 const USERS = 'users';
 const EMAILS = 'emails';
 const BOOKS = 'book';
+const COMMENTS = 'comments';
 
 const loaded = async () => {
   class User extends OneModel {}
   class Email extends OneModel {}
   class Book extends OneModel {}
+  class Comment extends OneModel {}
 
   User.configure({
     idAttr: '_id',
@@ -70,8 +72,27 @@ const loaded = async () => {
     },
   });
 
+  const { list: commentList } = createTable({
+    name: COMMENTS,
+    idAttr: 'id',
+    refreshClick: async () => commentList(await Comment.read()),
+    removeClick: ({ id }) => {
+      const comment = new Comment({ id });
+      return comment.delete();
+    },
+    addClick: async (data) => {
+      const comment = new Comment(data);
+      return await comment.save();
+    },
+    updateClick: async (data) => {
+      const comment = new Comment(data);
+      return await comment.save();
+    },
+  });
+
   userList(await User.read());
   emailList(await Email.read());
+  commentList(await Comment.read());
   bookList(await Book.read());
 };
 
