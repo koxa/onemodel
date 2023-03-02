@@ -9,9 +9,6 @@ describe('test block', () => {
   let server = null;
   let sockets = {}, nextSocketId = 0;
   server = http.createServer((req, res) => {
-    console.log('url', req.url);
-    console.log('method', req.method);
-
     if (req.method === 'GET') {
       // supporting GET tests
       res.end(JSON.stringify({ name: 'ethan' }));
@@ -38,7 +35,6 @@ describe('test block', () => {
       port,
     });
     await server.listen(port);
-    console.log("Server is Listening at Port " + port);
   });
 
   afterAll(async () => {
