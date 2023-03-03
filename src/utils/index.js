@@ -11,20 +11,26 @@ export function getFilter(filterObj) {
 }
 
 export function convertToQueryString(params, parentKey = null) {
-  let queryString = '';
+  const queryParts = [];
 
-  for (let key in params) {
-    let value = params[key];
-    let fullKey = parentKey ? `${parentKey}.${key}` : key;
+  for (const [key, value] of Object.entries(params)) {
+    const fullKey = parentKey ? `${parentKey}.${key}` : key;
 
     if (Array.isArray(value)) {
-      queryString += `${encodeURIComponent(fullKey)}=${encodeURIComponent(value.join(','))}&`;
-    } else if (typeof value === 'object') {
-      queryString += convertToQueryString(value, fullKey);
+      if (key === '$and' || key === '$or') {
+        const arrayQueryParts = value.map((element) => convertToQueryString(element));
+        queryParts.push(
+          `${encodeURIComponent(fullKey)}=${encodeURIComponent(`[${arrayQueryParts.join('&')}]`)}`,
+        );
+      } else {
+        queryParts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(value.join(','))}`);
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      queryParts.push(convertToQueryString(value, fullKey));
     } else {
-      queryString += `${encodeURIComponent(fullKey)}=${encodeURIComponent(value)}&`;
+      queryParts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(value)}`);
     }
   }
 
-  return queryString;
+  return queryParts.join('&');
 }

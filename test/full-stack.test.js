@@ -142,6 +142,17 @@ describe('test block', () => {
         comment: 'test',
         comment2: 333,
         user: { $in: ['last', 'first', 'next'] },
+        $and: [
+          { field1: 'value1' },
+          { field2: 'value2' },
+          { field7: { $in: ['value7', 'value77'] } },
+        ],
+        $or: [
+          { field3: 'value3' },
+          { field4: 'value4' },
+          { field5: { $in: ['value4', 'value5'] } },
+        ],
+        field5: { $not: { $eq: 'value5' } },
       },
       skip: 10,
     };
@@ -157,6 +168,14 @@ describe('test block', () => {
 
     const queryTestSort = {
       sort: { ...queryTestFull.sort },
+    };
+
+    const queryTestFilterAnd = {
+      filter: { ...queryTestFull.filter.$and },
+    };
+
+    const queryTestFilterOr = {
+      filter: { ...queryTestFull.filter.$or },
     };
 
     const queryTestColumns = {
@@ -195,6 +214,8 @@ describe('test block', () => {
     expect(await Model.read(queryId, queryTestFilter)).toStrictEqual(queryTestFilter);
     expect(await Model.read(queryId, queryTestSkip)).toStrictEqual(queryTestSkip);
     expect(await Model.read(queryId, queryTestPagination)).toStrictEqual(queryTestPagination);
+    expect(await Model.read(queryId, queryTestFilterAnd)).toStrictEqual(queryTestFilterAnd);
+    expect(await Model.read(queryId, queryTestFilterOr)).toStrictEqual(queryTestFilterOr);
     expect(await Model.read(queryId, queryTestPaginationAndSort)).toStrictEqual(
       queryTestPaginationAndSort,
     );

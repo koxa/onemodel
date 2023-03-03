@@ -26,30 +26,6 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     return db.collection(this.getConfig().collectionName);
   }
 
-  static buildFilter(filter) {
-    if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
-      return {};
-    }
-    const mongoOperators = ['$eq', '$ne', '$gt', '$lt', '$in', '$regex'];
-    const result = {};
-
-    Object.entries(filter).forEach(([key, val]) => {
-      if (mongoOperators.includes(key)) {
-        Object.entries(val).forEach(([op, value]) => {
-          if (op === '$regex') {
-            result[key] = new RegExp(value, 'i');
-          } else {
-            result[op === '$in' ? key : `${key}.${op}`] = value;
-          }
-        });
-      } else {
-        result[key] = val;
-      }
-    });
-
-    return getFilter(result);
-  }
-
   /**
    * Creates a new document in the MongoDB collection
    * @param {object} data - The data to be inserted in the collection
@@ -91,7 +67,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       });
     }
 
-    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
     const cursor = this.getCollection(collectionName).find(filters, projection);
 
     if (sort) {
@@ -156,7 +132,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     const { id, collectionName, filter } = this.getAdaptorParams(params); //todo: ability to save
     const { mongo } = this.config;
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = this.buildFilter({ [this.config.idAttr]: mongoId, ...filter });
+    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
     if (!filters || !Object.keys(filters).length) {
       throw new Error(
         'MongoServerModelAdaptor update: "id" or "filter" must be defined to update model',
@@ -205,7 +181,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     const { mongo } = this.config;
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = this.buildFilter({ [this.config.idAttr]: mongoId, ...filter });
+    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
     return await this.getCollection(collectionName).deleteMany(filters);
   }
 
