@@ -128,42 +128,87 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     return collectionName;
   }
 
-  static buildFilter(data) {
+  static getOperator(operator) {
+    switch (operator) {
+      case '$eq':
+        return '=';
+      case '$ne':
+        return '<>';
+      case '$lt':
+        return '<';
+      case '$lte':
+        return '<=';
+      case '$gt':
+        return '>';
+      case '$gte':
+        return '>=';
+      case '$in':
+        return 'IN';
+      case '$notIn':
+        return 'NOT IN';
+      case '$like':
+        return 'LIKE';
+      case '$notLike':
+        return 'NOT LIKE';
+      default:
+        throw new Error(`Unsupported operator: ${operator}`);
+    }
+  }
+
+  static convertOperatorValue(valueKey, subValue, connection) {
+    switch (valueKey) {
+      case '$like':
+      case '$notLike':
+        return `(${connection.escape(`%${subValue}%`)})`;
+      default:
+        return `(${connection.escape(subValue)})`;
+    }
+  }
+
+  static buildFilter(data, connection) {
     const filter = getFilter(data);
     if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
       return '';
     }
     const filterKeys = Object.keys(filter);
-    const conditions = filterKeys.map((key) => {
+    const conditions = [];
+    filterKeys.forEach((key) => {
       const value = filter[key];
-      if (typeof value === 'object' && value !== null) {
-        const conditionKeys = Object.keys(value);
-        if (conditionKeys.length === 0) {
-          return '';
+      if (key === '$and') {
+        const andConditions = value
+          .map((andValue) => this.buildFilter(andValue, connection))
+          .filter(Boolean);
+        if (andConditions.length > 0) {
+          conditions.push(`(${andConditions.join(' AND ')})`);
         }
-        const operator = conditionKeys[0];
-        const conditionValue = value[operator];
-        switch (operator) {
-          case '$eq':
-            return `${key} = '${conditionValue}'`;
-          case '$ne':
-            return `${key} <> '${conditionValue}'`;
-          case '$gt':
-            return `${key} > '${conditionValue}'`;
-          case '$lt':
-            return `${key} < '${conditionValue}'`;
-          case '$in':
-            return `${key} IN (${conditionValue.map((val) => `'${val}'`).join(', ')})`;
-          case '$regex':
-            return `${key} REGEXP '${conditionValue}'`;
-          default:
-            return '';
+      } else if (key === '$or') {
+        const orConditions = value
+          .map((orValue) => this.buildFilter(orValue, connection))
+          .filter(Boolean);
+        if (orConditions.length > 0) {
+          conditions.push(`(${orConditions.join(' OR ')})`);
+        }
+      } else if (key === '$not') {
+        const notConditions = this.buildFilter(value, connection);
+        if (notConditions) {
+          conditions.push(`NOT (${notConditions})`);
+        }
+      } else if (typeof value === 'object') {
+        const valueKeys = Object.keys(value);
+        const subConditions = valueKeys.map((valueKey) => {
+          const subValue = value[valueKey];
+          return `${connection.escapeId(key)} ${this.getOperator(
+            valueKey,
+          )} ${this.convertOperatorValue(valueKey, subValue, connection)}`;
+        });
+        if (subConditions.length > 0) {
+          conditions.push(`(${subConditions.join(' AND ')})`);
         }
       } else {
-        return `${key} = '${value}'`;
+        conditions.push(`${connection.escapeId(key)} = ${connection.escape(value)}`);
       }
     });
-    return `WHERE ${conditions.filter((c) => c !== '').join(' AND ')}`;
+    return conditions.join(' AND ');
   }
 
   /**
@@ -216,7 +261,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
       this.getConnection(),
     ]);
 
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter }, connection);
     const columnsQuery = columns
       ? Object.entries(columns)
           .filter(([, value]) => value)
@@ -232,7 +277,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     const maxLimit = Number(9223372036854775807n);
 
     let query = `SELECT ${columnsQuery} FROM ${collectionName}`;
-    if (filterQuery) query += ` ${filterQuery}`;
+    if (filterQuery) query += ` WHERE ${filterQuery}`;
     query += ' GROUP BY id';
     if (sortQuery) query += ` ORDER BY ${sortQuery}`;
 
@@ -263,21 +308,21 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    */
   static async update(data, params) {
+    const connection = await this.getConnection();
     const { id, collectionName, raw, filter } = this.getAdaptorParams(params);
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter }, connection);
     if (!filterQuery) {
       throw new Error(
         'MariaDbModelAdaptor update: "id" or "filter" must be defined to update model',
       );
     }
 
-    const connection = await this.getConnection();
     const sets = Object.keys(data)
       .filter((key) => key !== 'id')
       .map((key) => `${key}='${data[key]}'`)
       .join(', ');
 
-    const query = `UPDATE ${collectionName} SET ${sets} ${filterQuery}`;
+    const query = `UPDATE ${collectionName} SET ${sets} WHERE ${filterQuery}`;
 
     const { affectedRows } = await connection.query(query, raw);
     connection.end();
@@ -317,10 +362,10 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @returns {Promise<object>} - An object containing information about the operation, including the number of documents deleted.
    */
   static async delete(params = {}) {
-    const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
     const connection = await this.getConnection();
-    const query = `DELETE FROM ${collectionName} ${filterQuery}`;
+    const { id, collectionName, filter } = this.getAdaptorParams(params);
+    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter }, connection);
+    const query = `DELETE FROM ${collectionName} ${filterQuery ? `WHERE ${filterQuery}` : ''}`;
     const { affectedRows } = await connection.query(query);
     connection.end();
     return {

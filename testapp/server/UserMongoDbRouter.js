@@ -1,7 +1,7 @@
 const express = require('express');
 const mongodb = require('mongodb');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const { OneModel } = require('../../dist/onemodel.common.dev');
+const { ServerMongoDbModel } = require('../../dist/onemodel.common.dev');
 const { getQueryParams } = require('../../src/utils/node/index');
 
 async function userMongoDbRouter() {
@@ -10,7 +10,7 @@ async function userMongoDbRouter() {
   const mongodbConnect = await mongodb.MongoClient.connect(mongoServer.getUri(), {});
   const mongodbInstance = mongodbConnect.db(mongoServer.instanceInfo.dbName);
 
-  class User extends OneModel {}
+  class User extends ServerMongoDbModel {}
   User.configure({
     mongo: mongodb,
     db: mongodbInstance,

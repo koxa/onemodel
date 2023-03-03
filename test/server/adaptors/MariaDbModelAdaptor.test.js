@@ -90,7 +90,7 @@ describe('MariaDbModelAdaptor', () => {
   });
 
   describe('read(params)', () => {
-    it('read(): should return an array of documents from a MariaDB table', async () => {
+    it('should return an array of documents from a MariaDB table', async () => {
       const result = await TestTableMariaDbModel.read();
       expect(result[0].firstName).toBe('firstName1');
       expect(result[0].lastName).toBe('lastName1');
@@ -98,23 +98,23 @@ describe('MariaDbModelAdaptor', () => {
       expect(result.length).toBe(maxUsers);
     });
 
-    it('read(): should return an array of documents from a MariaDB table', async () => {
+    it('should return an array of documents from a MariaDB table', async () => {
       const result = await TestTableMariaDbModel.read({ columns: { firstName: 1 }, limit: 1 });
       expect(result[0].firstName).toBe('firstName1');
       expect(Object.keys(result).length).toBe(1);
     });
 
-    it('read(): testing only the skip parameter', async () => {
+    it('testing only the skip parameter', async () => {
       const result = await TestTableMariaDbModel.read({ skip: 1 });
       expect(result[0].firstName).toBe('firstName2');
     });
 
-    it('read(): testing only the filter parameter', async () => {
+    it('testing only the filter parameter', async () => {
       const result = await TestTableMariaDbModel.read({ filter: { firstName: 'firstName4' } });
       expect(result[0].firstName).toBe('firstName4');
     });
 
-    it('read(): should return a paginated array of documents from a collection', async () => {
+    it('should return a paginated array of documents from a collection', async () => {
       // Get the first 3 documents
       let result = await TestTableMariaDbModel.read({ limit: 3 });
       expect(Array.isArray(result)).toBe(true);
@@ -143,51 +143,130 @@ describe('MariaDbModelAdaptor', () => {
       expect(result[2]).toHaveProperty('firstName', testDocs[8].firstName);
     });
 
-    it('checking filter parameters: $eq, $ne, $gt, $lt, $in, $regex', async () => {
+    it('checking filter parameters: without operators', async () => {
       const resultWhere = await TestTableMariaDbModel.read({
         filter: { firstName: 'firstName2' },
       });
+      expect(resultWhere[0].firstName).toBe('firstName2');
+    });
+
+    it('checking filter parameters: $eq', async () => {
       const resultEq = await TestTableMariaDbModel.read({
         filter: { firstName: { $eq: 'firstName3' } },
       });
+      expect(resultEq.length).toBe(1);
+      expect(resultEq[0].firstName).toBe('firstName3');
+    });
+
+    it('checking filter parameters: $ne', async () => {
       const resultNe = await TestTableMariaDbModel.read({
         filter: { firstName: { $ne: 'firstName4' } },
       });
-      const resultGt = await TestTableMariaDbModel.read({
-        filter: { firstName: { $gt: 'firstName4' } },
-      });
+      expect(resultNe.length).toBe(8);
+      expect(resultNe.filter((result) => result.firstName === 'firstName4').length).toBe(0);
+    });
+
+    it('checking filter parameters: $lt', async () => {
       const resultLt = await TestTableMariaDbModel.read({
         filter: { firstName: { $lt: 'firstName4' } },
       });
-      const resultRegexAll = await TestTableMariaDbModel.read({
-        filter: { firstName: { $regex: 'firstName' } },
+      expect(resultLt.length).toBe(3);
+    });
+
+    it('checking filter parameters: $lte', async () => {
+      const resultLte = await TestTableMariaDbModel.read({
+        filter: { firstName: { $lte: 'firstName4' } },
       });
-      const resultRegexOne = await TestTableMariaDbModel.read({
-        filter: { firstName: { $regex: '5' } },
+      expect(resultLte.length).toBe(4);
+    });
+
+    it('checking filter parameters: $gt', async () => {
+      const resultGt = await TestTableMariaDbModel.read({
+        filter: { firstName: { $gt: 'firstName4' } },
       });
+      expect(resultGt.length).toBe(5);
+    });
+
+    it('checking filter parameters: $gte', async () => {
+      const resultGte = await TestTableMariaDbModel.read({
+        filter: { firstName: { $gte: 'firstName4' } },
+      });
+      expect(resultGte.length).toBe(6);
+    });
+
+    it('checking filter parameters: $in', async () => {
       const resultIn = await TestTableMariaDbModel.read({
         filter: { firstName: { $in: ['firstName4', 'firstName5'] } },
       });
-
-      expect(resultWhere[0].firstName).toBe('firstName2');
-
-      expect(resultEq.length).toBe(1);
-      expect(resultEq[0].firstName).toBe('firstName3');
-
-      expect(resultNe.length).toBe(8);
-      expect(resultNe.filter((result) => result.firstName === 'firstName4').length).toBe(0);
-
-      expect(resultGt.length).toBe(5);
-      expect(resultLt.length).toBe(3);
-
       expect(resultIn.length).toBe(2);
       expect(resultIn.map((res) => res.firstName)).toStrictEqual(['firstName4', 'firstName5']);
-
-      expect(resultRegexAll.length).toBe(9);
-      expect(resultRegexOne.length).toBe(1);
     });
 
-    it('read(): should return a sorted array of documents from the collection', async () => {
+    it('checking filter parameters: $notIn', async () => {
+      const resultNotIn = await TestTableMariaDbModel.read({
+        filter: { firstName: { $notIn: ['firstName4', 'firstName5'] } },
+      });
+      expect(resultNotIn.length).toBe(7);
+      expect(resultNotIn.map((res) => res.firstName)).toStrictEqual([
+        'firstName1',
+        'firstName2',
+        'firstName3',
+        'firstName6',
+        'firstName7',
+        'firstName8',
+        'firstName9',
+      ]);
+    });
+
+    it('checking filter parameters: $like', async () => {
+      const resultLikeAll = await TestTableMariaDbModel.read({
+        filter: { firstName: { $like: 'firstName' } },
+      });
+      expect(resultLikeAll.length).toBe(maxUsers);
+
+      const resultLikeOne = await TestTableMariaDbModel.read({
+        filter: { firstName: { $like: '5' } },
+      });
+      expect(resultLikeOne.length).toBe(1);
+    });
+
+    it('checking filter parameters: $notLike', async () => {
+      const resultNotLike = await TestTableMariaDbModel.read({
+        filter: { firstName: { $notLike: '5' } },
+      });
+      expect(resultNotLike.length).toBe(8);
+    });
+
+    it('checking filter parameters: $and', async () => {
+      const resultAnd = await TestTableMariaDbModel.read({
+        filter: {
+          $and: [{ firstName: 'firstName4' }, { lastName: 'lastName4' }],
+        },
+      });
+      expect(resultAnd.length).toBe(1);
+    });
+
+    it('checking filter parameters: $or', async () => {
+      const resultOr = await TestTableMariaDbModel.read({
+        filter: {
+          firstName: { $in: ['firstName4', 'firstName6', 'firstName7'] },
+          $or: [{ lastName: 'lastName4' }, { lastName: 'lastName7' }],
+        },
+      });
+      expect(resultOr.map((res) => res.firstName)).toStrictEqual(['firstName4', 'firstName7']);
+    });
+
+    it('checking filter parameters: $not', async () => {
+      const resultOr = await TestTableMariaDbModel.read({
+        filter: {
+          firstName: { $in: ['firstName4', 'firstName6', 'firstName7'] },
+          $not: { firstName: 'firstName4' },
+        },
+      });
+      expect(resultOr.map((res) => res.firstName)).toStrictEqual(['firstName6', 'firstName7']);
+    });
+
+    it('should return a sorted array of documents from the collection', async () => {
       const sortOptions = { firstName: -1 };
       const result = await TestTableMariaDbModel.read({ sort: sortOptions });
 
