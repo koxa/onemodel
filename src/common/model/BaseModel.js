@@ -6,7 +6,7 @@ function isClass(v) {
 
 class BaseModel extends Base {
   static _config = {
-    //todo: make _config private ? but how to extend in children ?
+    //todo: make _config private ? but how to extend in children ? //todo: make it private with es6 '#' private props
     idAttr: 'id', //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
     props: null, //this.getProps(),
     reactivity: false, //this.getReactivity(),
@@ -19,29 +19,28 @@ class BaseModel extends Base {
    * @returns {{}} New object consisting of static _config copy + dynamic config functions
    */
   static getConfig(cfgProp) {
-    const config = { ...this._config, ...this.config };
     const getCfgVal = (prop) => {
-      return typeof config[prop] === 'function' && !isClass(config[prop])
-        ? config[prop].apply(this)
-        : config[prop];
+      return typeof this._config[prop] === 'function' && !isClass(this._config[prop])
+        ? this._config[prop].apply(this)
+        : this._config[prop];
     };
     if (cfgProp) {
       return getCfgVal(cfgProp);
     }
     const out = {};
-    for (let prop of Object.getOwnPropertyNames(config)) {
+    for (let prop of Object.getOwnPropertyNames(this._config)) {
       out[prop] = getCfgVal(prop);
     }
     return out;
   }
 
   static configure(config) {
-    this.config = { ...this.config, ...config };
-    return this.config;
+    this._config = { ...this._config, ...config };
+    return this._config;
   }
 
   static validate(prop, val) {
-    const validators = this.getConfig().validators;
+    const validators = this.getConfig('validators');
     if (validators[prop]) {
       return validators[prop](val);
     } else {
@@ -50,7 +49,7 @@ class BaseModel extends Base {
   }
 
   static convert(prop, val) {
-    const converters = this.getConfig().converters;
+    const converters = this.getConfig('converters');
     if (converters[prop]) {
       return converters[prop](val);
     } else {
@@ -97,10 +96,7 @@ class BaseModel extends Base {
   }
 
   getId() {
-    let idAttr = this.constructor.getConfig().idAttr;
-    if (this.constructor.config && this.constructor.config.idAttr) {
-      idAttr = this.constructor.config.idAttr;
-    }
+    let idAttr = this.getConfig('idAttr');
     return this[idAttr];
   }
 
@@ -109,7 +105,7 @@ class BaseModel extends Base {
   }
 
   setId(id) {
-    return this.set(this.constructor.config.idAttr, id);
+    return this.set(this.getConfig('idAttr'), id);
   }
 
   get(prop) {
@@ -140,13 +136,13 @@ class BaseModel extends Base {
   }
 
   __defineId(val) {
-    Object.defineProperty(this, this.constructor.getConfig().idAttr, {
+    Object.defineProperty(this, this.constructor.getConfig('idAttr'), {
       configurable: true,
       enumerable: true,
       writable: false, // id is immutable by default
       value: val, // initial value is assigned
     });
-    return this[this.constructor.getConfig().idAttr];
+    return this[this.constructor.getConfig('idAttr')];
   }
 
   __defineProperty(prop, val, reactivity) {
@@ -194,8 +190,8 @@ class BaseModel extends Base {
    * @param options
    */
   __prepareSet(prop, val, options = { skipValidate: false, skipConvert: false }) {
-    const validators = this.constructor.getConfig().validators;
-    const converters = this.constructor.getConfig().converters;
+    const validators = this.constructor.getConfig('validators');
+    const converters = this.constructor.getConfig('converters');
     const { skipValidate, skipConvert } = options;
     // const propExists = this.__isPropExists(prop);
 
@@ -239,7 +235,7 @@ class BaseModel extends Base {
           // now calling only if value doSet
           val = this.__hookBeforeSet(prop, val);
         }
-        if (prop === this.constructor.getConfig().idAttr && this[prop] === undefined) {
+        if (prop === this.constructor.getConfig('idAttr') && this[prop] === undefined) {
           this.__defineId(val); // will define and set id attr as immutable
         } else {
           this[prop] = val;

@@ -10,7 +10,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
   static _sqliteFirstSync = true;
 
   static idAttr() {
-    return this.config.idAttr;
+    return this.getConfig('idAttr');
   }
 
   /**
@@ -104,7 +104,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
     if (this._sqliteFirstSync) {
       this._sqliteFirstSync = false;
       if (!(await this.isTableExist(tableName))) {
-        return this.createTableFromProps(tableName, this.config.props);
+        return this.createTableFromProps(tableName, this.getConfig('props'));
       }
     }
     return false;
@@ -213,7 +213,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
 
   static queryRun(query, values) {
     return new Promise((resolve, reject) => {
-      this.config.db.run(query, values, function (err) {
+      this.getConfig('db').run(query, values, function (err) {
         if (err) {
           reject(err);
         } else {
@@ -225,7 +225,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
 
   static queryAll(query) {
     return new Promise((resolve, reject) => {
-      this.config.db.all(query, (err, rows) => {
+      this.getConfig('db').all(query, (err, rows) => {
         if (err) {
           reject(err);
         } else {
@@ -278,7 +278,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
       this.getAdaptorParams(params);
     await this.firstCheckAndCreateTable(collectionName);
 
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
     const columnsQuery = columns
       ? Object.entries(columns)
           .filter(([, value]) => value)
@@ -323,7 +323,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
    */
   static async update(data, params) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
     if (!filterQuery) {
       throw new Error(
         'SQLiteServerModelAdaptor update: "id" or "filter" must be defined to update model',
@@ -373,7 +373,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
    */
   static async delete(params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
     const query = `DELETE FROM ${collectionName} ${filterQuery ? `WHERE ${filterQuery}` : ''}`;
     const { changes } = await this.queryRun(query);
     return {

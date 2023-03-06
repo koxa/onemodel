@@ -10,11 +10,11 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   static _mariaDbfirstSync = true;
 
   static idAttr() {
-    return this.config.idAttr;
+    return this.getConfig('idAttr');
   }
 
   static async getConnection() {
-    return this.config.db.getConnection();
+    return this.this.getConfig('db').getConnection();
   }
 
   /**
@@ -110,7 +110,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     if (this._mariaDbfirstSync) {
       this._mariaDbfirstSync = false;
       if (!(await this.isTableExist(tableName))) {
-        return this.createTableFromProps(tableName, this.config.props);
+        return this.createTableFromProps(tableName, this.getConfig('props'));
       }
     }
     return false;
@@ -261,7 +261,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
       this.getConnection(),
     ]);
 
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter }, connection);
+    const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter }, connection);
     const columnsQuery = columns
       ? Object.entries(columns)
           .filter(([, value]) => value)
@@ -309,7 +309,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   static async update(data, params) {
     const connection = await this.getConnection();
     const { id, collectionName, raw, filter } = this.getAdaptorParams(params);
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter }, connection);
+    const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter }, connection);
     if (!filterQuery) {
       throw new Error(
         'MariaDbModelAdaptor update: "id" or "filter" must be defined to update model',
@@ -363,7 +363,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   static async delete(params = {}) {
     const connection = await this.getConnection();
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter }, connection);
+    const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter }, connection);
     const query = `DELETE FROM ${collectionName} ${filterQuery ? `WHERE ${filterQuery}` : ''}`;
     const { affectedRows } = await connection.query(query);
     connection.end();

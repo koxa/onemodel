@@ -19,7 +19,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     collectionName = this.getConfig().collectionName ||
       (typeof this.getCollectionName !== 'undefined' && this.getCollectionName()),
   ) {
-    const { db } = this.config;
+    const { db } = this.getConfig();
     if (!db || typeof collectionName !== 'string') {
       throw new Error('MongoServerModelAdaptor: DB instance or CollectionName is not defined');
     }
@@ -67,7 +67,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       });
     }
 
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    const filters = getFilter({ [this.getConfig('idAttr')]: id, ...filter });
     const cursor = this.getCollection(collectionName).find(filters, projection);
 
     if (sort) {
@@ -94,12 +94,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    */
   static async readOne(key, val) {
     let query;
-    const { mongo } = this.config;
+    const { mongo } = this.getConfig();
     if (typeof key === 'object') {
       // e.g. {key: val} or Mongo.ObjectID
       if (key instanceof mongo.ObjectID) {
         // if ObjectID supplied
-        query = { [this.config.idAttr]: val ? val : key };
+        query = { [this.getConfig('idAttr')]: val ? val : key };
       } else {
         // if key in format {key: val, key2: val2,...}
         query = key;
@@ -108,7 +108,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       query = { [key]: val };
     } else if (key) {
       // if only key and it;s not object it's likely a numeric ID
-      query = { [this.config.idAttr]: new mongo.ObjectID(key) };
+      query = { [this.getConfig('idAttr')]: new mongo.ObjectID(key) };
     }
 
     const result = await this.getCollection().findOne(query);
@@ -130,16 +130,16 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    */
   static async update(data, params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params); //todo: ability to save
-    const { mongo } = this.config;
+    const { mongo } = this.getConfig();
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
+    const filters = getFilter({ [this.getConfig('idAttr')]: mongoId, ...filter });
     if (!filters || !Object.keys(filters).length) {
       throw new Error(
         'MongoServerModelAdaptor update: "id" or "filter" must be defined to update model',
       );
     }
     const myData = { ...data };
-    delete myData[this.config.idAttr];
+    delete myData[this.getConfig('idAttr')];
     let result;
     try {
       result = await this.getCollection(collectionName).updateOne({ ...filters }, { $set: myData });
@@ -178,10 +178,10 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * @returns {Promise<object>} - Returns the result of the deletion
    */
   static async delete(params = {}) {
-    const { mongo } = this.config;
+    const { mongo } = this.getConfig();
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = getFilter({ [this.config.idAttr]: mongoId, ...filter });
+    const filters = getFilter({ [this.getConfig('idAttr')]: mongoId, ...filter });
     return await this.getCollection(collectionName).deleteMany(filters);
   }
 
@@ -196,7 +196,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       throw new Error('MongoServerModelAdaptor deleteOne: "id" must be defined');
     }
     const { collectionName } = this.getAdaptorParams(params);
-    const { mongo } = this.config;
+    const { mongo } = this.getConfig();
     const _id = new mongo.ObjectID(id);
     return await this.getCollection(collectionName).deleteOne({ _id });
   }
