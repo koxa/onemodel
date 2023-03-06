@@ -122,47 +122,93 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
     return collectionName;
   }
 
+  static getOperator(operator) {
+    switch (operator) {
+      case '$eq':
+        return '=';
+      case '$ne':
+        return '<>';
+      case '$lt':
+        return '<';
+      case '$lte':
+        return '<=';
+      case '$gt':
+        return '>';
+      case '$gte':
+        return '>=';
+      case '$in':
+        return 'IN';
+      case '$notIn':
+        return 'NOT IN';
+      case '$like':
+        return 'LIKE';
+      case '$notLike':
+        return 'NOT LIKE';
+      default:
+        throw new Error(`Unsupported operator: ${operator}`);
+    }
+  }
+
+  static convertOperatorValue(valueKey, subValue) {
+    switch (valueKey) {
+      case '$like':
+        return `'%' || ${subValue} || '%'`;
+      case '$notLike':
+        return `('%' || ${subValue} || '%')`;
+      default:
+        return `'${subValue}'`;
+    }
+  }
+
   static buildFilter(data) {
     const filter = getFilter(data);
     if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
       return '';
     }
+    const filterKeys = Object.keys(filter);
     const conditions = [];
-    for (const [key, value] of Object.entries(filter)) {
-      if (typeof value === 'object' && value !== null) {
-        const conditionKeys = Object.keys(value);
-        if (conditionKeys.length === 0) {
-          continue;
+    filterKeys.forEach((key) => {
+      const value = filter[key];
+      if (key === '$and') {
+        const andConditions = value.map((andValue) => this.buildFilter(andValue)).filter(Boolean);
+        if (andConditions.length > 0) {
+          conditions.push(`(${andConditions.join(' AND ')})`);
         }
-        const operator = conditionKeys[0];
-        const conditionValue = value[operator];
-        switch (operator) {
-          case '$eq':
-            conditions.push(`${key} = '${conditionValue}'`);
-            break;
-          case '$ne':
-            conditions.push(`${key} <> '${conditionValue}'`);
-            break;
-          case '$gt':
-            conditions.push(`${key} > '${conditionValue}'`);
-            break;
-          case '$lt':
-            conditions.push(`${key} < '${conditionValue}'`);
-            break;
-          case '$in':
-            conditions.push(`${key} IN (${conditionValue.map((v) => `'${v}'`).join(', ')})`);
-            break;
-          case '$regex':
-            conditions.push(`${key} LIKE '%${conditionValue}%'`);
-            break;
-          default:
-            break;
+      } else if (key === '$or') {
+        const orConditions = value.map((orValue) => this.buildFilter(orValue)).filter(Boolean);
+        if (orConditions.length > 0) {
+          conditions.push(`(${orConditions.join(' OR ')})`);
+        }
+      } else if (key === '$not') {
+        const notConditions = this.buildFilter(value);
+        if (notConditions) {
+          conditions.push(`NOT (${notConditions})`);
+        }
+      } else if (typeof value === 'object') {
+        const valueKeys = Object.keys(value);
+        const subConditions = valueKeys.map((valueKey) => {
+          const subValue = value[valueKey];
+          if (valueKey === '$in' || valueKey === '$notIn') {
+            if (!Array.isArray(subValue)) {
+              throw new Error(`$in operator requires an array of values, got ${typeof subValue}`);
+            }
+            return `${key} ${this.getOperator(valueKey)} (${subValue
+              .map((v) => `'${v}'`)
+              .join(', ')})`;
+          }
+          return `${key} ${this.getOperator(valueKey)} ${this.convertOperatorValue(
+            valueKey,
+            subValue,
+          )}`;
+        });
+        if (subConditions.length > 0) {
+          conditions.push(`(${subConditions.join(' AND ')})`);
         }
       } else {
         conditions.push(`${key} = '${value}'`);
       }
-    }
-    return conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    });
+    return conditions.join(' AND ');
   }
 
   static queryRun(query, values) {
@@ -217,10 +263,10 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.columns] An object containing columns to select and their values, e.g. { id: true, name: true, email: false }
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of rows to return
    * @param {number} [params.skip] Number of rows to skip before returning results
@@ -247,9 +293,8 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
       : '';
 
     let query = `SELECT ${columnsQuery} FROM ${collectionName}`;
-    if (filterQuery) query += ` ${filterQuery}`;
-    query += ' GROUP BY id';
-    if (sortQuery) query += ` ORDER BY ${sortQuery}`;
+    if (filterQuery) query += ` WHERE ${filterQuery}`;
+    query += sortQuery ? ` ORDER BY ${sortQuery}` : ' GROUP BY id';
 
     if (limit && !skip) {
       query += ` LIMIT ${Number(limit)}`;
@@ -269,10 +314,10 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.id] Filter by id
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {object} [params] - Object containing query parameters
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    */
@@ -290,7 +335,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
       .map((key) => `${key}='${data[key]}'`)
       .join(', ');
 
-    const query = `UPDATE ${collectionName} SET ${sets} ${filterQuery}`;
+    const query = `UPDATE ${collectionName} SET ${sets} WHERE ${filterQuery}`;
 
     const { changes } = await this.queryRun(query);
     return changes > 0;
@@ -320,16 +365,16 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
    * @param {string} params.collectionName - The name of the collection to delete documents from.
    * @param {object} [params.id] Filter by id
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @returns {Promise<object>} - An object containing information about the operation, including the number of documents deleted.
    */
   static async delete(params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const filterQuery = this.buildFilter({ [this.config.idAttr]: id, ...filter });
-    const query = `DELETE FROM ${collectionName} ${filterQuery}`;
+    const query = `DELETE FROM ${collectionName} ${filterQuery ? `WHERE ${filterQuery}` : ''}`;
     const { changes } = await this.queryRun(query);
     return {
       deletedCount: changes,

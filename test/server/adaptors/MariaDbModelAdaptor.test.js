@@ -235,6 +235,16 @@ describe('MariaDbModelAdaptor', () => {
         filter: { firstName: { $notLike: '5' } },
       });
       expect(resultNotLike.length).toBe(8);
+      expect(resultNotLike.map((item) => item.firstName)).toEqual([
+        'firstName1',
+        'firstName2',
+        'firstName3',
+        'firstName4',
+        'firstName6',
+        'firstName7',
+        'firstName8',
+        'firstName9',
+      ]);
     });
 
     it('checking filter parameters: $and', async () => {

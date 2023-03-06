@@ -52,7 +52,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     collectionName = this.getConfig().collectionName ||
       (typeof this.getCollectionName !== 'undefined' && this.getCollectionName()),
   ) {
-    if (!this.config.schemasParser) {
+    if (typeof this.config.schemasParser === 'undefined' || this.config.schemasParser === null) {
       this.config.schemasParser = {};
     }
     const { schemas, schemasParser } = this.config;
@@ -64,34 +64,96 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     return schemasParser[collectionName];
   }
 
-  static buildFilter(filters) {
-    if (!filters || typeof filters !== 'object' || !Object.keys(filters).length) {
-      return undefined;
-    }
+  static getOperator(operator) {
     const { sequelize } = this.config;
-    const operators = {
-      $eq: sequelize.Op.eq,
-      $ne: sequelize.Op.ne,
-      $gt: sequelize.Op.gt,
-      $lt: sequelize.Op.lt,
-      $in: sequelize.Op.in,
-      $regex: sequelize.Op.regexp,
-      $like: sequelize.Op.like,
-    };
-    const result = {};
-    Object.entries(filters).forEach(([key, value]) => {
-      if (typeof value === 'object') {
-        const [operator, val] = Object.entries(value)[0];
-        if (operators[operator]) {
-          result[key] = { [operators[operator]]: val };
-        } else {
-          result[key] = value;
+    switch (operator) {
+      case '$eq':
+        return sequelize.Op.eq;
+      case '$ne':
+        return sequelize.Op.ne;
+      case '$lt':
+        return sequelize.Op.lt;
+      case '$lte':
+        return sequelize.Op.lte;
+      case '$gt':
+        return sequelize.Op.gt;
+      case '$gte':
+        return sequelize.Op.gte;
+      case '$in':
+        return sequelize.Op.in;
+      case '$notIn':
+        return sequelize.Op.notIn;
+      case '$like':
+        return sequelize.Op.like;
+      case '$notLike':
+        return sequelize.Op.notLike;
+      default:
+        throw new Error(`Unsupported operator: ${operator}`);
+    }
+  }
+
+  static convertOperatorValue(valueKey, subValue) {
+    switch (valueKey) {
+      case '$like':
+        return `%${subValue}%`;
+      case '$notLike':
+        return `%${subValue}%`;
+      default:
+        return subValue;
+    }
+  }
+
+  static buildFilter(data) {
+    const { sequelize } = this.config;
+    const filter = getFilter(data);
+    if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
+      return null;
+    }
+    const filterKeys = Object.keys(filter);
+    const conditions = [];
+    const arrToObj = (arr) =>
+      arr.reduce((acc, curr) => {
+        return { ...acc, ...curr };
+      }, {});
+    filterKeys.forEach((key) => {
+      const value = filter[key];
+      if (key === '$and') {
+        const andConditions = value.map((andValue) => this.buildFilter(andValue)).filter(Boolean);
+        if (andConditions.length > 0) {
+          conditions.push({ [sequelize.Op.and]: andConditions });
+        }
+      } else if (key === '$or') {
+        const orConditions = value.map((orValue) => this.buildFilter(orValue)).filter(Boolean);
+        if (orConditions.length > 0) {
+          conditions.push({ [sequelize.Op.or]: orConditions });
+        }
+      } else if (key === '$not') {
+        const notConditions = this.buildFilter(value);
+        if (notConditions) {
+          conditions.push({ [sequelize.Op.not]: notConditions });
+        }
+      } else if (typeof value === 'object') {
+        const valueKeys = Object.keys(value);
+        const subConditions = valueKeys.map((valueKey) => {
+          const subValue = value[valueKey];
+          if (valueKey === '$in' || valueKey === '$notIn') {
+            if (!Array.isArray(subValue)) {
+              throw new Error(`$in operator requires an array of values, got ${typeof subValue}`);
+            }
+            return { [this.getOperator(valueKey)]: subValue };
+          }
+          return {
+            [this.getOperator(valueKey)]: this.convertOperatorValue(valueKey, subValue),
+          };
+        });
+        if (subConditions.length > 0) {
+          conditions.push({ [key]: arrToObj(subConditions) });
         }
       } else {
-        result[key] = value;
+        conditions.push({ [key]: value });
       }
     });
-    return getFilter(result);
+    return conditions;
   }
 
   /**
@@ -121,10 +183,10 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @param {number} [params.limit] Maximum number of rows to return
    * @param {number} [params.skip] Number of rows to skip before returning results
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {object} [params={}] Object containing the query parameters. Returns all values by default
    * @returns {Promise<Array>} A promise that resolves to an array of row objects returned by the query
    */
@@ -156,10 +218,10 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @param {object} data - The data to update the model instance with
    * @param {object} [params.id] The identifier of the document to be updated
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    * @throws {Error} - Throws an error if the WHERE parameters are not defined or the result array is empty
@@ -167,16 +229,8 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   static async update(data, params) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
-    const where = filters
-      ? Object.entries(filters)
-          .filter(([key]) => key !== 'raw' && key !== 'collectionName')
-          .reduce((acc, [key, value]) => {
-            acc[key] = value;
-            return acc;
-          }, {})
-      : '';
 
-    if (Object.keys(where).length === 0) {
+    if (Object.keys(filters).length === 0) {
       throw new Error(
         'SequelizeModelAdaptor update: WHERE parameters must be defined to update model',
       );
@@ -186,7 +240,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     try {
       const dataUpdate = { ...data };
       delete dataUpdate[this.idAttr()];
-      result = await this.getCollection(collectionName).update(dataUpdate, { where });
+      result = await this.getCollection(collectionName).update(dataUpdate, { where: filters });
     } catch (err) {
       throw new Error('SequelizeModelAdaptor update: error during update: ' + err.toString());
     }
@@ -210,10 +264,10 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * Deletes one or more documents from the collection
    * @param {object} [params.id] The identifier of the document to be deleted
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */

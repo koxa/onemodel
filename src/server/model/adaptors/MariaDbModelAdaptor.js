@@ -243,10 +243,10 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.columns] An object containing columns to select and their values, e.g. { id: true, name: true, email: false }
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {object} [params.sort] An object containing sort fields, e.g. { name: 1, age: -1 }
    * @param {number} [params.limit] Maximum number of rows to return
    * @param {number} [params.skip] Number of rows to skip before returning results
@@ -278,8 +278,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
 
     let query = `SELECT ${columnsQuery} FROM ${collectionName}`;
     if (filterQuery) query += ` WHERE ${filterQuery}`;
-    query += ' GROUP BY id';
-    if (sortQuery) query += ` ORDER BY ${sortQuery}`;
+    query += sortQuery ? ` ORDER BY ${sortQuery}` : ' GROUP BY id';
 
     if (limit && !skip) {
       query += ` LIMIT ${Number(limit)}`;
@@ -300,10 +299,10 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params.id] Filter by id
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {object} [params] - Object containing query parameters
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    */
@@ -355,10 +354,10 @@ class MariaDbModelAdaptor extends BaseAdaptor {
    * @param {string} params.collectionName - The name of the collection to delete documents from.
    * @param {object} [params.id] Filter by id
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @returns {Promise<object>} - An object containing information about the operation, including the number of documents deleted.
    */
   static async delete(params = {}) {

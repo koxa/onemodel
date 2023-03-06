@@ -48,10 +48,10 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * @param {number} [params.limit] Maximum number of documents to return
    * @param {number} [params.skip] Count records to skip
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @param {object} [params={}] Object containing the query parameters, returns all values by default
    * @returns {Promise<Array>} Array of document objects returned by the query
@@ -120,10 +120,10 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * @param {object} data - The data to be updated
    * @param {object} [params.id] The identifier of the document to be updated
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<boolean>} - Returns true if the document was updated, false otherwise
    * @throws {Error} - If the ID of the document to be updated is not defined
@@ -170,10 +170,10 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    * Deletes one or more documents from the MongoDB collection
    * @param {object} [params.id] The identifier of the document to be deleted
    * @param {object} [params.filter={}] - The filter to apply to the query. Property names may include
-   *   operators, such as $eq, $ne, $gt, $lt, $in, and $regex. If the $regex operator is used, the corresponding value
-   *   should be a regular expression string. By default, all documents in the collection will be returned.
+   *   operators, such as $eq, $ne, $lt, $lte, $gt, $gte, $in, $notIn, $like, $notLike, $or and $and.
+   *   By default, all documents in the collection will be returned.
    *   e.g. { age: 18, gender: 'female' }, { firstName: { $eq: 'firstName3' } }, { firstName: { $in: ['firstName3', 'firstName7'] } },
-   *   { firstName: { $regex: 'firstName' } },
+   *   { firstName: { $like: 'firstName' } },
    * @param {string} [params.collectionName] The name of the table to select data from
    * @returns {Promise<object>} - Returns the result of the deletion
    */
