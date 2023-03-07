@@ -14,7 +14,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   static _firstSync = true;
 
   static idAttr() {
-    return this.config.idAttr;
+    return this.getConfig('idAttr');
   }
 
   /**
@@ -22,7 +22,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @returns {Promise<void>} - A promise that resolves when the database is successfully synchronized
    */
   static async sync() {
-    return this.config.db.sync();
+    return this.getConfig('db').sync();
   }
 
   /**
@@ -52,10 +52,13 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     collectionName = this.getConfig().collectionName ||
       (typeof this.getCollectionName !== 'undefined' && this.getCollectionName()),
   ) {
-    if (typeof this.config.schemasParser === 'undefined' || this.config.schemasParser === null) {
-      this.config.schemasParser = {};
+    if (
+      typeof this.getConfig('schemasParser') === 'undefined' ||
+      this.getConfig('schemasParser') === null
+    ) {
+      this._config.schemasParser = {};
     }
-    const { schemas, schemasParser } = this.config;
+    const { schemas, schemasParser } = this.getConfig();
     if (!schemasParser[collectionName]) {
       schemas.forEach((schema) => {
         schemasParser[schema.name.toLocaleLowerCase()] = schema;
@@ -65,7 +68,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   static getOperator(operator) {
-    const { sequelize } = this.config;
+    const sequelize = this.getConfig('sequelize');
     switch (operator) {
       case '$eq':
         return sequelize.Op.eq;
@@ -104,7 +107,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   static buildFilter(data) {
-    const { sequelize } = this.config;
+    const sequelize = this.getConfig('sequelize');
     const filter = getFilter(data);
     if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
       return null;
@@ -194,7 +197,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     const { id, collectionName, raw, columns, sort, limit, skip, filter } =
       this.getAdaptorParams(params);
     const collection = this.getCollection(collectionName);
-    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filters = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
     const attributes = columns
       ? Object.entries(columns)
           .map(([key, value]) => {
@@ -238,7 +241,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    */
   static async update(data, params) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const filters = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
 
     if (Object.keys(filters).length === 0) {
       throw new Error(
@@ -283,7 +286,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    */
   static async delete(params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter }) || {};
+    const filters = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter }) || {};
     const deleted = await this.getCollection(collectionName).destroy({ where: filters });
     return { deletedCount: deleted };
   }

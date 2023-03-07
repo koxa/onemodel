@@ -44,7 +44,10 @@ describe('MariaDbModelAdaptor', () => {
       testDocs.push(user);
     });
 
-    await TestTableMariaDbModel.createTableFromProps(tableName, TestTableMariaDbModel.config.props);
+    await TestTableMariaDbModel.createTableFromProps(
+      tableName,
+      TestTableMariaDbModel.getConfig('props'),
+    );
   });
 
   afterAll(async () => {
@@ -62,7 +65,7 @@ describe('MariaDbModelAdaptor', () => {
       const tableTestName = tableName + 'test_table1';
       const tableCreated = await TestTableMariaDbModel.firstCheckAndCreateTable(
         tableTestName,
-        TestTableMariaDbModel.config.props,
+        TestTableMariaDbModel.getConfig('props'),
       );
       await connection.query(`DROP TABLE ${tableTestName}`);
       expect(tableCreated).toBe(true);

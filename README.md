@@ -1,4 +1,5 @@
 # onemodel
+
 OneModel - Universal JS Data BaseModel and Store to be used in front-end and back-end
 
 #### Basic usage:
@@ -6,17 +7,17 @@ OneModel - Universal JS Data BaseModel and Store to be used in front-end and bac
 **Client:**
 
     import {OneModel} from 'onemodel'
-    const user = new OneModel({firstName: 'Eddie', lastName: 'Money'});<br/>
+    const user = new OneModel({firstName: 'Eddie', lastName: 'Money'});
     user.save();
 
 by default will issue POST /model/
 
 **Server** (Node with Express):
 
-    import {OneModel} from 'onemodel'; <br/>
-    router.post('/model/', (data) => { <br/>
-        const user = new ServerModel(data); <br/>
-        user.save(); // saves to file model.txt
+    import {OneModel} from 'onemodel';
+    router.post('/api/onemodel/', (data) => {
+        const user = new OneModel(data);
+        user.save();
     })
 
 <br/>
@@ -24,37 +25,31 @@ by default will issue POST /model/
 
 #### Sharing OneModel basics between Client and Server
 
-**Define Common BaseModel**
+**Define Common OneModel**
 
-    class User extends BaseModel {
-        
-        static getDefaultProps() {
-            firstName: '',
-            lastName: ''
-        }
-        
+    class User extends OneModel {
+
+        static getConfig() {}
+
         getFullName() {
             return `${this.firstName} ${this.lastName}`;
         }
     }
 
-**Client: Wrapping User with ClientModel**
+**Client: **
 
     import User from '../common/user';
-    class ClientUser extends ClientModelWrapper(User) {}
-    const user = new ClientUser(firstName: 'Eddie', lastName: 'Money');
+
+    const user = new User(firstName: 'Eddie', lastName: 'Money');
     console.log(user.getFullName());
     user.save();
 
-**Server: Wrapping User with ServerModel**
-    
+**Server: **
+
     import User from '../common/user';
-    class ServerUser extends ServerModelWrapper(User) {}
-    router.post('/user', (data) => {
+
+    router.post('/api/user', (data) => {
         const user = new User(data);
         console.log(user.getFullName());
         user.save();
     })
-    
-
-

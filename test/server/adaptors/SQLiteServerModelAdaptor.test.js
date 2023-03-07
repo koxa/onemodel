@@ -38,7 +38,7 @@ describe('SQLiteServerModelAdaptor', () => {
       testDocs.push(user);
     });
 
-    await TestSqLiteModel.createTableFromProps(tableName, TestSqLiteModel.config.props);
+    await TestSqLiteModel.createTableFromProps(tableName, TestSqLiteModel.getConfig('props'));
   });
 
   afterAll(async () => {
@@ -55,7 +55,7 @@ describe('SQLiteServerModelAdaptor', () => {
       const tableTestName = tableName + 'test_table1';
       const tableCreated = await TestSqLiteModel.firstCheckAndCreateTable(
         tableTestName,
-        TestSqLiteModel.config.props,
+        TestSqLiteModel.getConfig('props'),
       );
       expect(tableCreated).toBe(true);
     });
