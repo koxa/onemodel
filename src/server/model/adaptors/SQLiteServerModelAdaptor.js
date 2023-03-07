@@ -152,9 +152,9 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
   static convertOperatorValue(valueKey, subValue) {
     switch (valueKey) {
       case '$like':
-        return `'%' || ${subValue} || '%'`;
+        return `'%${subValue}%'`;
       case '$notLike':
-        return `('%' || ${subValue} || '%')`;
+        return `('%${subValue}%')`;
       default:
         return `'${subValue}'`;
     }

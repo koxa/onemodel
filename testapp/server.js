@@ -18,6 +18,7 @@ async function createServer() {
   app.use(await require('./server/EmailSequelizeRouter')()); // use Sequelize -> MariaDb
   app.use(await require('./server/BookMariaDbRouter')()); // use MariaDb
   app.use(await require('./server/CommentSQLiteRouter')()); // use SQlite3 -> sqlite::memory:
+  app.use(await require('./server/UserJsonDbRouter')()); // use json file
 
   app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '../public/index.html')));
   app.use('*', router);

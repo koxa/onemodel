@@ -8,16 +8,33 @@ const USERS = 'users';
 const EMAILS = 'emails';
 const BOOKS = 'book';
 const COMMENTS = 'comments';
+const USERSJSON = 'userjson';
 
 const loaded = async () => {
   class User extends OneModel {}
   class Email extends OneModel {}
   class Book extends OneModel {}
   class Comment extends OneModel {}
+  class UserJson extends OneModel {}
 
   User.configure({
     idAttr: '_id',
   });
+
+  const searchHandle = async (refModel, refUpdate, keys = [], search) => {
+    const searchText = search.trim();
+    refUpdate(
+      await refModel.read(
+        searchText
+          ? {
+              filter: {
+                $or: [{ [keys[0]]: { $like: searchText } }, { [keys[1]]: { $like: searchText } }],
+              },
+            }
+          : {},
+      ),
+    );
+  };
 
   const { list: userList } = createTable({
     name: USERS,
@@ -52,6 +69,7 @@ const loaded = async () => {
       const email = new Email(data);
       return await email.save();
     },
+    searchChange: async (search) => searchHandle(Email, emailList, ['user', 'email'], search),
   });
 
   const { list: bookList } = createTable({
@@ -70,6 +88,7 @@ const loaded = async () => {
       const book = new Book(data);
       return await book.save();
     },
+    searchChange: async (search) => searchHandle(Book, bookList, ['title', 'comment'], search),
   });
 
   const { list: commentList } = createTable({
@@ -88,12 +107,42 @@ const loaded = async () => {
       const comment = new Comment(data);
       return await comment.save();
     },
+    searchChange: async (search) =>
+      searchHandle(Comment, commentList, ['title1', 'comment_text'], search),
   });
 
-  userList(await User.read());
-  emailList(await Email.read());
-  commentList(await Comment.read());
-  bookList(await Book.read());
+  const { list: userJsonList } = createTable({
+    name: USERSJSON,
+    idAttr: 'id',
+    refreshClick: async () => userJsonList(await UserJson.read()),
+    removeClick: ({ id }) => {
+      const userjson = new UserJson({ id });
+      return userjson.delete();
+    },
+    addClick: async (data) => {
+      const userjson = new UserJson(data);
+      return await userjson.save();
+    },
+    updateClick: async (data) => {
+      const userjson = new UserJson(data);
+      return await userjson.save();
+    },
+    searchChange: async (search) =>
+      searchHandle(UserJson, userJsonList, ['userName', 'userRole'], search),
+  });
+
+  const [userJson, user, email, comment, book] = await Promise.all([
+    UserJson.read(),
+    User.read(),
+    Email.read(),
+    Comment.read(),
+    Book.read(),
+  ]);
+  userJsonList(userJson);
+  userList(user);
+  emailList(email);
+  commentList(comment);
+  bookList(book);
 };
 
 document.addEventListener('DOMContentLoaded', loaded);

@@ -195,11 +195,20 @@ class SequelizeModelAdaptor extends BaseAdaptor {
       this.getAdaptorParams(params);
     const collection = this.getCollection(collectionName);
     const filters = this.buildFilter({ [this.config.idAttr]: id, ...filter });
+    const attributes = columns
+      ? Object.entries(columns)
+          .map(([key, value]) => {
+            if (value === 1 || value === true) {
+              return key;
+            }
+          })
+          .filter(Boolean)
+      : undefined;
     const query = {
       raw,
       limit: limit ? Number(limit) : undefined,
       offset: skip,
-      attributes: columns,
+      attributes,
       where: filters,
       order:
         typeof sort === 'object'
@@ -210,7 +219,8 @@ class SequelizeModelAdaptor extends BaseAdaptor {
           : undefined,
     };
 
-    return await collection.findAll(query);
+    const rows = await collection.findAll(query);
+    return rows.map((item) => new this(item));
   }
 
   /**

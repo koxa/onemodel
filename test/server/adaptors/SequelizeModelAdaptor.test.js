@@ -260,6 +260,16 @@ describe('SequelizeModelAdaptor', () => {
       });
       expect(resultOr.map((res) => res.firstName)).toEqual(['firstName 6', 'firstName 7']);
     });
+
+    it('checking columns parameters', async () => {
+      const resultOr = await SequelizeModelTestModel.read({
+        filter: {
+          firstName: 'firstName 4',
+        },
+        columns: { id: 1, firstName: 1 },
+      });
+      expect(resultOr[0]).toEqual({ firstName: 'firstName 4', id: 4 });
+    });
   });
 
   describe('update()', () => {

@@ -1,5 +1,5 @@
 import express from 'express';
-import fetch from 'cross-fetch';
+import fetch from 'node-fetch';
 import Model from '../src/client/model/ClientModel';
 global.fetch = fetch;
 const { getQueryParams } = require('../src/utils/node/index');

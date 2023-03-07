@@ -59,16 +59,12 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   static async read(params = {}) {
     const { id, collectionName, sort, limit, skip, filter, columns } =
       this.getAdaptorParams(params);
-    const projection = {};
+    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
+    const cursor = this.getCollection(collectionName).find(filters);
 
     if (columns) {
-      Object.keys(columns).forEach((key) => {
-        projection[key] = columns[key] ? 1 : 0;
-      });
+      cursor.project(columns);
     }
-
-    const filters = getFilter({ [this.config.idAttr]: id, ...filter });
-    const cursor = this.getCollection(collectionName).find(filters, projection);
 
     if (sort) {
       cursor.sort(sort);
