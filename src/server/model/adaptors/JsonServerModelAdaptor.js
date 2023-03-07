@@ -248,7 +248,7 @@ class JsonServerModelAdaptor extends BaseAdaptor {
     if (this.getConfig('memoryDb')) {
       return (this.getConfig('memoryDb')[collectionName] = [...data]);
     }
-    const dirPath = this.getConfig().pathDir;
+    const dirPath = this.getConfig('pathDir');
     try {
       await fs.access(dirPath);
     } catch (error) {
@@ -325,13 +325,13 @@ class JsonServerModelAdaptor extends BaseAdaptor {
     return true;
   }
 
-  static getCollection(collectionName = this.getConfig().collectionName) {
-    return path.join(this.getConfig().pathDir, `${collectionName}.json`);
+  static getCollection(collectionName = this.getConfig('collectionName')) {
+    return path.join(this.getConfig('pathDir'), `${collectionName}.json`);
   }
 
   static getAdaptorParams({
     id,
-    collectionName = this.getConfig().collectionName,
+    collectionName = this.getConfig('collectionName'),
     raw,
     filter,
     ...props
@@ -347,7 +347,7 @@ class JsonServerModelAdaptor extends BaseAdaptor {
 
   getAdaptorParams({
     id = this.getId(),
-    collectionName = this.getConfig().collectionName,
+    collectionName = this.getConfig('collectionName'),
     filter,
     ...props
   }) {
