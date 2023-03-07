@@ -59,7 +59,7 @@ class BaseAdaptor {
       params = { id: this.getId(), ...params };
       const result = await this.constructor.update(
         this.getAll(this.constructor.getConfig().idAttr),
-        this.getAdaptorParams(params),
+        this.constructor.getAdaptorParams(params),
       ); // get all data but id //todo: get only props modified since creation and save to server only them
       if (typeof result !== 'boolean') {
         // for example mongo on updateOne won't return full data but rather modifiedCount. matchedCount etc
@@ -67,7 +67,10 @@ class BaseAdaptor {
       }
       return result; // if all ok true is returned
     } else {
-      const data = await this.constructor.create(this.getAll(), this.getAdaptorParams(params));
+      const data = await this.constructor.create(
+        this.getAll(),
+        this.constructor.getAdaptorParams(params),
+      );
       if (typeof data !== 'object') {
         throw new Error('BaseAdaptor save: create must return object with modified props or id');
       }

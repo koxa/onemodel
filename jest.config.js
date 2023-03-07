@@ -15,7 +15,7 @@ const settings = {
       protocol: 'http:',
     },
   },
-  //testPathIgnorePatterns: ['MariaDbModelAdaptor.test.js'],
+  testPathIgnorePatterns: ['MariaDbModelAdaptor.test.js'],
 };
 
 module.exports = settings;

@@ -35,7 +35,7 @@ class BaseModel extends Base {
   }
 
   static configure(config) {
-    this._config = { ...this._config, ...this.constructor._config, ...config };
+    this._config = { ...this._config, ...config };
     return this._config;
   }
 
