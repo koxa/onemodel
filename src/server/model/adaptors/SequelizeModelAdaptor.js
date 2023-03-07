@@ -14,7 +14,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   static _firstSync = true;
 
   static idAttr() {
-    return this.getConfig('idAttr')
+    return this.getConfig('idAttr');
   }
 
   /**
@@ -51,8 +51,11 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   static getCollection(
     collectionName = this.getConfig('collectionName')
   ) {
-    if (typeof this.getConfig('schemasParser') === 'undefined' || this.getConfig('schemasParser') === null) {
-      this._config.schemasParser = {}; //todo: DO not write dynamically into config like this
+    if (
+      typeof this.getConfig('schemasParser') === 'undefined' ||
+      this.getConfig('schemasParser') === null
+    ) {
+      this._config.schemasParser = {};
     }
     const { schemas, schemasParser } = this.getConfig();
     if (!schemasParser[collectionName]) {
@@ -64,7 +67,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   static getOperator(operator) {
-    const { sequelize } = this.getConfig();
+    const sequelize = this.getConfig('sequelize');
     switch (operator) {
       case '$eq':
         return sequelize.Op.eq;
@@ -103,7 +106,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   static buildFilter(data) {
-    const { sequelize } = this.getConfig();
+    const sequelize = this.getConfig('sequelize');
     const filter = getFilter(data);
     if (!filter || typeof filter !== 'object' || !Object.keys(filter).length) {
       return null;
@@ -194,11 +197,20 @@ class SequelizeModelAdaptor extends BaseAdaptor {
       this.getAdaptorParams(params);
     const collection = this.getCollection(collectionName);
     const filters = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
+    const attributes = columns
+      ? Object.entries(columns)
+          .map(([key, value]) => {
+            if (value === 1 || value === true) {
+              return key;
+            }
+          })
+          .filter(Boolean)
+      : undefined;
     const query = {
       raw,
       limit: limit ? Number(limit) : undefined,
       offset: skip,
-      attributes: columns,
+      attributes,
       where: filters,
       order:
         typeof sort === 'object'
@@ -209,7 +221,8 @@ class SequelizeModelAdaptor extends BaseAdaptor {
           : undefined,
     };
 
-    return await collection.findAll(query);
+    const rows = await collection.findAll(query);
+    return rows.map((item) => new this(item));
   }
 
   /**

@@ -16,7 +16,6 @@
 
         body {
             width: 100%;
-            height: 100%;
             position: relative;
             background-color: rgb(236, 152, 42);
         }
@@ -84,6 +83,27 @@
     <div class="center">
         <h1>OneModel</h1>
         <div class="block">
+            <h2>Users (HttpAdaptor - JsonDb)</h2>
+            <form class="form-add userjson">
+                <label for="userName">UserName:</label><br>
+                <input type="text" id="userName" name="userName"><br>
+                <label for="userRole">User role:</label><br>
+                <input type="text" id="userRole" name="userRole">
+                <button id="add-button" type="button">Add</button>
+            </form>
+            <input class="search userjson" type="text">
+            <table id="userjson">
+                <thead>
+                    <tr>
+                        <th colspan="2">Users</th>
+                        <th colspan="1"><button id="refresh" type="button">refresh</button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="block">
             <h2>Users (HttpAdaptor - (mongodb-memory-server))</h2>
             <form class="form-add users">
                 <label for="firstName">First name:</label><br>
@@ -92,6 +112,7 @@
                 <input type="text" id="lastName" name="lastName">
                 <button id="add-button" type="button">Add</button>
             </form>
+            <!-- <input class="search users" type="text"> -->
             <table id="users">
                 <thead>
                     <tr>
@@ -114,6 +135,7 @@
                 <input type="text" id="date" name="date">
                 <button id="add-button" type="button">Add</button>
             </form>
+            <input class="search emails" type="text">
             <table id="emails">
                 <thead>
                     <tr>
@@ -134,6 +156,7 @@
                 <input type="text" id="comment_text" name="comment_text">
                 <button id="add-button" type="button">Add</button>
             </form>
+            <input class="search comments" type="text">
             <table id="comments">
                 <thead>
                     <tr>
@@ -154,6 +177,7 @@
                 <input type="text" id="comment" name="comment">
                 <button id="add-button" type="button">Add</button>
             </form>
+            <input class="search book" type="text">
             <table id="book">
                 <thead>
                     <tr>

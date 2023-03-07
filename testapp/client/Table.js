@@ -4,13 +4,32 @@ export default function createTable({
   updateClick,
   removeClick,
   refreshClick,
+  searchChange,
   idAttr = '_id',
   skipColumns = ['_id', 'id', 'createdAt', 'updatedAt'],
 }) {
+  const debounce = (cb, timeout) => {
+    let timer;
+    return () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        cb();
+      }, timeout);
+    };
+  };
+
   const tableBody = document.querySelector(`#${name} > tbody`);
   const addButton = document.querySelector(`.form-add.${name} button`);
   const inputs = document.querySelectorAll(`.form-add.${name} input`);
+  const search = document.querySelector(`input.search.${name}`);
   document.querySelector(`#${name} button`).onclick = refreshClick;
+
+  if (search) {
+    search.addEventListener(
+      'input',
+      debounce(() => searchChange && searchChange(search.value), 500),
+    );
+  }
 
   const updateButtonClick = async (id) => {
     const inputs = document.querySelectorAll(`#${name} #i${id} input`);

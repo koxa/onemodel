@@ -1,4 +1,5 @@
 # onemodel
+
 OneModel - Universal JS Data BaseModel and Store to be used in front-end and back-end
 
 #### Basic usage:
@@ -27,9 +28,9 @@ by default will issue POST /model/
 **Define Common OneModel**
 
     class User extends OneModel {
-        
+
         static getConfig() {}
-        
+
         getFullName() {
             return `${this.firstName} ${this.lastName}`;
         }
@@ -44,7 +45,7 @@ by default will issue POST /model/
     user.save();
 
 **Server: **
-    
+
     import User from '../common/user';
 
     router.post('/api/user', (data) => {
@@ -52,6 +53,3 @@ by default will issue POST /model/
         console.log(user.getFullName());
         user.save();
     })
-    
-
-

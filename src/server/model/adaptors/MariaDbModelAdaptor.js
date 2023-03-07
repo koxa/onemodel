@@ -14,7 +14,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   }
 
   static async getConnection() {
-    return this.this.getConfig('db').getConnection();
+    return this.getConfig('db').getConnection();
   }
 
   /**

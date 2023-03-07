@@ -148,6 +148,18 @@ describe('MongoServerModelAdaptor', () => {
       expect(resultRegexOne.length).toBe(1);
     });
 
+    it('checking columns parameters', async () => {
+      const resultOr = await MongoModel.read({
+        filter: {
+          firstName: 'firstName 4',
+        },
+        columns: { _id: 1, firstName: 1 },
+      });
+      expect(resultOr[0]).toHaveProperty('_id');
+      expect(resultOr[0].firstName).toBe('firstName 4');
+      expect(resultOr[0].lastName).not.toBeDefined();
+    });
+
     it('readOne(): should find a document in the MongoDB collection by ID', async () => {
       const result = await MongoModel.create({ ...testData }, {});
       const document = await MongoModel.readOne(result._id);

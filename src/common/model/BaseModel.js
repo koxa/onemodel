@@ -35,7 +35,7 @@ class BaseModel extends Base {
   }
 
   static configure(config) {
-    this._config = { ...this._config, ...config };
+    this._config = { ...this._config, ...this.constructor._config, ...config };
     return this._config;
   }
 
@@ -96,7 +96,7 @@ class BaseModel extends Base {
   }
 
   getId() {
-    let idAttr = this.getConfig('idAttr');
+    let idAttr = this.constructor.getConfig('idAttr');
     return this[idAttr];
   }
 
