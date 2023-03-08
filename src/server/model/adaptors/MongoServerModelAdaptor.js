@@ -40,6 +40,30 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       });
   }
 
+  static buildFilter(filter) {
+    const mongo = this.getConfig('mongo');
+    const filters = getFilter(filter);
+    if (!filters || Object.keys(filters).length === 0) {
+      return filters;
+    }
+    const simplifiedFilters = Array.isArray(filter) ? [] : {};
+    const regex = (text) => new RegExp(text.toString().replace(/%/g, '.'), 'i');
+    for (const [key, value] of Object.entries(filters)) {
+      if (key === '$like' && (typeof value === 'string' || typeof value === 'number')) {
+        simplifiedFilters['$regex'] = regex(value);
+      } else if (key === '$notLike' && (typeof value === 'string' || typeof value === 'number')) {
+        simplifiedFilters['$not'] = regex(value);
+      } else if (key === '$notIn') {
+        simplifiedFilters['$nin'] = value;
+      } else if (typeof value === 'object' && value !== null && !mongo.ObjectId.isValid(value)) {
+        simplifiedFilters[key] = this.buildFilter(value);
+      } else {
+        simplifiedFilters[key] = value;
+      }
+    }
+    return simplifiedFilters;
+  }
+
   /**
    * Executes a request to read data from a collection
    * @param {object} [params.id] Filter by id
@@ -59,7 +83,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   static async read(params = {}) {
     const { id, collectionName, sort, limit, skip, filter, columns } =
       this.getAdaptorParams(params);
-    const filters = getFilter({ [this.getConfig('idAttr')]: id, ...filter });
+    const filters = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
     const cursor = this.getCollection(collectionName).find(filters);
 
     if (columns) {
@@ -128,7 +152,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     const { id, collectionName, filter } = this.getAdaptorParams(params); //todo: ability to save
     const mongo = this.getConfig('mongo');
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = getFilter({ [this.getConfig('idAttr')]: mongoId, ...filter });
+    const filters = this.buildFilter({ [this.getConfig('idAttr')]: mongoId, ...filter });
     if (!filters || !Object.keys(filters).length) {
       throw new Error(
         'MongoServerModelAdaptor update: "id" or "filter" must be defined to update model',
@@ -177,7 +201,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     const mongo = this.getConfig('mongo');
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
-    const filters = getFilter({ [this.getConfig('idAttr')]: mongoId, ...filter });
+    const filters = this.buildFilter({ [this.getConfig('idAttr')]: mongoId, ...filter });
     return await this.getCollection(collectionName).deleteMany(filters);
   }
 

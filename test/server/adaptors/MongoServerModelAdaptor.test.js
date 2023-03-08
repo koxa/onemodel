@@ -116,36 +116,130 @@ describe('MongoServerModelAdaptor', () => {
       expect(result[0]).toHaveProperty('firstName', `firstName ${testManyDocs.length}`);
     });
 
-    it('checking filter parameters: $eq, $ne, $gt, $lt, $in, $regex', async () => {
-      const resultWhere = await MongoModel.read({ filter: { firstName: 'firstName 2' } });
-      const resultEq = await MongoModel.read({ filter: { firstName: { $eq: 'firstName 3' } } });
-      const resultNe = await MongoModel.read({ filter: { firstName: { $ne: 'firstName 4' } } });
-      const resultGt = await MongoModel.read({ filter: { firstName: { $gt: 'firstName 4' } } });
-      const resultLt = await MongoModel.read({ filter: { firstName: { $lt: 'firstName 4' } } });
-      const resultRegexAll = await MongoModel.read({
-        filter: { firstName: { $regex: 'firstName' } },
+    it('checking filter parameters: without operators', async () => {
+      const resultWhere = await MongoModel.read({
+        filter: { firstName: 'firstName 2' },
       });
-      const resultRegexOne = await MongoModel.read({ filter: { firstName: { $regex: '5' } } });
+      expect(resultWhere[0].firstName).toBe('firstName 2');
+    });
+
+    it('checking filter parameters: $eq', async () => {
+      const resultEq = await MongoModel.read({
+        filter: { firstName: { $eq: 'firstName 3' } },
+      });
+      expect(resultEq.length).toBe(1);
+      expect(resultEq[0].firstName).toBe('firstName 3');
+    });
+
+    it('checking filter parameters: $ne', async () => {
+      const resultNe = await MongoModel.read({
+        filter: { firstName: { $ne: 'firstName 4' } },
+      });
+      expect(resultNe.length).toBe(maxDocs);
+      expect(resultNe.filter((result) => result.firstName === 'firstName 4').length).toBe(0);
+    });
+
+    it('checking filter parameters: $lt', async () => {
+      const resultLt = await MongoModel.read({
+        filter: { firstName: { $lt: 'firstName 4' } },
+      });
+      expect(resultLt.length).toBe(4);
+    });
+
+    it('checking filter parameters: $lte', async () => {
+      const resultLte = await MongoModel.read({
+        filter: { firstName: { $lte: 'firstName 4' } },
+      });
+      expect(resultLte.length).toBe(5);
+    });
+
+    it('checking filter parameters: $gt', async () => {
+      const resultGt = await MongoModel.read({
+        filter: { firstName: { $gt: 'firstName 4' } },
+      });
+      expect(resultGt.length).toBe(5);
+    });
+
+    it('checking filter parameters: $gte', async () => {
+      const resultGte = await MongoModel.read({
+        filter: { firstName: { $gte: 'firstName 4' } },
+      });
+      expect(resultGte.length).toBe(6);
+    });
+
+    it('checking filter parameters: $in', async () => {
       const resultIn = await MongoModel.read({
         filter: { firstName: { $in: ['firstName 4', 'firstName 5'] } },
       });
-
-      expect(resultWhere[0].firstName).toBe('firstName 2');
-
-      expect(resultEq.length).toBe(1);
-      expect(resultEq[0].firstName).toBe('firstName 3');
-
-      expect(resultNe.length).toBe(9);
-      expect(resultNe.filter((result) => result.firstName === 'firstName 4').length).toBe(0);
-
-      expect(resultGt.length).toBe(5);
-      expect(resultLt.length).toBe(4);
-
       expect(resultIn.length).toBe(2);
-      expect(resultIn.map((res) => res.firstName)).toStrictEqual(['firstName 4', 'firstName 5']);
+      expect(resultIn.map((res) => res.firstName)).toEqual(['firstName 4', 'firstName 5']);
+    });
 
-      expect(resultRegexAll.length).toBe(10);
-      expect(resultRegexOne.length).toBe(1);
+    it('checking filter parameters: $notIn', async () => {
+      const resultNotIn = await MongoModel.read({
+        filter: { firstName: { $notIn: ['firstName 4'] } },
+      });
+      expect(resultNotIn.length).toBe(9);
+      expect(resultNotIn.map((res) => res.firstName)).toEqual([
+        'firstName 1',
+        'firstName 2',
+        'firstName 3',
+        'firstName 5',
+        'firstName 6',
+        'firstName 7',
+        'firstName 8',
+        'firstName 9',
+        'firstName 1',
+      ]);
+    });
+
+    it('checking filter parameters: $like', async () => {
+      const resultLikeAll = await MongoModel.read({
+        filter: { firstName: { $like: 'firstName' } },
+      });
+      expect(resultLikeAll.length).toBe(10);
+
+      const resultLikeOne = await MongoModel.read({
+        filter: { firstName: { $like: '5' } },
+      });
+      expect(resultLikeOne.length).toBe(1);
+    });
+
+    it('checking filter parameters: $notLike', async () => {
+      const resultNotLike = await MongoModel.read({
+        filter: { firstName: { $notLike: '5' } },
+      });
+      expect(resultNotLike.length).toBe(9);
+      expect(resultNotLike.map((item) => item.firstName)).toEqual([
+        'firstName 1',
+        'firstName 2',
+        'firstName 3',
+        'firstName 4',
+        'firstName 6',
+        'firstName 7',
+        'firstName 8',
+        'firstName 9',
+        'firstName 1',
+      ]);
+    });
+
+    it('checking filter parameters: $and', async () => {
+      const resultAnd = await MongoModel.read({
+        filter: {
+          $and: [{ firstName: 'firstName 4' }, { lastName: 'lastName 4' }],
+        },
+      });
+      expect(resultAnd.length).toBe(1);
+    });
+
+    it('checking filter parameters: $or', async () => {
+      const resultOr = await MongoModel.read({
+        filter: {
+          firstName: { $in: ['firstName 4', 'firstName 6', 'firstName 7'] },
+          $or: [{ lastName: 'lastName 4' }, { lastName: 'lastName 7' }],
+        },
+      });
+      expect(resultOr.map((res) => res.firstName)).toEqual(['firstName 4', 'firstName 7']);
     });
 
     it('checking columns parameters', async () => {

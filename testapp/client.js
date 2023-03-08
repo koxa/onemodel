@@ -51,6 +51,7 @@ const loaded = async () => {
       const user = new User(data);
       return await user.save();
     },
+    searchChange: async (search) => searchHandle(User, userList, ['firstName', 'lastName'], search),
   });
 
   const { list: emailList } = createTable({
