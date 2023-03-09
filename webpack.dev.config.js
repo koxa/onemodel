@@ -76,6 +76,44 @@ module.exports = [
     externals: [nodeExternals()],
   },
   {
+    name: 'onemodelclient',
+    mode: 'development',
+    target: 'web',
+    entry: {
+      client: [
+        'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
+        './testapp/onemodelclient.js',
+      ],
+    },
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: 'onemodelclient-web.js',
+      publicPath: '/',
+      hotUpdateChunkFilename: '.hot/[id].[hash].hot-update.js',
+      hotUpdateMainFilename: '.hot/[hash].hot-update.json',
+    },
+    plugins: [
+      new NodePolyfillPlugin(),
+      new webpack.HotModuleReplacementPlugin(),
+      new webpack.DefinePlugin({
+        'process.env.WEBPACK_TARGET': JSON.stringify('web'),
+      }),
+    ],
+    module: {
+      rules: [
+        {
+          test: /\.js?$/,
+          loader: 'babel-loader',
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    optimization: {
+      minimize: false,
+    },
+    devtool: 'eval-source-map',
+  },
+  {
     name: 'client',
     mode: 'development',
     target: 'web',

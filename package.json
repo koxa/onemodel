@@ -9,7 +9,8 @@
     "build": "webpack",
     "prepublish": "npm run build",
     "test.build": "webpack --watch --mode development --config webpack.dev.config.js",
-    "test.server": "nodemon --inspect testapp/server.js"
+    "test.server": "nodemon --inspect testapp/server.js",
+    "test.onemodel": "nodemon --inspect testapp/onemodelserver.js"
   },
   "repository": {
     "type": "git",
