@@ -1,69 +1,55 @@
-import Model from '../src/client/model/ClientModel';
-import http from 'http';
-const { getQueryParams } = require('../src/utils/node/index');
+import fetch from 'node-fetch';
+import OneModelServer from '../src/middleware/index';
+import ClientModel from '../src/client/model/ClientModel';
 
-const port = 9333;
-let server;
+class OneModel extends ClientModel {}
 
 describe('test block', () => {
   let server = null;
-  let sockets = {}, nextSocketId = 0;
-  server = http.createServer((req, res) => {
-    if (req.method === 'GET') {
-      // supporting GET tests
-      res.end(JSON.stringify({ name: 'ethan' }));
-    } else if (req.method === 'POST') {
-      // supporting POST tests
-    } else {
-      throw new Error('unknown request method');
-    }
-  });
-
-  /** WE MUST COLLECT SOCKETS TO DESTROY THEM LATER OTHERWISE CONNECTION HANGS **/
-  server.on('connection', function (socket) {
-    let socketId = nextSocketId++;
-    sockets[socketId] = socket;
-    socket.on('close', function () {
-      delete sockets[socketId];
-    });
-    socket.setTimeout(4000);
-  });
+  let port = 9333;
+  const maxDocs = 30;
+  const testDocs = [];
+  const testUser1 = { id: 1, firstName: 'firstName 1', lastName: 'lastName 1' };
 
   beforeAll(async () => {
-    Model.configure({
-      idAttr: '_id',
+    global.fetch = fetch;
+
+    OneModel.configure({
       port,
     });
-    await server.listen(port);
+
+    server = new OneModelServer({ port, props: { memoryDb: {} } });
+    await server.start();
+
+    /** CREATE TEST DATA */
+    [...Array(maxDocs).keys()].forEach((i) => {
+      const user = { firstName: `firstName ${i + 1}`, lastName: `lastName ${i + 1}` };
+      testDocs.push(user);
+    });
+
+    await testDocs.reduce((prevPromise, value) => {
+      return prevPromise.then(() => OneModel.create({ ...value }, {}));
+    }, Promise.resolve());
   });
 
   afterAll(async () => {
-    await server.close();
-    for (let socketId in sockets) {
-      sockets[socketId].destroy();
-    }
-    await new Promise((resolve) => setTimeout(() => resolve(), 0)); // put this at the end of queue to make sure all sockets destroyed before closing tests
+    await server.stop();
   });
 
   /*** GET TESTS ***/
   test('should read Model by id', async () => {
-    const user = await Model.read({ id: 1, port });
-    expect(user.name).toBe('ethan');
+    const user = await OneModel.read({ id: 1 });
+    expect(user).toEqual([testUser1]);
   });
 
-  test('should read preconfigured Model by id', async () => {
-    const user = await Model.read({ id: 1 });
-    expect(user.name).toBe('ethan');
+  test('should filter Model', async () => {
+    const user = await OneModel.read('firstName', 'firstName 1'); // key-val format
+    expect(user).toEqual([testUser1]);
+    const user2 = await OneModel.read({ filter: { firstName: 'firstName 1' } }); // params object filter prop
+    expect(user2).toEqual([testUser1]);
+    const user3 = await OneModel.read(1, { filter: { firstName: 'firstName 1' } }); // id and params with filter
+    expect(user3).toEqual([testUser1]);
+    const user4 = await OneModel.read('firstName', 'lastName 1', { id: 1 }); // id and params with filter
+    expect(user4).toEqual([testUser1]);
   });
-  //
-  // test('should filter Model', async () => {
-  //   const user = await Model.read('name', 'aaron'); // key-val format
-  //   expect(user.name).toBe('aaron');
-  //   const user2 = await Model.read({ filter: { name: 'aaron' } }); // params object filter prop
-  //   expect(user2.name).toBe('aaron');
-  //   const user3 = await Model.read(1, { filter: { name: 'aaron' } }); // id and params with filter
-  //   expect(user3.name).toBe('AARON');
-  //   const user4 = await Model.read('name', 'aaron', { id: 1 }); // id and params with filter
-  //   expect(user4.name).toBe('AARON');
-  // });
 });

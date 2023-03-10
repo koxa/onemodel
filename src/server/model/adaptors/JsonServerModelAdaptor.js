@@ -40,7 +40,8 @@ class JsonServerModelAdaptor extends BaseAdaptor {
 
     let filteredData = raw ? data : data.slice(1);
     if (id) {
-      filteredData = filteredData.find((doc) => doc[this.idAttr()] == id);
+      const findElement = filteredData.find((doc) => doc[this.idAttr()] == id);
+      filteredData = findElement ? [findElement] : [];
     } else if (filtered) {
       filteredData = filteredData.filter((doc) => this.matchFilter(doc, filtered));
     }

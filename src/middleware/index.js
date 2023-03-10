@@ -21,9 +21,17 @@ class OneModelServer {
     indexFileName,
     timeout = 1500,
     onBeforeResponse,
+    props,
   } = {}) {
     this.port = port;
-    this.models = new Map(models.map((model) => [model.getConfig('collectionName'), model]));
+    this.models = new Map(
+      models.map((model) => {
+        if (props) {
+          model.configure({ ...props });
+        }
+        return [model.getConfig('collectionName'), model];
+      }),
+    );
     this.staticPaths = staticPaths;
     this.indexFileName = indexFileName;
     this.onBeforeResponse = onBeforeResponse;
@@ -136,7 +144,8 @@ class OneModelServer {
       if (method === 'GET' && (await this.checkStaticFile(url, res))) {
         return;
       }
-      const [, , collectionName, id] = url.split('/');
+      const [, , collectionName, idParam] = url.split('/');
+      const id = idParam ? idParam.split('?')[0] : undefined;
       const model = this.getModel(collectionName);
       const searchParams = getQueryParams(req);
       if (!model) {
@@ -144,7 +153,9 @@ class OneModelServer {
       }
       const log = (body) =>
         console.log(
-          `${method} ${url}, ${JSON.stringify(searchParams)} ${body ? JSON.stringify(body) : ''}`,
+          `${method} ${url}, id:${id}, ${JSON.stringify(searchParams)} ${
+            body ? JSON.stringify(body) : ''
+          }`,
         );
 
       switch (method) {
@@ -221,11 +232,14 @@ class OneModelServer {
   }
 
   async stop() {
-    this.server.close(() => {
-      console.log('Server stopped');
-    });
-    Object.values(this.sockets).forEach((socket) => {
-      socket.destroy();
+    await new Promise((resolve) => {
+      Object.values(this.sockets).forEach((socket) => {
+        socket.destroy();
+      });
+      this.server.close(() => {
+        console.log('Server stopped');
+        resolve();
+      });
     });
   }
 }
