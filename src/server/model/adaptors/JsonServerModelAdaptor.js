@@ -46,7 +46,7 @@ class JsonServerModelAdaptor extends BaseAdaptor {
       filteredData = filteredData.filter((doc) => this.matchFilter(doc, filtered));
     }
 
-    if (sort) {
+    if (typeof sort === 'object') {
       const sortKeys = Object.keys(sort);
       filteredData.sort((a, b) => {
         for (let i = 0; i < sortKeys.length; i++) {
@@ -54,10 +54,17 @@ class JsonServerModelAdaptor extends BaseAdaptor {
           const order = sort[key];
           const aValue = a[key];
           const bValue = b[key];
-          if (aValue < bValue) {
+          if (typeof aValue === 'string' && typeof bValue === 'string') {
+            const comparison = aValue.localeCompare(bValue, undefined, {
+              numeric: true,
+              sensitivity: 'base',
+            });
+            if (comparison !== 0) {
+              return order === 1 ? comparison : -comparison;
+            }
+          } else if (aValue < bValue) {
             return order === 1 ? -1 : 1;
-          }
-          if (aValue > bValue) {
+          } else if (aValue > bValue) {
             return order === 1 ? 1 : -1;
           }
         }
@@ -135,12 +142,10 @@ class JsonServerModelAdaptor extends BaseAdaptor {
     if (!existingDocs || existingDocs.length === 0) {
       throw new Error(`Document with id ${filter[this.idAttr()]} does not exist`);
     }
-    const existingDoc = existingDocs[0];
-    const updatedDoc = { ...existingDoc, ...data };
     const allDocs = await this.read({ collectionName, raw: true });
     const modifiedData = allDocs.map((doc) => {
       if (this.matchFilter(doc, filters)) {
-        return updatedDoc;
+        return { ...doc, ...data };
       }
       return doc;
     });
@@ -281,13 +286,16 @@ class JsonServerModelAdaptor extends BaseAdaptor {
               return false;
             }
           }
+          return true;
         } else if (key === '$or') {
+          let matchFound = false;
           for (let j = 0; j < value.length; j++) {
             if (this.matchFilter(doc, value[j])) {
-              return true;
+              matchFound = true;
+              break;
             }
           }
-          return false;
+          return matchFound;
         } else if (key === '$not') {
           return !this.matchFilter(doc, value);
         }

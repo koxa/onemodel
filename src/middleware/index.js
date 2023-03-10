@@ -162,6 +162,9 @@ class OneModelServer {
         case 'GET': {
           try {
             log();
+            if (id === 'count') {
+              return this.handleResponse(res, await model.count());
+            }
             const result = await model.read(id ? { id, ...searchParams } : searchParams);
             this.handleResponse(res, result);
           } catch (error) {

@@ -119,6 +119,12 @@ class HttpModelAdaptor extends BaseAdaptor {
     return await this.request({ ...this.getAdaptorParams(params) }, data);
   }
 
+  static async count(params = {}) {
+    //todo: url or id for static calls
+    params.method = params.method || 'GET';
+    return await this.request({ ...this.getAdaptorParams({ ...params, id: 'count' }) });
+  }
+
   static async delete(params = {}) {
     //todo: url or id for static calls
     params.method = params.method || 'DELETE';
