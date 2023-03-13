@@ -198,7 +198,7 @@ describe('test block', () => {
     expect(updatedDoc).toEqual([{ id, ...data }]);
   });
 
-  test('should update documents that match the specified filter', async () => {
+  test('should update documents that match the specified filter #1', async () => {
     const data = { age: '30' };
     const filter = { firstName: { $like: 'Name 30' } };
     const result = await OneModel.update(data, { id: 30, filter });
@@ -207,6 +207,20 @@ describe('test block', () => {
     expect(updatedDocs).toEqual([
       { age: '30', firstName: 'firstName 30', id: 30, lastName: 'lastName 30' },
     ]);
+  });
+
+  test('should update documents that match the specified filter #2', async () => {
+    const data = { age: 30 };
+    const filter = { firstName: { $like: 'first' } };
+    const result = await OneModel.update(data, { filter });
+    expect(result).toBe(true);
+    const countDocs = await OneModel.count();
+    const updatedDocs = await OneModel.read({ filter });
+    expect(countDocs).toBe(30);
+    expect(updatedDocs.length).toBe(29);
+    updatedDocs.forEach((doc) => {
+      expect(doc.age).toBe(30);
+    });
   });
 
   test('should delete the document with the specified ID', async () => {

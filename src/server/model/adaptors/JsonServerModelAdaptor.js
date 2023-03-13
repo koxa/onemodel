@@ -149,6 +149,7 @@ class JsonServerModelAdaptor extends BaseAdaptor {
       }
       return doc;
     });
+    console.log('###', modifiedData);
     await this.writeFile(collectionName, modifiedData);
     return true;
   }
@@ -303,28 +304,32 @@ class JsonServerModelAdaptor extends BaseAdaptor {
         const docValue = doc[key];
         const valueKeys = Object.keys(value);
         for (let j = 0; j < valueKeys.length; j++) {
-          const operator = valueKeys[j];
-          const operand = value[operator];
-          if (operator === '$eq' && docValue != operand) {
-            return false;
-          } else if (operator === '$ne' && docValue == operand) {
-            return false;
-          } else if (operator === '$lt' && docValue >= operand) {
-            return false;
-          } else if (operator === '$lte' && docValue > operand) {
-            return false;
-          } else if (operator === '$gt' && docValue <= operand) {
-            return false;
-          } else if (operator === '$gte' && docValue < operand) {
-            return false;
-          } else if (operator === '$in' && !operand.includes(docValue)) {
-            return false;
-          } else if (operator === '$notIn' && operand.includes(docValue)) {
-            return false;
-          } else if (operator === '$like' && !docValue.includes(operand)) {
-            return false;
-          } else if (operator === '$notLike' && docValue.includes(operand)) {
-            return false;
+          try {
+            const operator = valueKeys[j];
+            const operand = value[operator];
+            if (operator === '$eq' && docValue != operand) {
+              return false;
+            } else if (operator === '$ne' && docValue == operand) {
+              return false;
+            } else if (operator === '$lt' && docValue >= operand) {
+              return false;
+            } else if (operator === '$lte' && docValue > operand) {
+              return false;
+            } else if (operator === '$gt' && docValue <= operand) {
+              return false;
+            } else if (operator === '$gte' && docValue < operand) {
+              return false;
+            } else if (operator === '$in' && !operand.includes(docValue)) {
+              return false;
+            } else if (operator === '$notIn' && operand.includes(docValue)) {
+              return false;
+            } else if (operator === '$like' && !docValue.includes(operand)) {
+              return false;
+            } else if (operator === '$notLike' && docValue.includes(operand)) {
+              return false;
+            }
+          } catch (error) {
+            console.error(error);
           }
         }
       } else if (doc[key] != value) {

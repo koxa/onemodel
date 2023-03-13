@@ -195,8 +195,7 @@ class OneModelServer {
             }
             const doc = JSON.parse(body);
             log(doc);
-            const item = new model({ id, ...doc });
-            const result = await item.save();
+            const result = await model.update(doc, id ? { id, ...searchParams } : searchParams);
             this.handleResponse(res, result);
           } catch (error) {
             this.handleError(res, error);
