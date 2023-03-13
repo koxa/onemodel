@@ -149,7 +149,6 @@ class JsonServerModelAdaptor extends BaseAdaptor {
       }
       return doc;
     });
-    console.log('###', modifiedData);
     await this.writeFile(collectionName, modifiedData);
     return true;
   }
