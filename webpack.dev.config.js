@@ -82,7 +82,7 @@ module.exports = [
     entry: {
       client: [
         'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
-        './testapp/onemodelclient.js',
+        './testapp/oneModelServer/onemodelclient.js',
       ],
     },
     output: {

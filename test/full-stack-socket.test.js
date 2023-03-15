@@ -1,12 +1,13 @@
+import 'jsdom-global/register';
 import fetch from 'node-fetch';
-import { OneModelServer } from '../src/middleware/index';
-import ClientModel from '../src/client/model/ClientModel';
-
-class OneModel extends ClientModel {}
+import { OneModelSocketServer } from '../src/middleware';
+import ClientSocketModel from '../src/client/model/ClientSocketModel';
+global.WebSocket = require('ws');
+class OneModel extends ClientSocketModel {}
 
 describe('test block', () => {
   let server = null;
-  let port = 9334;
+  let port = 9337;
   const maxDocs = 30;
   const testDocs = [];
   const testUser1 = { id: 1, firstName: 'firstName 1', lastName: 'lastName 1' };
@@ -15,10 +16,11 @@ describe('test block', () => {
     global.fetch = fetch;
 
     OneModel.configure({
+      hostname: 'localhost',
       port,
     });
 
-    server = new OneModelServer({ port, props: { memoryDb: {} } });
+    server = new OneModelSocketServer({ port, props: { memoryDb: {} } });
     await server.start();
 
     /** CREATE TEST DATA */

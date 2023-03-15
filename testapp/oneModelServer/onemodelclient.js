@@ -1,5 +1,6 @@
-import { OneModel } from '../src';
-import createTable from './client/Table';
+import { OneModel } from '../../src';
+import ClientSocketModel from '../../src/client/model/ClientSocketModel';
+import createTable from '../client/Table';
 
 if (module['hot']) {
   module['hot'].accept();
@@ -7,11 +8,13 @@ if (module['hot']) {
 const USERS = 'users';
 const EMAILS = 'emails';
 const COMMENTS = 'comments';
+const BOOKS = 'books';
 
 const loaded = async () => {
   class User extends OneModel {}
   class Email extends OneModel {}
   class Comment extends OneModel {}
+  class Book extends ClientSocketModel {}
 
   const searchHandle = async (refModel, refUpdate, keys = [], search) => {
     const searchText = search.trim();
@@ -91,10 +94,43 @@ const loaded = async () => {
       searchHandle(Comment, commentList, ['title1', 'comment_text'], search),
   });
 
-  const [user, email, comment] = await Promise.all([User.read(), Email.read(), Comment.read()]);
+  const { list: bookList } = createTable({
+    name: BOOKS,
+    idAttr: 'id',
+    refreshClick: async () => bookList(await Book.read()),
+    removeClick: ({ id }) => {
+      const book = new Book({ id });
+      return book.delete();
+    },
+    addClick: async (data) => {
+      const book = new Book(data);
+      return await book.save();
+    },
+    updateClick: async (data) => {
+      const book = new Book(data);
+      return await book.save();
+    },
+    searchChange: async (search) =>
+      searchHandle(Book, bookList, ['book_title', 'book_comment'], search),
+  });
+
+  const [user, email, comment, books] = await Promise.all([
+    User.read(),
+    Email.read(),
+    Comment.read(),
+    Book.read(),
+  ]);
   userList(user);
   emailList(email);
   commentList(comment);
+  bookList(books);
+
+  document.addEventListener('socket-broadcast', async (event) => {
+    const { collectionName } = event.detail;
+    if (collectionName === 'book') {
+      bookList(await Book.read());
+    }
+  });
 };
 
 document.addEventListener('DOMContentLoaded', loaded);

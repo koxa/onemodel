@@ -10,7 +10,7 @@
     "prepublish": "npm run build",
     "test.build": "webpack --watch --mode development --config webpack.dev.config.js",
     "test.server": "nodemon --inspect testapp/server.js",
-    "test.onemodel": "nodemon --inspect testapp/onemodelserver.js"
+    "test.onemodelserver": "nodemon --inspect testapp/oneModelServer/onemodelserver.js"
   },
   "repository": {
     "type": "git",
@@ -41,6 +41,8 @@
     "eslint-plugin-prettier": "^4.2.1",
     "express": "*",
     "jest": "*",
+    "jsdom": "^21.1.1",
+    "jsdom-global": "^3.0.2",
     "mariadb": "^3.0.2",
     "mongodb": "*",
     "mongodb-memory-server": "*",
@@ -54,6 +56,7 @@
     "webpack-cli": "*",
     "webpack-dev-middleware": "^6.0.1",
     "webpack-hot-middleware": "^2.25.3",
-    "webpack-node-externals": "*"
+    "webpack-node-externals": "*",
+    "websocket": "^1.0.34"
   }
 }

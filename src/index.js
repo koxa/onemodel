@@ -13,7 +13,8 @@ if (process.env.WEBPACK_TARGET === 'node') {
   exports.ServerSQLiteModel = require('./server/model/ServerSQLiteModel').default;
   exports.ServerMongoDbModel = require('./server/model/ServerMongoDbModel').default;
   exports.JsonServerModel = require('./server/model/JsonServerModel').default;
-  exports.OneModelServer = require('./middleware/index').default;
+  exports.OneModelServer = require('./middleware').OneModelServer;
+  exports.OneModelSocketServer = require('./middleware').OneModelSocketServer;
 } else if (process.env.WEBPACK_TARGET === 'web') {
   exports.ClientModel = require('./client/model/ClientModel').default;
   exports.ClientModelWrapper = require('./client/model/ClientModelWrapper').default;
