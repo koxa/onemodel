@@ -125,7 +125,7 @@ const loaded = async () => {
   commentList(comment);
   bookList(books);
 
-  document.addEventListener('socket-broadcast', async (event) => {
+  Book.on('socket-broadcast', async (event) => {
     const { collectionName } = event.detail;
     if (collectionName === 'book') {
       bookList(await Book.read());
