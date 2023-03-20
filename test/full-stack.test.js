@@ -205,19 +205,41 @@ describe('test block', () => {
       skip: 40,
     };
 
-    expect(await Model.read(queryId, queryTestEmpty)).toStrictEqual(queryTestEmpty);
-    expect(await Model.read(queryId, queryTestFull)).toStrictEqual(queryTestFull);
-    expect(await Model.read(queryTestFullWithId)).toStrictEqual(queryTestFull);
-    expect(await Model.read(queryId, queryTestLimit)).toStrictEqual(queryTestLimit);
-    expect(await Model.read(queryId, queryTestSort)).toStrictEqual(queryTestSort);
-    expect(await Model.read(queryId, queryTestColumns)).toStrictEqual(queryTestColumns);
-    expect(await Model.read(queryId, queryTestFilter)).toStrictEqual(queryTestFilter);
-    expect(await Model.read(queryId, queryTestSkip)).toStrictEqual(queryTestSkip);
-    expect(await Model.read(queryId, queryTestPagination)).toStrictEqual(queryTestPagination);
-    expect(await Model.read(queryId, queryTestFilterAnd)).toStrictEqual(queryTestFilterAnd);
-    expect(await Model.read(queryId, queryTestFilterOr)).toStrictEqual(queryTestFilterOr);
-    expect(await Model.read(queryId, queryTestPaginationAndSort)).toStrictEqual(
-      queryTestPaginationAndSort,
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestEmpty)))).toStrictEqual(
+      queryTestEmpty,
     );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestFull)))).toStrictEqual(
+      queryTestFull,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryTestFullWithId)))).toStrictEqual(
+      queryTestFull,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestLimit)))).toStrictEqual(
+      queryTestLimit,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestSort)))).toStrictEqual(
+      queryTestSort,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestColumns)))).toStrictEqual(
+      queryTestColumns,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestFilter)))).toStrictEqual(
+      queryTestFilter,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestSkip)))).toStrictEqual(
+      queryTestSkip,
+    );
+    expect(
+      JSON.parse(JSON.stringify(await Model.read(queryId, queryTestPagination))),
+    ).toStrictEqual(queryTestPagination);
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestFilterAnd)))).toStrictEqual(
+      queryTestFilterAnd,
+    );
+    expect(JSON.parse(JSON.stringify(await Model.read(queryId, queryTestFilterOr)))).toStrictEqual(
+      queryTestFilterOr,
+    );
+    expect(
+      JSON.parse(JSON.stringify(await Model.read(queryId, queryTestPaginationAndSort))),
+    ).toStrictEqual(queryTestPaginationAndSort);
   });
 });

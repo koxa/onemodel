@@ -31,6 +31,10 @@ describe('SequelizeModelAdaptor', () => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      comment: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     });
 
     SequelizeModelTestModel.configure({
@@ -42,7 +46,11 @@ describe('SequelizeModelAdaptor', () => {
 
     /** CREATE TEST DATA */
     [...Array(maxDocs).keys()].forEach((i) => {
-      const user = { firstName: `firstName ${i + 1}`, lastName: `lastName ${i + 1}` };
+      const user = {
+        firstName: `firstName ${i + 1}`,
+        lastName: `lastName ${i + 1}`,
+        comment: `comment ${i + 1}`,
+      };
       testManyDocs.push(user);
     });
 
@@ -277,6 +285,48 @@ describe('SequelizeModelAdaptor', () => {
       const updateData = { ...testData, lastName: 'lastName Updated User' };
       const updated = await SequelizeModelTestModel.update(updateData, { id: 10 });
       expect(updated).toBe(true);
+    });
+  });
+
+  describe('updateMany()', () => {
+    it('should update multiple documents in the collection', async () => {
+      const selectItems = await SequelizeModelTestModel.read({ limit: 3 });
+      const updateData = [
+        {
+          ...selectItems[0],
+          comment: 'Updated comment updateMany1',
+          lastName: 'Updated lastName updateMany1',
+        },
+        {
+          ...selectItems[1],
+          comment: 'Updated comment updateMany2',
+          lastName: 'Updated lastName updateMany2',
+        },
+        {
+          ...selectItems[2],
+          comment: 'Updated comment updateMany3',
+          lastName: 'Updated lastName updateMany3',
+        },
+      ];
+      const updated = await SequelizeModelTestModel.updateMany(updateData);
+      expect(updated).toBe(true);
+
+      const result = await SequelizeModelTestModel.read({
+        filter: { id: { $in: [selectItems[0].id, selectItems[1].id, selectItems[2].id] } },
+      });
+      expect(result[0].comment).toBe('Updated comment updateMany1');
+      expect(result[1].comment).toBe('Updated comment updateMany2');
+      expect(result[2].comment).toBe('Updated comment updateMany3');
+
+      expect(result[0].lastName).toBe('Updated lastName updateMany1');
+      expect(result[1].lastName).toBe('Updated lastName updateMany2');
+      expect(result[2].lastName).toBe('Updated lastName updateMany3');
+    });
+
+    it('should throw an error if the data array is empty', async () => {
+      await expect(SequelizeModelTestModel.updateMany([])).rejects.toThrow(
+        'SequelizeModelAdaptor updateMany: data array is empty',
+      );
     });
   });
 

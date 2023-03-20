@@ -300,6 +300,33 @@ describe('SQLiteServerModelAdaptor', () => {
     });
   });
 
+  describe('updateMany()', () => {
+    it('should update multiple documents in the collection', async () => {
+      const updateData = [
+        { id: 1, comment: 'Updated comment updateMany1', lastName: 'Updated lastName updateMany1' },
+        { id: 2, comment: 'Updated comment updateMany2', lastName: 'Updated lastName updateMany2' },
+        { id: 3, comment: 'Updated comment updateMany3', lastName: 'Updated lastName updateMany3' },
+      ];
+      const updated = await TestSqLiteModel.updateMany(updateData);
+      expect(updated).toBe(true);
+
+      const result = await TestSqLiteModel.read({ filter: { id: { $in: [1, 2, 3] } } });
+      expect(result[0].comment).toBe('Updated comment updateMany1');
+      expect(result[1].comment).toBe('Updated comment updateMany2');
+      expect(result[2].comment).toBe('Updated comment updateMany3');
+
+      expect(result[0].lastName).toBe('Updated lastName updateMany1');
+      expect(result[1].lastName).toBe('Updated lastName updateMany2');
+      expect(result[2].lastName).toBe('Updated lastName updateMany3');
+    });
+
+    it('should throw an error if the data array is empty', async () => {
+      await expect(TestSqLiteModel.updateMany([])).rejects.toThrow(
+        'SQLiteServerModelAdaptor updateMany: data array is empty',
+      );
+    });
+  });
+
   describe('count()', () => {
     it('should return the number of documents in the collection', async () => {
       const count = await TestSqLiteModel.count();

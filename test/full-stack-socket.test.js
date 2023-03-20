@@ -41,7 +41,7 @@ describe('test block', () => {
   /*** GET TESTS ***/
   test('should read Model by id', async () => {
     const user = await OneModel.read({ id: 1 });
-    expect(user).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(user))).toEqual([testUser1]);
   });
 
   test('should read all documents in the collection', async () => {
@@ -51,13 +51,13 @@ describe('test block', () => {
 
   test('should filter Model', async () => {
     const user = await OneModel.read('firstName', 'firstName 1'); // key-val format
-    expect(user).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(user))).toEqual([testUser1]);
     const user2 = await OneModel.read({ filter: { firstName: 'firstName 1' } }); // params object filter prop
-    expect(user2).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(user2))).toEqual([testUser1]);
     const user3 = await OneModel.read(1, { filter: { firstName: 'firstName 1' } }); // id and params with filter
-    expect(user3).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(user3))).toEqual([testUser1]);
     const user4 = await OneModel.read('firstName', 'lastName 1', { id: 1 }); // id and params with filter
-    expect(user4).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(user4))).toEqual([testUser1]);
   });
 
   test('should select specific columns', async () => {
@@ -67,7 +67,7 @@ describe('test block', () => {
 
   test('should apply filter using $eq operator', async () => {
     const users = await OneModel.read({ filter: { firstName: { $eq: 'firstName 1' } } });
-    expect(users).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(users))).toEqual([testUser1]);
   });
 
   test('should apply filter using $in operator', async () => {
@@ -79,14 +79,14 @@ describe('test block', () => {
 
   test('should apply filter using $like operator', async () => {
     const users = await OneModel.read({ filter: { firstName: { $like: 'Name 1' }, id: 1 } });
-    expect(users).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(users))).toEqual([testUser1]);
   });
 
   test('should apply multiple filters using $and operator', async () => {
     const users = await OneModel.read({
       filter: { $and: [{ firstName: 'firstName 1' }, { lastName: 'lastName 1' }] },
     });
-    expect(users).toEqual([testUser1]);
+    expect(JSON.parse(JSON.stringify(users))).toEqual([testUser1]);
   });
 
   test('should apply sorting', async () => {
@@ -114,7 +114,9 @@ describe('test block', () => {
       sort: { lastName: 1 },
       limit: 1,
     });
-    expect(users).toEqual([{ id: 1, firstName: 'firstName 1', lastName: 'lastName 1' }]);
+    expect(JSON.parse(JSON.stringify(users))).toEqual([
+      { id: 1, firstName: 'firstName 1', lastName: 'lastName 1' },
+    ]);
   });
 
   test('should apply multiple options #2', async () => {
@@ -125,7 +127,9 @@ describe('test block', () => {
       sort: { firstName: -1 },
       limit: 1,
     });
-    expect(users).toEqual([{ id: 30, firstName: 'firstName 30', lastName: 'lastName 30' }]);
+    expect(JSON.parse(JSON.stringify(users))).toEqual([
+      { id: 30, firstName: 'firstName 30', lastName: 'lastName 30' },
+    ]);
   });
 
   test('should apply filter using $ne operator', async () => {
@@ -197,7 +201,7 @@ describe('test block', () => {
     const result = await OneModel.update(data, { id });
     expect(result).toBe(true);
     const updatedDoc = await OneModel.read({ id });
-    expect(updatedDoc).toEqual([{ id, ...data }]);
+    expect(JSON.parse(JSON.stringify(updatedDoc))).toEqual([{ id, ...data }]);
   });
 
   test('should update documents that match the specified filter #1', async () => {
@@ -206,7 +210,7 @@ describe('test block', () => {
     const result = await OneModel.update(data, { id: 30, filter });
     expect(result).toBeDefined();
     const updatedDocs = await OneModel.read({ filter });
-    expect(updatedDocs).toEqual([
+    expect(JSON.parse(JSON.stringify(updatedDocs))).toEqual([
       { age: '30', firstName: 'firstName 30', id: 30, lastName: 'lastName 30' },
     ]);
   });
@@ -230,6 +234,6 @@ describe('test block', () => {
     const result = await OneModel.delete({ id });
     expect(result).toEqual({ deletedCount: 1 });
     const doc = await OneModel.read({ id });
-    expect(doc).toEqual([]);
+    expect(doc.length).toBe(0);
   });
 });

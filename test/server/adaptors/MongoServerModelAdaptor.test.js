@@ -25,7 +25,11 @@ describe('MongoServerModelAdaptor', () => {
 
     /** CREATE TEST DATA */
     [...Array(maxDocs).keys()].forEach((i) => {
-      const user = { firstName: `firstName ${i + 1}`, lastName: `lastName ${i + 1}` };
+      const user = {
+        firstName: `firstName ${i + 1}`,
+        lastName: `lastName ${i + 1}`,
+        comment: `comment ${i + 1}`,
+      };
       testManyDocs.push(user);
     });
 
@@ -295,6 +299,46 @@ describe('MongoServerModelAdaptor', () => {
 
       expect(updated).toBe(true);
       expect(result[0].name).toBe('Updated User2');
+    });
+  });
+
+  describe('updateMany()', () => {
+    it('should update multiple documents in the collection', async () => {
+      const selectItems = await MongoModel.read({ limit: 3 });
+      const updateData = [
+        {
+          _id: selectItems[0]._id,
+          comment: 'Updated comment updateMany1',
+          lastName: 'Updated lastName updateMany1',
+        },
+        {
+          _id: selectItems[1]._id,
+          comment: 'Updated comment updateMany2',
+          lastName: 'Updated lastName updateMany2',
+        },
+        {
+          _id: selectItems[2]._id,
+          comment: 'Updated comment updateMany3',
+          lastName: 'Updated lastName updateMany3',
+        },
+      ];
+      const updated = await MongoModel.updateMany(updateData);
+      expect(updated).toBe(true);
+
+      const result = await MongoModel.read({ limit: 3 });
+      expect(result[0].comment).toBe('Updated comment updateMany1');
+      expect(result[1].comment).toBe('Updated comment updateMany2');
+      expect(result[2].comment).toBe('Updated comment updateMany3');
+
+      expect(result[0].lastName).toBe('Updated lastName updateMany1');
+      expect(result[1].lastName).toBe('Updated lastName updateMany2');
+      expect(result[2].lastName).toBe('Updated lastName updateMany3');
+    });
+
+    it('should throw an error if the data array is empty', async () => {
+      await expect(MongoModel.updateMany([])).rejects.toThrow(
+        'MongoServerModelAdaptor updateMany: data array is empty',
+      );
     });
   });
 

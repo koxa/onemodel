@@ -329,6 +329,53 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   }
 
   /**
+   * Updates multiple documents in the collection
+   * @param {object[]} data - Array of objects containing the data to be updated
+   * @param {string} params.collectionName - The name of the table to select data from
+   * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
+   */
+  static async updateMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('MariaDbModelAdaptor updateMany: data array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const connection = await this.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const idAttr = this.idAttr();
+      const idValues = data.map((item) => item[idAttr]);
+      const filterQuery = `WHERE ${connection.escapeId(idAttr)} IN (${idValues.map((id) =>
+        connection.escape(id),
+      )})`;
+
+      const sets = Object.keys(data[0])
+        .filter((key) => key !== idAttr)
+        .map(
+          (key) =>
+            `${connection.escapeId(key)} = CASE ${connection.escapeId(idAttr)} ${data
+              .map(
+                (item) =>
+                  `WHEN ${connection.escape(item[idAttr])} THEN ${connection.escape(item[key])}`,
+              )
+              .join(' ')} END`,
+        )
+        .join(', ');
+
+      const query = `UPDATE ${connection.escapeId(collectionName)} SET ${sets} ${filterQuery}`;
+      const { affectedRows } = await connection.query(query);
+      await connection.commit();
+      return affectedRows > 0;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.end();
+    }
+  }
+
+  /**
    * Deletes a document with the given ID from the collection
    * @param {number} id - The ID of the document to delete
    * @param {string} [params.collectionName] The name of the table to select data from

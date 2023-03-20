@@ -321,6 +321,33 @@ describe('MariaDbModelAdaptor', () => {
     });
   });
 
+  describe('updateMany()', () => {
+    it('should update multiple documents in the collection', async () => {
+      const updateData = [
+        { id: 1, comment: 'Updated User updateMany1', lastName: 'Updated lastName updateMany1' },
+        { id: 2, comment: 'Updated User updateMany2', lastName: 'Updated lastName updateMany2' },
+        { id: 3, comment: 'Updated User updateMany3', lastName: 'Updated lastName updateMany3' },
+      ];
+      const updated = await TestTableMariaDbModel.updateMany(updateData);
+      expect(updated).toBe(true);
+
+      const result = await TestTableMariaDbModel.read({ filter: { id: { $in: [1, 2, 3] } } });
+      expect(result[0].comment).toBe('Updated User updateMany1');
+      expect(result[1].comment).toBe('Updated User updateMany2');
+      expect(result[2].comment).toBe('Updated User updateMany3');
+
+      expect(result[0].lastName).toBe('Updated lastName updateMany1');
+      expect(result[1].lastName).toBe('Updated lastName updateMany2');
+      expect(result[2].lastName).toBe('Updated lastName updateMany3');
+    });
+
+    it('should throw an error if the data array is empty', async () => {
+      await expect(TestTableMariaDbModel.updateMany([])).rejects.toThrow(
+        'MariaDbModelAdaptor updateMany: data array is empty',
+      );
+    });
+  });
+
   describe('count()', () => {
     it('should return the number of documents in the collection', async () => {
       const count = await TestTableMariaDbModel.count();

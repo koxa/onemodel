@@ -151,7 +151,7 @@ class OneModelServer {
       const [, , collectionName, idParam] = url.split('/');
       const id = idParam ? idParam.split('?')[0] : undefined;
       const model = this.getModel(collectionName);
-      const searchParams = getQueryParams(req);
+      const { options = {}, ...searchParams } = getQueryParams(req);
       if (!model) {
         return;
       }
@@ -197,9 +197,12 @@ class OneModelServer {
             for await (const chunk of req) {
               body += chunk;
             }
+            const { isUpdateMany } = options;
             const doc = JSON.parse(body);
             log(doc);
-            const result = await model.update(doc, id ? { id, ...searchParams } : searchParams);
+            const result = isUpdateMany
+              ? await model.updateMany(doc)
+              : await model.update(doc, id ? { id, ...searchParams } : searchParams);
             this.handleResponse(res, result);
           } catch (error) {
             this.handleError(res, error);

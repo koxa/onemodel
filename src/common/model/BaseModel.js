@@ -1,4 +1,5 @@
 import Base from '../Base';
+import { deepEqual } from '../../utils';
 
 function isClass(v) {
   return typeof v === 'function' && /^\s*class\s+/.test(v.toString());
@@ -72,6 +73,7 @@ class BaseModel extends Base {
       Object.keys(fullConfig.props).forEach((prop) =>
         this.__defineProperty(prop, fullConfig.props[prop], fullConfig.reactivity),
       );
+    this.__defineModified(false);
     data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
   }
 
@@ -135,6 +137,16 @@ class BaseModel extends Base {
     return this['_config'];
   }
 
+  __defineModified(val) {
+    Object.defineProperty(this, 'isModified', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: val,
+    });
+    return this['isModified'];
+  }
+
   __defineId(val) {
     Object.defineProperty(this, this.constructor.getConfig('idAttr'), {
       configurable: true,
@@ -168,12 +180,27 @@ class BaseModel extends Base {
             val = this.__hookBeforeSet(prop, val);
           }
           tmpProps[prop] = val;
+          this.isModified = true;
           this.__hookAfterSet && this.__hookAfterSet(prop, val);
         }
       };
     } else {
-      def['value'] = val;
-      def['writable'] = true;
+      const tmpProps = {
+        [prop]: val,
+      };
+      def.get = () => {
+        return tmpProps[prop];
+      };
+      def.set = (val) => {
+        const prepared = this.__prepareSet(prop, val);
+        if (prepared.doSet) {
+          val = prepared.val;
+          tmpProps[prop] = val;
+          this.isModified = true;
+        }
+      };
+      // def['value'] = val;
+      // def['writable'] = true;
     }
     Object.defineProperty(this, prop, def);
   }
@@ -206,7 +233,7 @@ class BaseModel extends Base {
     }
 
     let doSet = true;
-    if (/*propExists &&*/ this[prop] === val) {
+    if (/*propExists &&*/ deepEqual(this[prop], val)) {
       doSet = false; // skip if value is same
     }
     return { doSet: doSet, prop: prop, val: val };
@@ -263,6 +290,9 @@ class BaseModel extends Base {
       if (this.set(prop, data[prop], options)) {
         modifiedProps[prop] = this[prop]; // record modified props and return them at the end
       }
+    }
+    if (this.isModified) {
+      this.isModified = false;
     }
     !skipHooks && this.__hookAfterSetAll && this.__hookAfterSetAll(modifiedProps, data);
     return modifiedProps;

@@ -262,6 +262,29 @@ describe('JsonDbModelAdaptor', () => {
     });
   });
 
+  describe('updateMany()', () => {
+    it('should update multiple documents in the collection', async () => {
+      const updateData = [
+        { id: 1, comment: 'Updated User1' },
+        { id: 2, comment: 'Updated User2' },
+        { id: 3, comment: 'Updated User3' },
+      ];
+      const updated = await TestTableJsonDbModel.updateMany(updateData);
+      expect(updated).toBe(true);
+
+      const result = await TestTableJsonDbModel.read({ filter: { id: { $in: [1, 2, 3] } } });
+      expect(result[0].comment).toBe('Updated User1');
+      expect(result[1].comment).toBe('Updated User2');
+      expect(result[2].comment).toBe('Updated User3');
+    });
+
+    it('should throw an error if the data array is empty', async () => {
+      await expect(TestTableJsonDbModel.updateMany([])).rejects.toThrow(
+        'JsonServerModelAdaptor updateMany: data array is empty',
+      );
+    });
+  });
+
   describe('count()', () => {
     it('should return the number of documents in the collection', async () => {
       const count = await TestTableJsonDbModel.count();

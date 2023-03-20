@@ -1,4 +1,5 @@
 import BaseAdaptor from '../../adaptors/BaseAdaptor';
+import ArrayModelReturns from '../../types/ArrayModelReturns';
 import { getFilter } from '../../../utils';
 
 class HttpModelAdaptor extends BaseAdaptor {
@@ -110,12 +111,21 @@ class HttpModelAdaptor extends BaseAdaptor {
       skip,
       columns,
     });
-    return await this.request(normalizedParams);
+    const response = await this.request(normalizedParams);
+    return Array.isArray(response)
+      ? new ArrayModelReturns({ mixed1, mixed2, mixed3 }, ...response.map((item) => new this(item)))
+      : new this(response);
   }
 
   static async update(data = {}, params = {}) {
     //todo: url or id for static calls
     params.method = params.method || 'PUT';
+    return await this.request({ ...this.getAdaptorParams(params) }, data);
+  }
+
+  static async updateMany(data = [], params = {}) {
+    params.method = params.method || 'PUT';
+    params.options = { isUpdateMany: true };
     return await this.request({ ...this.getAdaptorParams(params) }, data);
   }
 
@@ -146,12 +156,13 @@ class HttpModelAdaptor extends BaseAdaptor {
     limit,
     skip,
     columns,
+    options,
   }) {
     if (!path) {
       path = `/${prefix}/${collectionName}` + (id ? `/${id}` : '');
     }
 
-    const queryParams = getFilter({ filter, sort, limit, skip, columns });
+    const queryParams = getFilter({ filter, sort, limit, skip, columns, options });
 
     return {
       id,
@@ -178,12 +189,13 @@ class HttpModelAdaptor extends BaseAdaptor {
     limit,
     skip,
     columns,
+    options,
   }) {
     if (!path) {
       path = `/${prefix}/${collectionName}` + (id ? `/${id}` : '');
     }
 
-    const queryParams = getFilter({ filter, sort, limit, skip, columns });
+    const queryParams = getFilter({ filter, sort, limit, skip, columns, options });
 
     return {
       id,

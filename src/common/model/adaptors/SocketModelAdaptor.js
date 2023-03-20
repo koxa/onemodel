@@ -1,4 +1,5 @@
 import BaseAdaptor from '../../adaptors/BaseAdaptor';
+import ArrayModelReturns from '../../types/ArrayModelReturns';
 
 class SocketModelAdaptor extends BaseAdaptor {
   static _config = {
@@ -112,11 +113,20 @@ class SocketModelAdaptor extends BaseAdaptor {
       skip,
       columns,
     });
-    return await this.request(normalizedParams);
+    const response = await this.request(normalizedParams);
+    return Array.isArray(response)
+      ? new ArrayModelReturns({ mixed1, mixed2, mixed3 }, ...response.map((item) => new this(item)))
+      : new this(response);
   }
 
   static async update(data = {}, params = {}) {
     params.operation = params.operation || 'update';
+    return await this.request({ ...this.getAdaptorParams(params) }, data);
+  }
+
+  static async updateMany(data = [], params = {}) {
+    params.operation = params.operation || 'update';
+    params.options = { isUpdateMany: true };
     return await this.request({ ...this.getAdaptorParams(params) }, data);
   }
 
@@ -142,8 +152,9 @@ class SocketModelAdaptor extends BaseAdaptor {
     limit,
     skip,
     columns,
+    options,
   }) {
-    const query = { filter, sort, limit, skip, columns };
+    const query = { filter, sort, limit, skip, columns, options };
     return {
       id,
       hostname,
@@ -167,8 +178,9 @@ class SocketModelAdaptor extends BaseAdaptor {
     limit,
     skip,
     columns,
+    options,
   }) {
-    const query = { filter, sort, limit, skip, columns };
+    const query = { filter, sort, limit, skip, columns, options };
     return {
       id,
       hostname,

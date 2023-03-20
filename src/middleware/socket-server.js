@@ -78,6 +78,7 @@ class OneModelSocketServer {
         throw new Error(`Operation ${operation} not allowed`);
       }
 
+      const { options, ...queryParams } = query;
       const result = await operations[operation].call(this, {
         connection,
         requestId,
@@ -85,7 +86,8 @@ class OneModelSocketServer {
         collectionName,
         model,
         id,
-        query,
+        query: queryParams,
+        options,
         body,
       });
 
@@ -127,8 +129,21 @@ class OneModelSocketServer {
     });
   }
 
-  async updateModel({ connection, model, collectionName, operation, requestId, id, query, body }) {
-    const result = await model.update(body, id ? { id, ...query } : query);
+  async updateModel({
+    connection,
+    model,
+    collectionName,
+    operation,
+    requestId,
+    id,
+    options = {},
+    query,
+    body,
+  }) {
+    const { isUpdateMany } = options;
+    const result = isUpdateMany
+      ? await model.updateMany(body)
+      : await model.update(body, id ? { id, ...query } : query);
     this.sendToClient({
       connection,
       requestId,

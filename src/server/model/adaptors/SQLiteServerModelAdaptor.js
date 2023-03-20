@@ -342,6 +342,50 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
   }
 
   /**
+   * Updates multiple documents in the collection
+   * @param {object[]} data - Array of objects containing the data to be updated
+   * @param {string} params.collectionName - The name of the table to select data from
+   * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
+   */
+  /**
+   * Updates multiple documents in the collection
+   * @param {object[]} data - Array of objects containing the data to be updated
+   * @param {string} params.collectionName - The name of the table to select data from
+   * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
+   */
+  static async updateMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('SQLiteServerModelAdaptor updateMany: data array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const db = await this.getConfig('db');
+
+    try {
+      await db.run('BEGIN');
+      const idAttr = this.idAttr();
+      const idValues = data.map((item) => item[idAttr]);
+      const filterQuery = `WHERE ${idAttr} IN (${idValues.map((id) => `'${id}'`)})`;
+      const sets = Object.keys(data[0])
+        .filter((key) => key !== idAttr)
+        .map(
+          (key) =>
+            `${key} = CASE ${idAttr} ${data
+              .map((item) => `WHEN '${item[idAttr]}' THEN '${item[key]}'`)
+              .join(' ')} END`,
+        )
+        .join(', ');
+
+      const query = `UPDATE ${collectionName} SET ${sets} ${filterQuery}`;
+      const { changes } = await this.queryRun(query);
+      await db.run('COMMIT');
+      return changes > 0;
+    } catch (error) {
+      await db.run('ROLLBACK');
+      throw error;
+    }
+  }
+
+  /**
    * Deletes a document with the given ID from the collection
    * @param {number} id - The ID of the document to delete
    * @param {string} [params.collectionName] The name of the table to select data from

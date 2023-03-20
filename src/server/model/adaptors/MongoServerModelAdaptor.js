@@ -23,7 +23,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     if (!db || typeof collectionName !== 'string') {
       throw new Error('MongoServerModelAdaptor: DB instance or CollectionName is not defined');
     }
-    return db.collection(this.getConfig().collectionName);
+    return db.collection(collectionName);
   }
 
   /**
@@ -175,6 +175,54 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     }
     throw new Error(
       'MongoServerModelAdaptor update: Acknowledged false or modifiedCount/matchedCount not 1',
+    );
+  }
+
+  /**
+   * Updates multiple documents in the MongoDB collection
+   * @param {object} data - Array of objects containing the data to be updated
+   * @param {string} [params.collectionName] The name of the table to select data from
+   * @returns {Promise<boolean>} - Returns true if the documents were updated, false otherwise
+   */
+  static async updateMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('MongoServerModelAdaptor updateMany: data array is empty');
+    }
+    const mongo = this.getConfig('mongo');
+    const { collectionName } = this.getAdaptorParams(params);
+
+    try {
+      const idAttr = this.getConfig('idAttr');
+      const bulkOperations = data.map((data) => {
+        const mongoId =
+          data[idAttr] instanceof mongo.ObjectID ? data[idAttr] : new mongo.ObjectID(data[idAttr]);
+        delete data[idAttr];
+        return {
+          updateOne: {
+            filter: { [idAttr]: mongoId },
+            update: { $set: data },
+          },
+        };
+      });
+
+      const result = await this.getCollection(collectionName).bulkWrite(bulkOperations);
+      if (
+        result &&
+        result.result &&
+        result.result.ok &&
+        result.result.nModified === data.length &&
+        result.result.nMatched === data.length
+      ) {
+        return true;
+      }
+    } catch (err) {
+      throw new Error(
+        'MongoServerModelAdaptor updateMany: MongoDB error during bulkWrite: ' + err.toString(),
+      );
+    }
+
+    throw new Error(
+      'MongoServerModelAdaptor updateMany: Acknowledged false or modifiedCount/matchedCount not equal to dataArray length',
     );
   }
 

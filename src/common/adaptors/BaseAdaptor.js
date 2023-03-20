@@ -21,6 +21,10 @@ class BaseAdaptor {
     throw new Error('UPDATE method must be implemented in child Adaptor');
   }
 
+  static async updateMany(data = [], params = {}) {
+    throw new Error('updateMany method must be implemented in child Adaptor');
+  }
+
   static delete(params) {
     throw new Error('DELETE method must be implemented in child Adaptor');
   }
@@ -64,6 +68,9 @@ class BaseAdaptor {
       if (typeof result !== 'boolean') {
         // for example mongo on updateOne won't return full data but rather modifiedCount. matchedCount etc
         throw new Error('BaseAdaptor save: update must return boolean');
+      }
+      if (this.isModified) {
+        this.isModified = false;
       }
       return result; // if all ok true is returned
     } else {

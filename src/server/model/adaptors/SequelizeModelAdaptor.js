@@ -48,9 +48,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @param {string} collectionName - The name of the collection to get the schema for (optional, default is the default collection name)
    * @returns {object} - The schema collection for the specified collection name or the default collection name
    */
-  static getCollection(
-    collectionName = this.getConfig('collectionName')
-  ) {
+  static getCollection(collectionName = this.getConfig('collectionName')) {
     if (
       typeof this.getConfig('schemasParser') === 'undefined' ||
       this.getConfig('schemasParser') === null
@@ -238,7 +236,7 @@ class SequelizeModelAdaptor extends BaseAdaptor {
    * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
    * @throws {Error} - Throws an error if the WHERE parameters are not defined or the result array is empty
    */
-  static async update(data, params) {
+  static async update(data, params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const filters = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
 
@@ -262,6 +260,35 @@ class SequelizeModelAdaptor extends BaseAdaptor {
     }
 
     throw new Error('SequelizeModelAdaptor update: Array result must not be empty');
+  }
+
+  /**
+   * Updates multiple documents in the collection
+   * @param {object[]} data - Array of objects containing the data to be updated
+   * @param {string} params.collectionName - The name of the table to select data from
+   * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
+   */
+  static async updateMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('SequelizeModelAdaptor updateMany: data array is empty');
+    }
+    let transaction;
+    const { collectionName } = this.getAdaptorParams(params);
+    try {
+      const db = this.getCollection(collectionName);
+      transaction = await this.getConfig('db').transaction();
+      const result = await db.bulkCreate(data, {
+        updateOnDuplicate: Object.keys(data[0]).filter((key) => key !== this.idAttr()),
+        transaction,
+      });
+      await transaction.commit();
+      return !!result;
+    } catch (err) {
+      if (transaction) {
+        await transaction.rollback();
+      }
+      throw new Error(`SequelizeModelAdaptor updateMany: error during update: ${err}`);
+    }
   }
 
   /**

@@ -93,10 +93,10 @@ class JsonServerModelAdaptor extends BaseAdaptor {
         }
         selectedData.push(selectedDoc);
       }
-      return selectedData;
+      return selectedData.map((item) => new this(item));
     }
 
-    return filteredData;
+    return filteredData.map((item) => new this(item));
   }
 
   /**
@@ -150,6 +150,27 @@ class JsonServerModelAdaptor extends BaseAdaptor {
       return doc;
     });
     await this.writeFile(collectionName, modifiedData);
+    return true;
+  }
+
+  /**
+   * Updates multiple documents in the collection
+   * @param {object[]} data - Array of objects containing the data to be updated
+   * @param {string} params.collectionName - The name of the table to select data from
+   * @returns {Promise<boolean>} - A promise that resolves to a boolean value indicating whether the update was successful
+   */
+  static async updateMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('JsonServerModelAdaptor updateMany: data array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const allDocs = await this.read({ collectionName, raw: true });
+    const updatedDocs = allDocs.map((doc) => {
+      const update = data.find((item) => item[this.idAttr()] === doc[this.idAttr()]);
+      return update ? { ...doc, ...update } : doc;
+    });
+
+    await this.writeFile(collectionName, updatedDocs);
     return true;
   }
 
