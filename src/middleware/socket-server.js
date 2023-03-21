@@ -71,7 +71,7 @@ class OneModelSocketServer {
         read: this.readModel,
         create: this.createModel,
         update: this.updateModel,
-        deleteOne: this.deleteOneModel,
+        delete: this.deleteModel,
       };
 
       if (!operations[operation]) {
@@ -114,8 +114,17 @@ class OneModelSocketServer {
     });
   }
 
-  async createModel({ connection, model, collectionName, operation, requestId, body }) {
-    const result = await model.create(body);
+  async createModel({
+    connection,
+    model,
+    collectionName,
+    operation,
+    requestId,
+    options = {},
+    body,
+  }) {
+    const { isInsertMany } = options;
+    const result = isInsertMany ? await model.insertMany(body) : await model.create(body);
     this.sendToClient({
       connection,
       requestId,
@@ -152,8 +161,18 @@ class OneModelSocketServer {
     this.broadcast({ requestId, operation, collectionName, id, result });
   }
 
-  async deleteOneModel({ connection, model, collectionName, operation, requestId, id }) {
-    const result = await model.deleteOne(id);
+  async deleteModel({
+    connection,
+    model,
+    collectionName,
+    operation,
+    requestId,
+    id,
+    options = {},
+    body,
+  }) {
+    const { isDeleteMany } = options;
+    const result = isDeleteMany ? await model.deleteMany(body) : await model.deleteOne(id);
     this.sendToClient({
       connection,
       requestId,

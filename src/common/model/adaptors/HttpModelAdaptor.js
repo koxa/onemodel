@@ -113,7 +113,10 @@ class HttpModelAdaptor extends BaseAdaptor {
     });
     const response = await this.request(normalizedParams);
     return Array.isArray(response)
-      ? new ArrayModelReturns({ mixed1, mixed2, mixed3 }, ...response.map((item) => new this(item)))
+      ? new ArrayModelReturns(
+          { model: this, mixed1, mixed2, mixed3 },
+          ...response.map((item) => new this(item)),
+        )
       : new this(response);
   }
 
@@ -126,6 +129,18 @@ class HttpModelAdaptor extends BaseAdaptor {
   static async updateMany(data = [], params = {}) {
     params.method = params.method || 'PUT';
     params.options = { isUpdateMany: true };
+    return await this.request({ ...this.getAdaptorParams(params) }, data);
+  }
+
+  static async insertMany(data = [], params = {}) {
+    params.method = params.method || 'POST';
+    params.options = { isInsertMany: true };
+    return await this.request({ ...this.getAdaptorParams(params) }, data);
+  }
+
+  static async deleteMany(data = [], params = {}) {
+    params.method = params.method || 'DELETE';
+    params.options = { isDeleteMany: true };
     return await this.request({ ...this.getAdaptorParams(params) }, data);
   }
 

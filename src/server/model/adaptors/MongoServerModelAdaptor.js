@@ -58,7 +58,10 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       } else if (typeof value === 'object' && value !== null && !mongo.ObjectId.isValid(value)) {
         simplifiedFilters[key] = this.buildFilter(value);
       } else {
-        simplifiedFilters[key] = value;
+        simplifiedFilters[key] =
+          typeof value === 'string' && mongo.ObjectId.isValid(value)
+            ? new mongo.ObjectID(value)
+            : value;
       }
     }
     return simplifiedFilters;
@@ -232,6 +235,45 @@ class MongoServerModelAdaptor extends BaseAdaptor {
    */
   static async count() {
     return await this.getCollection().count();
+  }
+
+  /**
+   * Inserts multiple documents into the specified collection in the database
+   * @param {object[]} data - Array of objects containing the data to be inserted
+   * @param {string} [params.collectionName] - The name of the table to insert data into
+   * @returns {Promise<object>} - Returns an object with the number of inserted documents and their IDs
+   * @throws Will throw an error if the data array is empty or not an array
+   */
+  static async insertMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('MongoServerModelAdaptor insertMany: data array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    return await this.getCollection(collectionName)
+      .insertMany(data)
+      .then((result) => {
+        return {
+          insertedCount: result.insertedCount,
+          insertedIds: Object.values(result.insertedIds),
+        };
+      });
+  }
+
+  /**
+   * Deletes documents from the specified collection in the database based on the provided IDs
+   * @param {number[]} ids - Array of IDs to delete
+   * @param {string} [params.collectionName] - The name of the table to delete data from
+   * @returns {Promise<object>} - Returns an object with the number of deleted documents
+   */
+  static async deleteMany(ids, params = {}) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      throw new Error('MongoServerModelAdaptor deleteMany: ids array is empty');
+    }
+    const idAttr = this.getConfig('idAttr');
+    const mongo = this.getConfig('mongo');
+    const { collectionName } = this.getAdaptorParams(params);
+    const objIds = ids.map((id) => new mongo.ObjectID(id));
+    return await this.getCollection(collectionName).deleteMany({ [idAttr]: { $in: objIds } });
   }
 
   /**

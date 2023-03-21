@@ -182,9 +182,10 @@ class OneModelServer {
             for await (const chunk of req) {
               body += chunk;
             }
+            const { isInsertMany } = options;
             const doc = JSON.parse(body);
             log(doc);
-            const result = await model.create(doc);
+            const result = isInsertMany ? await model.insertMany(doc) : await model.create(doc);
             this.handleResponse(res, result);
           } catch (error) {
             this.handleError(res, error);
@@ -212,7 +213,14 @@ class OneModelServer {
         case 'DELETE': {
           try {
             log();
-            const result = await model.deleteOne(id);
+            let body = '';
+            for await (const chunk of req) {
+              body += chunk;
+            }
+            const doc = body ? JSON.parse(body) : '';
+            const { isDeleteMany } = options;
+            const result =
+              isDeleteMany && doc ? await model.deleteMany(doc) : await model.deleteOne(id);
             this.handleResponse(res, result);
           } catch (error) {
             this.handleError(res, error);

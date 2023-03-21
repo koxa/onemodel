@@ -115,7 +115,10 @@ class SocketModelAdaptor extends BaseAdaptor {
     });
     const response = await this.request(normalizedParams);
     return Array.isArray(response)
-      ? new ArrayModelReturns({ mixed1, mixed2, mixed3 }, ...response.map((item) => new this(item)))
+      ? new ArrayModelReturns(
+          { model: this, mixed1, mixed2, mixed3 },
+          ...response.map((item) => new this(item)),
+        )
       : new this(response);
   }
 
@@ -130,13 +133,25 @@ class SocketModelAdaptor extends BaseAdaptor {
     return await this.request({ ...this.getAdaptorParams(params) }, data);
   }
 
+  static async insertMany(data = [], params = {}) {
+    params.operation = params.operation || 'create';
+    params.options = { isInsertMany: true };
+    return await this.request({ ...this.getAdaptorParams(params) }, data);
+  }
+
+  static async deleteMany(data = [], params = {}) {
+    params.operation = params.operation || 'delete';
+    params.options = { isDeleteMany: true };
+    return await this.request({ ...this.getAdaptorParams(params) }, data);
+  }
+
   static async count(params = {}) {
     params.operation = params.operation || 'read';
     return await this.request({ ...this.getAdaptorParams({ ...params, id: 'count' }) });
   }
 
   static async delete(params = {}) {
-    params.operation = params.operation || 'deleteOne';
+    params.operation = params.operation || 'delete';
     return await this.request({ ...this.getAdaptorParams(params) });
   }
 

@@ -154,6 +154,28 @@ class JsonServerModelAdaptor extends BaseAdaptor {
   }
 
   /**
+   * Inserts multiple documents into the specified collection in the database
+   * @param {object[]} data - Array of objects containing the data to be inserted
+   * @param {string} [params.collectionName] - The name of the table to insert data into
+   * @returns {Promise<object>} - Returns an object with the number of inserted documents and their IDs
+   * @throws Will throw an error if the data array is empty or not an array
+   */
+  static async insertMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('JsonServerModelAdaptor insertMany: data array is empty or not an array');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const allDocs = await this.read({ collectionName, raw: true });
+    const newData = data.map((item) => ({ ...item, [this.idAttr()]: ++allDocs[0].lastId }));
+    const mergedData = [...allDocs, ...newData];
+    await this.writeFile(collectionName, mergedData);
+    return {
+      insertedCount: newData.length,
+      insertedIds: newData.map((item) => item[this.idAttr()]),
+    };
+  }
+
+  /**
    * Updates multiple documents in the collection
    * @param {object[]} data - Array of objects containing the data to be updated
    * @param {string} params.collectionName - The name of the table to select data from
@@ -241,6 +263,32 @@ class JsonServerModelAdaptor extends BaseAdaptor {
     });
 
     await this.writeFile(collectionName, filteredData);
+    return {
+      deletedCount,
+    };
+  }
+
+  /**
+   * Deletes documents from the specified collection in the database based on the provided IDs
+   * @param {number[]} ids - Array of IDs to delete
+   * @param {string} [params.collectionName] - The name of the table to delete data from
+   * @returns {Promise<object>} - Returns an object with the number of deleted documents
+   */
+  static async deleteMany(ids, params = {}) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      throw new Error('JsonServerModelAdaptor deleteMany: ids array is empty');
+    }
+    let deletedCount = 0;
+    const { collectionName } = this.getAdaptorParams(params);
+    const allDocs = await this.read({ collectionName, raw: true });
+    const filteredDocs = allDocs.filter((doc) => {
+      if (ids.includes(doc[this.idAttr()])) {
+        deletedCount++;
+        return false;
+      }
+      return true;
+    });
+    await this.writeFile(collectionName, filteredDocs);
     return {
       deletedCount,
     };

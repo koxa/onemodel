@@ -25,8 +25,16 @@ class BaseAdaptor {
     throw new Error('updateMany method must be implemented in child Adaptor');
   }
 
+  static async insertMany(data = [], params = {}) {
+    throw new Error('insertMany method must be implemented in child Adaptor');
+  }
+
   static delete(params) {
     throw new Error('DELETE method must be implemented in child Adaptor');
+  }
+
+  static async deleteMany(data = [], params = {}) {
+    throw new Error('deleteMany method must be implemented in child Adaptor');
   }
 
   static async find(params) {

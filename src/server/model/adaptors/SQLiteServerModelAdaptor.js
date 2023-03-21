@@ -358,7 +358,7 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
       throw new Error('SQLiteServerModelAdaptor updateMany: data array is empty');
     }
     const { collectionName } = this.getAdaptorParams(params);
-    const db = await this.getConfig('db');
+    const db = this.getConfig('db');
 
     try {
       await db.run('BEGIN');
@@ -379,6 +379,46 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
       const { changes } = await this.queryRun(query);
       await db.run('COMMIT');
       return changes > 0;
+    } catch (error) {
+      await db.run('ROLLBACK');
+      throw error;
+    }
+  }
+
+  /**
+   * Inserts multiple documents into the specified collection in the database
+   * @param {object[]} data - Array of objects containing the data to be inserted
+   * @param {string} [params.collectionName] - The name of the table to insert data into
+   * @returns {Promise<object>} - Returns an object with the number of inserted documents and their IDs
+   * @throws Will throw an error if the data array is empty or not an array
+   */
+  static async insertMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('SQLiteServerModelAdaptor insertMany: data array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const db = this.getConfig('db');
+
+    try {
+      await db.run('BEGIN');
+      const idAttr = this.getConfig('idAttr');
+      const keys = Object.keys(data[0]);
+      const values = data.map((item) => Object.values(item));
+      const placeholders = values.map((item) => `(${item.map(() => '?').join(', ')})`).join(', ');
+      const query = `INSERT INTO ${collectionName} (${keys.join(
+        ', ',
+      )}) VALUES ${placeholders}; SELECT last_insert_rowid() as ${idAttr};`;
+      const result = await this.queryRun(query, [].concat(...values));
+      const insertedCount = Number(result.changes);
+      const insertId = Number(result.lastID);
+      const insertedIds = Array(result.changes)
+        .fill()
+        .map((_, i) => insertId - insertedCount + i + 1);
+      await db.run('COMMIT');
+      return {
+        insertedCount,
+        insertedIds,
+      };
     } catch (error) {
       await db.run('ROLLBACK');
       throw error;
@@ -419,6 +459,26 @@ class SQLiteServerModelAdaptor extends BaseAdaptor {
     const { id, collectionName, filter } = this.getAdaptorParams(params);
     const filterQuery = this.buildFilter({ [this.getConfig('idAttr')]: id, ...filter });
     const query = `DELETE FROM ${collectionName} ${filterQuery ? `WHERE ${filterQuery}` : ''}`;
+    const { changes } = await this.queryRun(query);
+    return {
+      deletedCount: changes,
+    };
+  }
+
+  /**
+   * Deletes documents from the specified collection in the database based on the provided IDs
+   * @param {number[]} ids - Array of IDs to delete
+   * @param {string} [params.collectionName] - The name of the table to delete data from
+   * @returns {Promise<object>} - Returns an object with the number of deleted documents
+   */
+  static async deleteMany(ids, params = {}) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      throw new Error('SQLiteServerModelAdaptor deleteMany: ids array is empty');
+    }
+    const idAttr = this.idAttr();
+    const { collectionName } = this.getAdaptorParams(params);
+    const filterQuery = `${idAttr} IN (${ids.map((id) => `'${id}'`)})`;
+    const query = `DELETE FROM ${collectionName} WHERE ${filterQuery}`;
     const { changes } = await this.queryRun(query);
     return {
       deletedCount: changes,

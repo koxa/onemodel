@@ -342,6 +342,40 @@ describe('MongoServerModelAdaptor', () => {
     });
   });
 
+  describe('insertMany && deleteMany', () => {
+    it('should insert and delete multiple documents from the collection', async () => {
+      const testData = [
+        { firstName: 'test 100', lastName: 'test 10', comment: 'Test comment 10' },
+        { firstName: 'test 110', lastName: 'test 11', comment: 'Test comment 11' },
+        { firstName: 'test 120', lastName: 'test 12', comment: 'Test comment 12' },
+      ];
+
+      const insertMany = await MongoModel.insertMany(testData);
+      expect(insertMany.insertedCount).toBe(3);
+      expect(insertMany.insertedIds.length).toBe(3);
+
+      const readInsert = await MongoModel.read({
+        filter: {
+          _id: { $in: insertMany.insertedIds },
+        },
+      });
+      expect(readInsert[0].firstName).toEqual(testData[0].firstName);
+      expect(readInsert[1].firstName).toEqual(testData[1].firstName);
+      expect(readInsert[2].firstName).toEqual(testData[2].firstName);
+      expect(readInsert.length).toBe(3);
+
+      const result = await MongoModel.deleteMany(insertMany.insertedIds);
+      expect(result.deletedCount).toBe(3);
+
+      const readDelete = await MongoModel.read({
+        filter: {
+          id: { $in: insertMany.insertedIds },
+        },
+      });
+      expect(readDelete.length).toBe(0);
+    });
+  });
+
   describe('count()', () => {
     it('should return the number of documents in the MongoDB collection', async () => {
       const count = await MongoModel.count();

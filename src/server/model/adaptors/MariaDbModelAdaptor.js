@@ -329,6 +329,49 @@ class MariaDbModelAdaptor extends BaseAdaptor {
   }
 
   /**
+   * Inserts multiple documents into the specified collection in the database
+   * @param {object[]} data - Array of objects containing the data to be inserted
+   * @param {string} [params.collectionName] - The name of the table to insert data into
+   * @returns {Promise<object>} - Returns an object with the number of inserted documents and their IDs
+   * @throws Will throw an error if the data array is empty or not an array
+   */
+  static async insertMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('MariaDbModelAdaptor insertMany: data array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const connection = await this.getConnection();
+
+    try {
+      await connection.beginTransaction();
+      const keys = Object.keys(data[0]);
+      const values = data.map((item) => Object.values(item));
+      const placeholders = values.map((item) => `(${item.map(() => '?').join(', ')})`).join(', ');
+      const query = `INSERT INTO ${connection.escapeId(collectionName)} (${keys.join(
+        ', ',
+      )}) VALUES ${placeholders}`;
+      await connection.query(query, [].concat(...values));
+
+      const result = await connection.query('SELECT LAST_INSERT_ID() AS insertId');
+      const insertId = Number(result[0].insertId);
+      const insertedCount = data.length;
+      const insertedIds = Array(data.length)
+        .fill()
+        .map((_, i) => insertId - insertedCount + i + 1);
+      await connection.commit();
+      return {
+        insertedCount,
+        insertedIds,
+      };
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.end();
+    }
+  }
+
+  /**
    * Updates multiple documents in the collection
    * @param {object[]} data - Array of objects containing the data to be updated
    * @param {string} params.collectionName - The name of the table to select data from
@@ -417,6 +460,39 @@ class MariaDbModelAdaptor extends BaseAdaptor {
     return {
       deletedCount: affectedRows,
     };
+  }
+
+  /**
+   * Deletes documents from the specified collection in the database based on the provided IDs
+   * @param {number[]} ids - Array of IDs to delete
+   * @param {string} [params.collectionName] - The name of the table to delete data from
+   * @returns {Promise<object>} - Returns an object with the number of deleted documents
+   */
+  static async deleteMany(ids, params = {}) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      throw new Error('MariaDbModelAdaptor deleteMany: ids array is empty');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const connection = await this.getConnection();
+    try {
+      await connection.beginTransaction();
+      const idAttr = this.idAttr();
+      const filterQuery = `WHERE ${connection.escapeId(idAttr)} IN (${ids
+        .map((id) => connection.escape(id))
+        .join(', ')})`;
+
+      const query = `DELETE FROM ${connection.escapeId(collectionName)} ${filterQuery}`;
+      const { affectedRows } = await connection.query(query);
+      await connection.commit();
+      return {
+        deletedCount: affectedRows,
+      };
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.end();
+    }
   }
 
   /**

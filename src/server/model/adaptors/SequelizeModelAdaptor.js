@@ -292,6 +292,39 @@ class SequelizeModelAdaptor extends BaseAdaptor {
   }
 
   /**
+   * Inserts multiple documents into the specified collection in the database
+   * @param {object[]} data - Array of objects containing the data to be inserted
+   * @param {string} [params.collectionName] - The name of the table to insert data into
+   * @returns {Promise<object>} - Returns an object with the number of inserted documents and their IDs
+   * @throws Will throw an error if the data array is empty or not an array
+   */
+  static async insertMany(data, params = {}) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('SequelizeModelAdaptor insertMany: data array is empty or not an array');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const result = await this.getCollection(collectionName).bulkCreate(data, { returning: true });
+    return { insertedCount: result.length, insertedIds: result.map((item) => item.id) };
+  }
+
+  /**
+   * Deletes documents from the specified collection in the database based on the provided IDs
+   * @param {number[]} ids - Array of IDs to delete
+   * @param {string} [params.collectionName] - The name of the table to delete data from
+   * @returns {Promise<object>} - Returns an object with the number of deleted documents
+   */
+  static async deleteMany(ids, params = {}) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      throw new Error('SequelizeModelAdaptor deleteMany: ids array is empty or not an array');
+    }
+    const { collectionName } = this.getAdaptorParams(params);
+    const deleted = await this.getCollection(collectionName).destroy({
+      where: { [this.idAttr()]: ids },
+    });
+    return { deletedCount: deleted };
+  }
+
+  /**
    * Counts the number of documents in the collection
    * @returns {Promise<number>} - Returns the number of documents in the collection
    */

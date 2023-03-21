@@ -330,6 +330,39 @@ describe('SequelizeModelAdaptor', () => {
     });
   });
 
+  describe('insertMany && deleteMany', () => {
+    it('should insert and delete multiple documents from the collection', async () => {
+      const testData = [
+        { firstName: 'test 100', lastName: 'test 10', comment: 'Test comment 10' },
+        { firstName: 'test 110', lastName: 'test 11', comment: 'Test comment 11' },
+        { firstName: 'test 120', lastName: 'test 12', comment: 'Test comment 12' },
+      ];
+
+      const insertMany = await SequelizeModelTestModel.insertMany(testData);
+      expect(insertMany).toEqual({ insertedCount: 3, insertedIds: [11, 12, 13] });
+
+      const readInsert = await SequelizeModelTestModel.read({
+        filter: {
+          id: { $in: insertMany.insertedIds },
+        },
+      });
+      expect(readInsert[0].firstName).toEqual(testData[0].firstName);
+      expect(readInsert[1].firstName).toEqual(testData[1].firstName);
+      expect(readInsert[2].firstName).toEqual(testData[2].firstName);
+      expect(readInsert.length).toBe(3);
+
+      const result = await SequelizeModelTestModel.deleteMany(insertMany.insertedIds);
+      expect(result.deletedCount).toBe(3);
+
+      const readDelete = await SequelizeModelTestModel.read({
+        filter: {
+          id: { $in: insertMany.insertedIds },
+        },
+      });
+      expect(readDelete.length).toBe(0);
+    });
+  });
+
   describe('count()', () => {
     it('should return the number of documents in the collection', async () => {
       const count = await SequelizeModelTestModel.count();

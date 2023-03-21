@@ -114,14 +114,14 @@ const loaded = async () => {
       searchHandle(Book, bookList, ['book_title', 'book_comment'], search),
   });
 
-  const [user, email, comment, books] = await Promise.all([
+  const [user, emails, comment, books] = await Promise.all([
     User.read(),
     Email.read(),
     Comment.read(),
     Book.read(),
   ]);
   userList(user);
-  emailList(email);
+  emailList(emails);
   commentList(comment);
   bookList(books);
 
