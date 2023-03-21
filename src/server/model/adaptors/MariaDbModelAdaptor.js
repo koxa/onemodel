@@ -357,7 +357,7 @@ class MariaDbModelAdaptor extends BaseAdaptor {
       const insertedCount = data.length;
       const insertedIds = Array(data.length)
         .fill()
-        .map((_, i) => insertId - insertedCount + i + 1);
+        .map((_, i) => insertId + i);
       await connection.commit();
       return {
         insertedCount,
