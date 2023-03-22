@@ -1,6 +1,4 @@
 import http from 'http';
-import path from 'path';
-import fs from 'fs/promises';
 import ObservableModel from '../common/model/ObservableModel';
 import JsonServerModelAdaptor from '../server/model/adaptors/JsonServerModelAdaptor';
 import { getQueryParams } from '../utils/node/index';
@@ -17,12 +15,12 @@ class OneModelServer {
   constructor({
     port = 3000,
     models = [OneModel],
-    staticPaths = [],
-    indexFileName,
     timeout = 1500,
+    bodyParse = true,
     onBeforeResponse,
     props,
   } = {}) {
+    this.bodyParse = bodyParse;
     this.port = port;
     this.models = new Map(
       models.map((model) => {
@@ -32,10 +30,8 @@ class OneModelServer {
         return [model.getConfig('collectionName'), model];
       }),
     );
-    this.staticPaths = staticPaths;
-    this.indexFileName = indexFileName;
     this.onBeforeResponse = onBeforeResponse;
-    this.server = http.createServer(this.handleReqRes.bind(this));
+    this.server = http.createServer(this.requestMiddleware.bind(this));
 
     this.sockets = {};
     this.nextSocketId = 0;
@@ -65,56 +61,6 @@ class OneModelServer {
     return model;
   }
 
-  async sendStaticFile(res, url, folder) {
-    try {
-      const filePath = path.join(__dirname, folder, url);
-      const stats = await fs.stat(filePath);
-      if (!stats.isFile()) {
-        throw new Error('File not found');
-      }
-      const extname = path.extname(filePath).toLowerCase();
-      const contentType =
-        {
-          '.html': 'text/html',
-          '.css': 'text/css',
-          '.js': 'text/javascript',
-          '.png': 'image/png',
-          '.jpg': 'image/jpg',
-          '.json': 'application/json',
-        }[extname] || 'application/json';
-      const data = await fs.readFile(filePath);
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(data);
-      return true;
-    } catch (error) {
-      if (error.code === 'ENOENT' || error.message === 'File not found') {
-        return false;
-      }
-      this.handleError(res, error);
-      return false;
-    }
-  }
-
-  async checkStaticFile(url, res) {
-    if (this.staticPaths.length === 0 || !url || url.includes('/api')) {
-      return false;
-    }
-    try {
-      const results = await Promise.all(
-        this.staticPaths.map((folder) => {
-          if (this.indexFileName && url === '/') {
-            return this.sendStaticFile(res, `/${this.indexFileName}`, folder);
-          }
-          return this.sendStaticFile(res, url, folder);
-        }),
-      );
-      return results.some((result) => result);
-    } catch (error) {
-      this.handleError(res, error);
-      return false;
-    }
-  }
-
   handleError(res, error, code = 500) {
     console.error(error);
     res.writeHead(code, { 'Content-Type': 'application/json' });
@@ -132,7 +78,7 @@ class OneModelServer {
    * @param req
    * @param res
    */
-  async handleReqRes(req, res) {
+  async requestMiddleware(req, res) {
     try {
       const { url, method } = req;
       if (this.onBeforeResponse) {
@@ -140,13 +86,6 @@ class OneModelServer {
         if (result) {
           return;
         }
-      }
-      if (['__webpack_hmr', 'favicon.ico'].some((item) => url.includes(item))) {
-        this.handleError(res, `File not found: ${url}`);
-        return;
-      }
-      if (method === 'GET' && (await this.checkStaticFile(url, res))) {
-        return;
       }
       const [, , collectionName, idParam] = url.split('/');
       const id = idParam ? idParam.split('?')[0] : undefined;
@@ -178,12 +117,14 @@ class OneModelServer {
         }
         case 'POST': {
           try {
-            let body = '';
-            for await (const chunk of req) {
-              body += chunk;
+            let body = req.body || '';
+            if (!body) {
+              for await (const chunk of req) {
+                body += chunk;
+              }
             }
             const { isInsertMany } = options;
-            const doc = JSON.parse(body);
+            const doc = this.bodyParse ? JSON.parse(body) : body;
             log(doc);
             const result = isInsertMany ? await model.insertMany(doc) : await model.create(doc);
             this.handleResponse(res, result);
@@ -194,12 +135,14 @@ class OneModelServer {
         }
         case 'PUT': {
           try {
-            let body = '';
-            for await (const chunk of req) {
-              body += chunk;
+            let body = req.body || '';
+            if (!body) {
+              for await (const chunk of req) {
+                body += chunk;
+              }
             }
             const { isUpdateMany } = options;
-            const doc = JSON.parse(body);
+            const doc = this.bodyParse ? JSON.parse(body) : body;
             log(doc);
             const result = isUpdateMany
               ? await model.updateMany(doc)
@@ -213,11 +156,13 @@ class OneModelServer {
         case 'DELETE': {
           try {
             log();
-            let body = '';
-            for await (const chunk of req) {
-              body += chunk;
+            let body = req.body || '';
+            if (!body) {
+              for await (const chunk of req) {
+                body += chunk;
+              }
             }
-            const doc = body ? JSON.parse(body) : '';
+            const doc = body && this.bodyParse ? JSON.parse(body) : body || '';
             const { isDeleteMany } = options;
             const result =
               isDeleteMany && doc ? await model.deleteMany(doc) : await model.deleteOne(id);

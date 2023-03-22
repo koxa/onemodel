@@ -14,7 +14,7 @@ class SocketModelAdaptor extends BaseAdaptor {
   }
 
   static getPrefix() {
-    return 'socket';
+    return 'api';
   }
 
   static getPort() {
