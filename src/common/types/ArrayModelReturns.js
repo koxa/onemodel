@@ -1,3 +1,5 @@
+import { deepEqual } from '../../utils';
+
 class ArrayModelReturns extends Array {
   constructor(_params, ...items) {
     super(...items);
@@ -36,11 +38,16 @@ class ArrayModelReturns extends Array {
     return new ArrayModelReturns({ model: this.model, ...this.params }, ...modified);
   }
 
-  find(id) {
-    const index = this.findIndex(id);
-    if (index > -1) {
+  find(param1, param2) {
+    if (typeof param1 === 'number' || !isNaN(param1)) {
+      const index = this.findIndex(param1);
       return this[index];
+    } else if (typeof param1 === 'string' && typeof param2 !== 'undefined') {
+      return super.find((model) => deepEqual(model[param1], param2));
     }
+    throw new Error(
+      `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`,
+    );
   }
 
   findIndex(id) {
@@ -48,23 +55,59 @@ class ArrayModelReturns extends Array {
       return -1;
     }
     const idAttr = this.model.getConfig('idAttr');
-    return super.findIndex((item) => item[idAttr] === id);
+    return super.findIndex((item) => item[idAttr] == id);
   }
 
   push() {
     for (const element of arguments) {
-      this.pushed.push(element);
-      super.push(element);
+      const model = new this.model(element);
+      this.pushed.push(model);
+      super.push(model);
     }
   }
 
-  remove(id) {
+  removeById(id) {
     const index = this.findIndex(id);
     if (index > -1) {
-      this.removed.push(this[index][this.model.getConfig('idAttr')]);
+      const primaryKey = this.model.getConfig('idAttr');
+      const id = this[index][primaryKey];
+      if (typeof id !== 'undefined') {
+        this.removed.push(id);
+      }
       super.splice(index, 1);
+      return true;
     }
     return false;
+  }
+
+  removeByKeyValue(key, value) {
+    const index = super.findIndex((model) => deepEqual(model[key], value));
+    if (index > -1) {
+      const primaryKey = this.model.getConfig('idAttr');
+      const id = this[index][primaryKey];
+      if (typeof id !== 'undefined') {
+        this.removed.push(id);
+      } else {
+        const pushedIndex = this.pushed.findIndex((pushed) => pushed[key] == value);
+        if (pushedIndex > -1) {
+          this.pushed.splice(pushedIndex, 1);
+        }
+      }
+      super.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  remove(param1, param2) {
+    if (typeof param1 === 'number' || !isNaN(param1)) {
+      return this.removeById(param1);
+    } else if (typeof param1 === 'string' && typeof param2 !== 'undefined') {
+      return this.removeByKeyValue(param1, param2);
+    }
+    throw new Error(
+      `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`,
+    );
   }
 
   async restore() {
@@ -101,13 +144,14 @@ class ArrayModelReturns extends Array {
     }
     if (this.removed && this.removed.length) {
       const deleteMany = await this.model.deleteMany(this.removed);
-      result.delete = deleteMany;
+      result.deletedCount = deleteMany.deletedCount;
       console.log('saveAll delete: ', this.removed, 'response: ', deleteMany);
       this.removed = [];
     }
     if (this.pushed && this.pushed.length) {
       const insertMany = await this.model.insertMany(this.pushed);
-      result.insert = insertMany;
+      result.insertedCount = insertMany.insertedCount;
+      result.insertedIds = insertMany.insertedIds;
       console.log('saveAll insert: ', this.pushed, 'response: ', insertMany);
       this.pushed = [];
     }

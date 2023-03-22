@@ -369,12 +369,14 @@ class JsonServerModelAdaptor extends BaseAdaptor {
           return !this.matchFilter(doc, value);
         }
       } else if (typeof value === 'object') {
-        const docValue = doc[key];
+        const docValue = !isNaN(doc[key]) ? Number(doc[key]) : doc[key];
         const valueKeys = Object.keys(value);
         for (let j = 0; j < valueKeys.length; j++) {
           try {
             const operator = valueKeys[j];
-            const operand = value[operator];
+            const operand = Array.isArray(value[operator])
+              ? value[operator].map((item) => (!isNaN(item) ? Number(item) : item))
+              : value[operator];
             if (operator === '$eq' && docValue != operand) {
               return false;
             } else if (operator === '$ne' && docValue == operand) {
