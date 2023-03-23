@@ -75,8 +75,13 @@ class OneModelServer {
   /**
    * HTTP server middleware handler
    * By Default supports basic OneModel CRUD operations
-   * @param req
-   * @param res
+   * @param req Request object from an HTTP server
+   * @param res Response object from an HTTP server
+   * This function can be used as a middleware for an Express.js server, for example:
+   * const app = express();
+   * const router = express.Router();
+   * const oneModelServer = new OneModelServer();
+   * router.use((req, res) => oneModelServer.requestMiddleware(req, res));
    */
   async requestMiddleware(req, res) {
     try {
