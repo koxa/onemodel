@@ -159,49 +159,30 @@ class BaseModel extends Base {
 
   __defineProperty(prop, val, reactivity) {
     const def = {
-      //value: val,
       configurable: true,
       enumerable: true,
-      //writable: true
     };
-    if (reactivity) {
-      const tmpProps = {
-        [prop]: val,
-      };
-      // def.writable = false;
-      def.get = () => {
-        return tmpProps[prop];
-      };
-      def.set = (val) => {
-        const prepared = this.__prepareSet(prop, val);
-        if (prepared.doSet) {
-          val = prepared.val;
-          if (this.__hookBeforeSet) {
-            val = this.__hookBeforeSet(prop, val);
-          }
-          tmpProps[prop] = val;
-          this.isModified = true;
-          this.__hookAfterSet && this.__hookAfterSet(prop, val);
+    const tmpProps = {
+      [prop]: val,
+    };
+    def.get = () => {
+      return tmpProps[prop];
+    };
+    def.set = (val) => {
+      const prepared = this.__prepareSet(prop, val);
+      if (prepared.doSet) {
+        val = prepared.val;
+        if (reactivity && this.__hookBeforeSet) {
+          val = this.__hookBeforeSet(prop, val);
         }
-      };
-    } else {
-      const tmpProps = {
-        [prop]: val,
-      };
-      def.get = () => {
-        return tmpProps[prop];
-      };
-      def.set = (val) => {
-        const prepared = this.__prepareSet(prop, val);
-        if (prepared.doSet) {
-          val = prepared.val;
-          tmpProps[prop] = val;
+        if (typeof tmpProps[prop] !== 'undefined') {
           this.isModified = true;
+          this.__hookUpdate && this.__hookUpdate(prop, val);
         }
-      };
-      // def['value'] = val;
-      // def['writable'] = true;
-    }
+        tmpProps[prop] = val;
+        reactivity && this.__hookAfterSet && this.__hookAfterSet(prop, val);
+      }
+    };
     Object.defineProperty(this, prop, def);
   }
 

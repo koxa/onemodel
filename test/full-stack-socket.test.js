@@ -285,6 +285,7 @@ describe('test block', () => {
     expect(result[2].isModified).toBe(false);
     expect(result[3].isModified).toBe(true);
     expect(result[4].isModified).toBe(false);
+    result.forEach((model) => expect(model instanceof result.model).toBe(true));
 
     expect(JSON.parse(JSON.stringify(result))).toEqual([
       { age: 30, firstName: 'firstName 10 - update', id: 10, lastName: 'lastName 10' },
@@ -336,6 +337,7 @@ describe('test block', () => {
     });
     expect(updateResult.length).toBe(4);
     expect(updateResult[3].firstName).toBe('updateResultPush 1');
+    expect(updateResult[3] instanceof updateResult.model).toBe(true);
     expect(updateResult.find('firstName', 'updateResultPush 1').firstName).toBe(
       'updateResultPush 1',
     );

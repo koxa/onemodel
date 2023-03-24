@@ -6,40 +6,67 @@ import { deepEqual } from '../../utils';
  * @param _params Object that includes optional parameters to configure the behavior of the ArrayModelReturns.
  *  The object should have the following properties:
  * - model: A reference to a OneModel object that will be used for CRUD operations
- * - mixed1, mixed2, mixed3: A parameter for the OneModel's read method (optional)
+ * - mixed1, mixed2, mixed3: A parameters for the OneModel's read method (optional)
  * @param items Array of initial items to populate the ArrayModelReturns
  */
 class ArrayModelReturns extends Array {
+  /** References to the "emit, on, once, removeListener, off" functions of the EventEmitter class in the model, if supported */
+  emit(eventName, ...args) {
+    if (!this.model.emit) {
+      throw new Error('The "emit" function is not supported in the model');
+    }
+    this.model.emit(eventName, ...args);
+  }
+
+  on(eventName, listener) {
+    if (!this.model.on) {
+      throw new Error('The "on" function is not supported in the model');
+    }
+    this.model.on(eventName, listener);
+  }
+
+  once(eventName, listener) {
+    if (!this.model.once) {
+      throw new Error('The "once" function is not supported in the model');
+    }
+    this.model.once(eventName, listener);
+  }
+
+  removeListener(eventName, listener) {
+    if (!this.model.removeListener) {
+      throw new Error('The "removeListener" function is not supported in the model');
+    }
+    this.model.removeListener(eventName, listener);
+  }
+
+  off(eventName, listener) {
+    if (!this.model.off) {
+      throw new Error('The "off" function is not supported in the model');
+    }
+    this.model.off(eventName, listener);
+  }
+
+  defineProperty({ name, value, writable = false }) {
+    Object.defineProperty(this, name, {
+      configurable: false,
+      enumerable: false,
+      writable,
+      value,
+    });
+  }
+
   constructor(_params, ...items) {
     super(...items);
     const { model, ...params } = _params;
-    Object.defineProperty(this, 'params', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: params || {},
-    });
-
-    Object.defineProperty(this, 'model', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: model,
-    });
-
-    Object.defineProperty(this, 'pushed', {
-      configurable: false,
-      enumerable: false,
-      writable: true,
-      value: [],
-    });
-
-    Object.defineProperty(this, 'removed', {
-      configurable: false,
-      enumerable: false,
-      writable: true,
-      value: [],
-    });
+    this.defineProperty({ name: 'params', value: params || {} });
+    this.defineProperty({ name: 'model', value: model });
+    this.defineProperty({ name: 'pushed', value: [], writable: true });
+    this.defineProperty({ name: 'removed', value: [], writable: true });
+    for (let i = 0; i < this.length; i++) {
+      if (typeof this[i] === 'object' && !(this[i] instanceof model)) {
+        this[i] = new model(this[i]);
+      }
+    }
   }
 
   /**
@@ -90,7 +117,7 @@ class ArrayModelReturns extends Array {
    */
   push() {
     for (const element of arguments) {
-      const model = new this.model(element);
+      const model = !(element instanceof this.model) ? new this.model(element) : element;
       this.pushed.push(model);
       super.push(model);
     }

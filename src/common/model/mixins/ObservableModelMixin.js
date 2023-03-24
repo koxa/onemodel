@@ -7,7 +7,14 @@ class ObservableModelMixin extends ObservableMixin {
       AFTER_SET: 'after_set',
       BEFORE_SET_ALL: 'before_set_all',
       AFTER_SET_ALL: 'after_set_all',
+      UPDATE: 'update',
     };
+  }
+
+  __hookUpdate(prop, val) {
+    ObservableMixin.emit(this.constructor.getEvents().UPDATE, prop, val);
+    this.emit(this.constructor.getEvents().UPDATE, prop, val);
+    return this;
   }
 
   __hookBeforeSet(prop, val) {

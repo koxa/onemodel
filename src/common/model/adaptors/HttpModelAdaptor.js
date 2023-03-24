@@ -113,10 +113,7 @@ class HttpModelAdaptor extends BaseAdaptor {
     });
     const response = await this.request(normalizedParams);
     return Array.isArray(response)
-      ? new ArrayModelReturns(
-          { model: this, mixed1, mixed2, mixed3 },
-          ...response.map((item) => new this(item)),
-        )
+      ? new ArrayModelReturns({ model: this, mixed1, mixed2, mixed3 }, ...response)
       : new this(response);
   }
 
