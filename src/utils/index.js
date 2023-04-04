@@ -1,3 +1,7 @@
+export function isClass(v) {
+  return typeof v === 'function' && /^\s*class\s+/.test(v.toString());
+}
+
 export function getFilter(filterObj) {
   if (filterObj && typeof filterObj === 'object' && Object.keys(filterObj).length) {
     let filters = {};

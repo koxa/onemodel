@@ -1,5 +1,4 @@
 import BaseAdaptor from '../../adaptors/BaseAdaptor';
-import ArrayModelReturns from '../../types/ArrayModelReturns';
 
 class SocketModelAdaptor extends BaseAdaptor {
   static _config = {
@@ -113,10 +112,7 @@ class SocketModelAdaptor extends BaseAdaptor {
       skip,
       columns,
     });
-    const response = await this.request(normalizedParams);
-    return Array.isArray(response)
-      ? new ArrayModelReturns({ model: this, mixed1, mixed2, mixed3 }, ...response)
-      : new this(response);
+    return await this.request(normalizedParams);
   }
 
   static async update(data = {}, params = {}) {

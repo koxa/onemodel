@@ -1,9 +1,5 @@
 import Base from '../Base';
-import { deepEqual } from '../../utils';
-
-function isClass(v) {
-  return typeof v === 'function' && /^\s*class\s+/.test(v.toString());
-}
+import { isClass, deepEqual } from '../../utils';
 
 class BaseModel extends Base {
   static _config = {
