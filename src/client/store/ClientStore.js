@@ -2,7 +2,7 @@ import ObservableModel from '../../common/model/ObservableModel';
 import { applyProps, addMixins } from '../../utils/mixins';
 import Store from '../../common/store/Store';
 
-class OneStore extends Store {
+class ClientStore extends Store {
   static _config = {
     model: null,
   };
@@ -21,11 +21,11 @@ class OneStore extends Store {
 
   /**
    * Returns a new OneStore that contains only the items that have been modified
-   * @returns {OneStore}
+   * @returns {ClientStore}
    */
   getModified() {
     const modified = this.filter((model) => model && model.isModified);
-    return new OneStore(...modified);
+    return new ClientStore(...modified);
   }
 
   /**
@@ -58,6 +58,6 @@ class OneStore extends Store {
   }
 }
 
-OneStore.addMixins([ObservableModel]);
+ClientStore.addMixins([ObservableModel]);
 
-export default OneStore;
+export default ClientStore;

@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { OneModelServer } from '../src/middleware/index';
 import ClientModel from '../src/client/model/ClientModel';
-import OneStore from '../src/client/store/OneStore';
+import ClientStore from '../src/client/store/ClientStore';
 
 class OneModel extends ClientModel {}
 
@@ -18,7 +18,7 @@ describe('test block', () => {
       port,
     });
 
-    OneStore.configure({
+    ClientStore.configure({
       modelClass: OneModel,
     });
 
@@ -51,7 +51,7 @@ describe('test block', () => {
     beforeAll(async () => {
       ids = [2, 3, 4, 5, 6];
       const filter = { id: { $in: ids } };
-      result = new OneStore(...(await OneModel.read({ filter })));
+      result = new ClientStore(...(await OneModel.read({ filter })));
     });
 
     test('initialize store with models', () => {
@@ -109,7 +109,7 @@ describe('test block', () => {
 
     test('read and update models from OneServer', async () => {
       const readIds = [ids[1], ids[2], ...resultSaveAll.insertedIds];
-      const updateResult = new OneStore(
+      const updateResult = new ClientStore(
         ...(await OneModel.read({ filter: { id: { $in: readIds } } })),
       );
 
