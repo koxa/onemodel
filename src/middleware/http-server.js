@@ -109,6 +109,11 @@ class OneModelServer {
       switch (method) {
         case 'GET': {
           try {
+            if (url === '/') {
+              res.writeHead(code, { 'Content-Type': 'text/html' });
+              res.end('hello world');
+              return;
+            }
             log();
             if (id === 'count') {
               return this.handleResponse(res, await model.count());
