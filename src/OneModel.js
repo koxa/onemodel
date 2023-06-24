@@ -1,16 +1,20 @@
 /**
  * OneModel is a ClientModel when in Browser, otherwise it's ServerModel if common js modules exist
  */
+
+//todo: optimize code and check when imported fromm node or webpack or web
 let Parent;
-if (process.env.WEBPACK_TARGET === 'node') {
-  // it's NodeJS
-  Parent = require('./server/model/ServerModel').default;
-} else if (process.env.WEBPACK_TARGET === 'web') {
-  Parent = require('./client/model/ClientModel').default;
+if (process.env.WEBPACK_TARGET) { // if compiling via webpack
+  if (process.env.WEBPACK_TARGET === 'node') {
+    // it's NodeJS
+    Parent = (await import('./server/model/ServerModel')).default;
+  } else if (process.env.WEBPACK_TARGET === 'web') {
+    Parent = (await import('./client/model/ClientModel')).default;
+  } else {
+    throw new Error('Unknown webpack target');
+  }
 } else {
-  throw new Error('Unable to certainly determine environment to export OneModel');
+  Parent = (await import( './server/model/ServerModel')).default;
 }
-
 class OneModel extends Parent {}
-
 export default OneModel;

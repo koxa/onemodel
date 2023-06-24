@@ -12,6 +12,7 @@
     "test.server": "nodemon --inspect testapp/server.js",
     "test.onemodelserver": "nodemon --inspect testapp/oneModelServer/onemodelserver.js"
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/koxa/onemodel.git"

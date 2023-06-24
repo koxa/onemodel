@@ -68,4 +68,4 @@ function getQueryParams(req) {
   return parseQuery(data);
 }
 
-module.exports = { getQueryParams };
+export {getQueryParams};
