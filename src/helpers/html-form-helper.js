@@ -9,7 +9,7 @@ function generateForm(model) {
   let out = "<form method=\"post\">";
   for (let prop in props) {
     //todo: support complex prop definitions
-    out += getProp(prop, props[prop], model.get ? model.get(prop) : props[prop]); //whether instance or class
+    out += getProp(prop, props[prop], model.get ? model.get(prop) : undefined); //whether instance or class
   }
   out += "<input type=\"submit\" />";
   out += "</form>";
