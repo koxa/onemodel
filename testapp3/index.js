@@ -11,7 +11,7 @@ Movie.configure({
   props: {
     title: "Movie",
     director: "Director",
-    genre: {index: 2, options: ['action', 'drama', 'western', 'horror', 'thriller', 'comedy']},
+    genre: {value: 'comedy', options: ['action', 'drama', 'western', 'horror', 'thriller', 'comedy']},
     decade: ['1980', '1990', '2000', '2010', '2020'],
     qualities: {options: ['remux-2160p', 'bluray-2160p', 'web-2160p', 'hdtv-2160p'], multiple: true},
     rating: {type: Number, min: 0, max: 10},
@@ -20,11 +20,12 @@ Movie.configure({
 });
 
 app.get('/', (req, res) => {
-  let html = ''
-  res.send(generateForm(new Movie()));
+  let html = '<p>New Movie Form</p>'
+  res.send(html + generateForm(new Movie()));
 });
 
 app.post('/', (req, res) => {
+  console.log('body', req.body);
   res.send(generateForm(new Movie(req.body)));
 })
 

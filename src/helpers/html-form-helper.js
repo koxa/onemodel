@@ -29,26 +29,33 @@ function getProp(prop, propVal, val) {
       break;
     case "object":
       if (Array.isArray(propVal)) {
-        html += getPropArray(propVal);
+        html += getPropArray(prop, propVal, false, val);
       } else {
-        html += getObject(propVal);
+        html += getObject(prop, propVal, val);
       }
       break;
     default:
       break;
   }
 
-  function getPropArray(options, multiple, index) {
+  function getPropArray(name, options, multiple, val) {
     let html = "";
-    html += `<select ${multiple ? 'multiple' : ''}>`;
-    for (let o of options) {
-      html += `<option value="${o}">${o}</option>`;
+    html += `<select name="${name}" ${multiple ? 'multiple' : ''}>`;
+    for (let i = 0; i < options.length; i++) {
+      let v = options[i];
+      let selected = '';
+      if (val) {
+        if (Array.isArray(val) && val.includes(v) || val === v) {
+          selected = "selected";
+        }
+      }
+      html += `<option value="${v}" ${selected}>${v}</option>`;
     }
     html += `</select>`;
     return html;
   }
 
-  function getObject(propVal) {
+  function getObject(name, propVal, val) {
     html = '';
     let type = propVal["type"];
     if (!type) {
@@ -65,9 +72,10 @@ function getProp(prop, propVal, val) {
       case String:
         break;
       case Number:
+        html += `<input type="number" name="${name}" value="${val || propVal['value'] || ''}" min="${propVal['min']}" max="${propVal['max']}"/>`;
         break;
       case Array:
-        html += getPropArray(propVal['options'], propVal['multiple'], propVal['index'])
+        html += getPropArray(name, propVal['options'], propVal['multiple'], val || propVal['value'])
         break;
     }
 
