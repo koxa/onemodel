@@ -7,14 +7,14 @@ let Parent;
 if (process.env.WEBPACK_TARGET) { // if compiling via webpack
   if (process.env.WEBPACK_TARGET === 'node') {
     // it's NodeJS
-    Parent = (await import('./server/model/ServerModel')).default;
+    Parent = (await import('./server/model/ServerModel.js')).default;
   } else if (process.env.WEBPACK_TARGET === 'web') {
-    Parent = (await import('./client/model/ClientModel')).default;
+    Parent = (await import('./client/model/ClientModel.js')).default;
   } else {
     throw new Error('Unknown webpack target');
   }
 } else {
-  Parent = (await import( './server/model/ServerModel')).default;
+  Parent = (await import( './server/model/ServerModel.js')).default;
 }
 class OneModel extends Parent {}
 export default OneModel;

@@ -1,4 +1,4 @@
-import Store from '../../common/store/Store';
+import Store from '../../common/store/Store.js';
 
 class ServerStore extends Store {
   static getDbCollection() {

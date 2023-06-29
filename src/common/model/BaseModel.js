@@ -1,14 +1,15 @@
-import Base from '../Base';
-import { isClass, deepEqual } from '../../utils';
+import Base from "../Base";
+import { isClass, deepEqual } from "../../utils";
+import { underscoredIf } from "sequelize/lib/utils";
 
 class BaseModel extends Base {
   static _config = {
     //todo: make _config private ? but how to extend in children ? //todo: make it private with es6 '#' private props
-    idAttr: 'id', //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
+    idAttr: "id", //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
     props: null, //this.getProps(),
     reactivity: false, //this.getReactivity(),
     validators: null, //this.getValidators(),
-    converters: null, //this.getConverters()
+    converters: null //this.getConverters()
   };
 
   /**
@@ -17,7 +18,7 @@ class BaseModel extends Base {
    */
   static getConfig(cfgProp) {
     const getCfgVal = (prop) => {
-      return typeof this._config[prop] === 'function' && !isClass(this._config[prop])
+      return typeof this._config[prop] === "function" && !isClass(this._config[prop])
         ? this._config[prop].apply(this)
         : this._config[prop];
     };
@@ -37,27 +38,59 @@ class BaseModel extends Base {
   }
 
   static validate(prop, val) {
-    const validators = this.getConfig('validators');
+    const validators = this.getConfig("validators");
     if (validators[prop]) {
       return validators[prop](val);
     } else {
-      console.log('validator is not defined for prop: ', prop);
+      console.log("validator is not defined for prop: ", prop);
     }
   }
 
   static convert(prop, val) {
-    const converters = this.getConfig('converters');
+    const converters = this.getConfig("converters");
     if (converters[prop]) {
       return converters[prop](val);
     } else {
-      console.log('converter is not defined for prop: ', prop);
+      console.log("converter is not defined for prop: ", prop);
+    }
+  }
+
+  /**
+   * Parses Prop Configuration to return just default value
+   * //todo: maybe move this to mixin
+   * @param propObj
+   */
+  static parsePropConfig(val) {
+    switch (typeof val) {
+      case "bigint":
+      case "boolean":
+      case "undefined":
+      case "string":
+      case "number":
+        return val;
+      case "object":
+        if (Array.isArray(val)) {
+          return null; // no default value. todo: should be null or undefined ?
+        } else {
+          // it's an object: may have Type[Number, Array]. If not Type defined check for fields: options = Array, min/max = Number
+          let type = val['type'] ?? (val['options'] ? Array : null) ?? (val['min'] || val['max'] ? Number : null);
+          switch (type) {
+            case Number:
+            case Array:
+              return val['value'];
+            default:
+              throw new Error('Unknown prop config type' + type);
+          }
+        }
+      default:
+        throw new Error("Unknown prop config value" + val);
     }
   }
 
   constructor(
     data,
     options = { skipHooks: false, skipConvert: false, skipValidate: false },
-    config = {},
+    config = {}
   ) {
     super(...arguments);
     if (config && Object.keys(config).length) {
@@ -66,10 +99,10 @@ class BaseModel extends Base {
     }
     const fullConfig = this.getConfig();
     fullConfig.props &&
-      Object.keys(fullConfig.props).forEach((prop) =>
-        this.__defineProperty(prop, fullConfig.props[prop], fullConfig.reactivity),
-      );
-    this.__defineModified(false);
+    Object.keys(fullConfig.props).forEach((prop) =>
+      this.__defineProperty(prop, this.constructor.parsePropConfig(fullConfig.props[prop]), fullConfig.reactivity)
+    );
+    //this.__defineModified(false);
     data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
   }
 
@@ -94,7 +127,7 @@ class BaseModel extends Base {
   }
 
   getId() {
-    let idAttr = this.constructor.getConfig('idAttr');
+    let idAttr = this.constructor.getConfig("idAttr");
     return this[idAttr];
   }
 
@@ -103,7 +136,7 @@ class BaseModel extends Base {
   }
 
   setId(id) {
-    return this.set(this.getConfig('idAttr'), id);
+    return this.set(this.getConfig("idAttr"), id);
   }
 
   get(prop) {
@@ -124,42 +157,42 @@ class BaseModel extends Base {
   }
 
   __defineConfig(config) {
-    Object.defineProperty(this, '_config', {
+    Object.defineProperty(this, "_config", {
       configurable: false,
       enumerable: false,
       writable: false,
-      value: config, // initial value is assigned
+      value: config // initial value is assigned
     });
-    return this['_config'];
+    return this["_config"];
   }
 
-  __defineModified(val) {
-    Object.defineProperty(this, 'isModified', {
-      configurable: false,
-      enumerable: false,
-      writable: true,
-      value: val,
-    });
-    return this['isModified'];
-  }
+  // __defineModified(val) {
+  //   Object.defineProperty(this, 'isModified', {
+  //     configurable: false,
+  //     enumerable: false,
+  //     writable: true,
+  //     value: val,
+  //   });
+  //   return this['isModified'];
+  // }
 
   __defineId(val) {
-    Object.defineProperty(this, this.constructor.getConfig('idAttr'), {
+    Object.defineProperty(this, this.constructor.getConfig("idAttr"), {
       configurable: true,
       enumerable: true,
       writable: false, // id is immutable by default
-      value: val, // initial value is assigned
+      value: val // initial value is assigned
     });
-    return this[this.constructor.getConfig('idAttr')];
+    return this[this.constructor.getConfig("idAttr")];
   }
 
   __defineProperty(prop, val, reactivity) {
     const def = {
       configurable: true,
-      enumerable: true,
+      enumerable: true
     };
     const tmpProps = {
-      [prop]: val,
+      [prop]: val
     };
     def.get = () => {
       return tmpProps[prop];
@@ -171,10 +204,10 @@ class BaseModel extends Base {
         if (reactivity && this.__hookBeforeSet) {
           val = this.__hookBeforeSet(prop, val);
         }
-        if (typeof tmpProps[prop] !== 'undefined') {
-          this.isModified = true;
-          this.__hookUpdate && this.__hookUpdate(prop, val);
-        }
+        // if (typeof tmpProps[prop] !== 'undefined') {
+        //   this.isModified = true;
+        //   this.__hookUpdate && this.__hookUpdate(prop, val);
+        // }
         tmpProps[prop] = val;
         reactivity && this.__hookAfterSet && this.__hookAfterSet(prop, val);
       }
@@ -194,8 +227,8 @@ class BaseModel extends Base {
    * @param options
    */
   __prepareSet(prop, val, options = { skipValidate: false, skipConvert: false }) {
-    const validators = this.constructor.getConfig('validators');
-    const converters = this.constructor.getConfig('converters');
+    const validators = this.constructor.getConfig("validators");
+    const converters = this.constructor.getConfig("converters");
     const { skipValidate, skipConvert } = options;
     // const propExists = this.__isPropExists(prop);
 
@@ -239,7 +272,7 @@ class BaseModel extends Base {
           // now calling only if value doSet
           val = this.__hookBeforeSet(prop, val);
         }
-        if (prop === this.constructor.getConfig('idAttr') && this[prop] === undefined) {
+        if (prop === this.constructor.getConfig("idAttr") && this[prop] === undefined) {
           this.__defineId(val); // will define and set id attr as immutable
         } else {
           this[prop] = val;
@@ -268,9 +301,9 @@ class BaseModel extends Base {
         modifiedProps[prop] = this[prop]; // record modified props and return them at the end
       }
     }
-    if (this.isModified) {
-      this.isModified = false;
-    }
+    // if (this.isModified) {
+    //   this.isModified = false;
+    // }
     !skipHooks && this.__hookAfterSetAll && this.__hookAfterSetAll(modifiedProps, data);
     return modifiedProps;
   }

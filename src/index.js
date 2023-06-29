@@ -1,8 +1,8 @@
 //todo: FIX
-const BaseModel = (await import("./common/model/BaseModel")).default;
-const ObservableModel = (await import ("./common/model/ObservableModel")).default;
-const OneModel = (await import ("./OneModel")).default;
-//const OneStore = await (import ("./OneStore")).default;
+//const BaseModel = (await import("./common/model/BaseModel.js")).default;
+//const ObservableModel = (await import ("./common/model/ObservableModel.js")).default;
+const OneModel = (await import ("./OneModel.js")).default;
+const OneStore = (await import ("./OneStore.js")).default;
 
 //if (process.env.WEBPACK_TARGET === "node") {
 //  const ServerModel = require("./server/model/ServerModel").default;
@@ -12,11 +12,10 @@ const OneModel = (await import ("./OneModel")).default;
 //const ServerSQLiteModel = require("./server/model/ServerSQLiteModel").default;
 //const ServerMongoDbModel = require("./server/model/ServerMongoDbModel").default;
 //const JsonServerModel = require("./server/model/JsonServerModel").default;
-const OneModelServer = (await import("./middleware")).OneModelServer;
+//const OneModelServer = (await import("./middleware")).OneModelServer;
 //const OneModelSocketServer = require("./middleware").OneModelSocketServer;
 //} else if (process.env.WEBPACK_TARGET === "web") {
 //const ClientModel = require("./client/model/ClientModel").default;
 //const ClientModelWrapper = require("./client/model/ClientModelWrapper").default;
 //}
-
-export {OneModel, OneModelServer}
+export {OneModel, OneStore}

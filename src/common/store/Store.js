@@ -1,23 +1,54 @@
-import { isClass, deepEqual } from '../../utils';
+import OneModel from "../../OneModel.js"; //making sure to import not from index to avoid recursion
 
 class Store extends Array {
+  static modelClass = null;
+  // static wrapItems(items = []) {
+  //   let modelClass = this.getClassModel();
+  //   if (!modelClass && Array.isArray(items)) {
+  //     modelClass = this.getClassModelFromItems(items);
+  //     modelClass && this.constructor.setConfig({ modelClass });
+  //   }
+  //   if (modelClass) {
+  //     for (let i = 0; i < items.length; i++) {
+  //       if (typeof items[i] === "object" && !(items[i] instanceof modelClass)) {
+  //         items[i] = new modelClass(items[i]);
+  //       }
+  //     }
+  //   }
+  //   return items;
+  // }
+
+  static wrapItems(...items) {
+    if (!this.modelClass) { //todo: maybe capture modelClass from first item if available
+      throw new Error('ModelClass must be defined!')
+    }
+    if (!this.modelClass instanceof OneModel) {
+      throw new Error('ModelClass must be instance of OneModel');
+    }
+    for (let i = 0; i < items.length; i++) {
+      items[i] = new this.modelClass(items[i]);
+    }
+
+    return items;
+  }
+
   constructor() {
-    super(...arguments);
-    this.defineProperty({ name: 'pushed', value: [], writable: true });
-    this.defineProperty({ name: 'removed', value: [], writable: true });
+    super();
+    //this.defineProperty({ name: 'pushed', value: [], writable: true });
+    //this.defineProperty({ name: 'removed', value: [], writable: true });
     this.__hookBeforeConstruct && this.__hookBeforeConstruct(...arguments);
-    this.wrapItems(this);
+    this.push(...this.constructor.wrapItems(...arguments));
     this.__hookAfterConstruct && this.__hookAfterConstruct();
   }
 
-  defineProperty({ name, value, writable = false }) {
-    Object.defineProperty(this, name, {
-      configurable: false,
-      enumerable: false,
-      writable,
-      value,
-    });
-  }
+  // defineProperty({ name, value, writable = false }) {
+  //   Object.defineProperty(this, name, {
+  //     configurable: false,
+  //     enumerable: false,
+  //     writable,
+  //     value,
+  //   });
+  // }
 
   get(id) {
     return this.find((item) => item.getId() === id);
@@ -54,15 +85,6 @@ class Store extends Array {
     throw new Error(
       `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`,
     );
-  }
-
-  add(item, skipHooks) {
-    !skipHooks && this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
-    const items = this.wrapItems(item);
-    this.pushed.push(...items);
-    const out = super.push(...items);
-    !skipHooks && this.__hookAfterChange && this.__hookAfterChange(out);
-    return out;
   }
 
   removeById(id) {
@@ -123,9 +145,8 @@ class Store extends Array {
 
   push() {
     this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
-    const items = this.wrapItems(arguments);
-    this.pushed.push(...items);
-    const out = super.push(...items);
+    //this.pushed.push(...items);
+    const out = super.push(...this.constructor.wrapItems(...arguments));
     this.__hookAfterChange && this.__hookAfterChange(out);
     return out;
   }
@@ -158,31 +179,15 @@ class Store extends Array {
     return out;
   }
 
-  getClassModel() {
-    return this.constructor.getConfig('modelClass');
-  }
+  // getClassModel() {
+  //   return this.constructor.getConfig('modelClass');
+  // }
 
-  getClassModelFromItems(items) {
-    if (items && Array.isArray(items)) {
-      return items.find((item) => isClass(item));
-    }
-  }
-
-  wrapItems(items) {
-    let modelClass = this.getClassModel();
-    if (!modelClass && Array.isArray(items)) {
-      modelClass = this.getClassModelFromItems(items);
-      modelClass && this.constructor.setConfig({ modelClass });
-    }
-    if (modelClass) {
-      for (let i = 0; i < items.length; i++) {
-        if (typeof items[i] === 'object' && !(items[i] instanceof modelClass)) {
-          items[i] = new modelClass(items[i]);
-        }
-      }
-    }
-    return items;
-  }
+  // getClassModelFromItems(items) {
+  //   if (items && Array.isArray(items)) {
+  //     return items.find((item) => isClass(item));
+  //   }
+  // }
 }
 
 export default Store;

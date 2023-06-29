@@ -1,11 +1,14 @@
-import { OneModel, OneModelServer } from "../src";
+import { OneModel, OneStore } from "../src/index.js";
 import express from 'express';
 import generateForm from "../src/helpers/html-form-helper.js";
+import generateTable from "../src/helpers/html-table-helper.js";
 const port = 3000;
 const app = express();
 app.use(express.urlencoded());
-
 class Movie extends OneModel {}
+class MovieStore extends OneStore {
+  static modelClass = Movie;
+}
 
 Movie.configure({
   props: {
@@ -19,14 +22,24 @@ Movie.configure({
   }
 });
 
-app.get('/', (req, res) => {
+const myMovie = new Movie();
+const myMovieStore = new MovieStore();
+
+function getHomePage() {
   let html = '<p>New Movie Form</p>'
-  res.send(html + generateForm(new Movie()));
+  html += generateForm(myMovie);
+  html += generateTable(myMovieStore);
+  return html;
+}
+
+app.get('/', (req, res) => {
+  res.send(getHomePage());
 });
 
 app.post('/', (req, res) => {
   console.log('body', req.body);
-  res.send(generateForm(new Movie(req.body)));
+  myMovieStore.push(req.body);
+  res.send(getHomePage());
 })
 
 app.listen(port, () => {
