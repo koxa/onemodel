@@ -18,7 +18,7 @@ Movie.configure({
     decade: ['1980', '1990', '2000', '2010', '2020'],
     qualities: {options: ['remux-2160p', 'bluray-2160p', 'web-2160p', 'hdtv-2160p'], multiple: true},
     rating: {type: Number, min: 0, max: 10, value: 5},
-    year: 1990
+    year: { min: 1900, max: 2023, value: 1990 }
   }
 });
 

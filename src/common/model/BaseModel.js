@@ -72,16 +72,20 @@ class BaseModel extends Base {
         if (Array.isArray(val)) {
           return null; // no default value. todo: should be null or undefined ?
         } else {
-          // it's an object: may have Type[Number, Array]. If not Type defined check for fields: options = Array, min/max = Number
-          let type = val['type'] ?? (val['options'] ? Array : null) ?? (val['min'] || val['max'] ? Number : null);
+          // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
+          let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null);
+          //todo: support validator/converter right here
           switch (type) {
             case Number:
             case Array:
-              return val['value'];
+            case String:
+              return val["value"];
             default:
-              throw new Error('Unknown prop config type' + type);
+              throw new Error("Unknown prop config type" + type);
           }
         }
+      case "function":
+        console.log(val); //todo
       default:
         throw new Error("Unknown prop config value" + val);
     }
@@ -233,7 +237,7 @@ class BaseModel extends Base {
     // const propExists = this.__isPropExists(prop);
 
     if (!skipValidate && validators && validators[prop]) {
-      if (!validators[prop](val)) {
+      if (!validators[prop](val)) { //todo: record validation error somehow somewhere
         return { doSet: false, prop, val };
       }
     }

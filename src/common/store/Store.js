@@ -18,26 +18,52 @@ class Store extends Array {
   //   return items;
   // }
 
-  static wrapItems(...items) {
-    if (!this.modelClass) { //todo: maybe capture modelClass from first item if available
-      throw new Error('ModelClass must be defined!')
+  /**
+   * Wraps items with OneModel class instances
+   * todo: support items without modelClass
+   * @param modelClass
+   * @param items
+   * @returns {*[]}
+   */
+  static wrapItems({modelClass = this.modelClass, items = []}) {
+    if (!modelClass) { //todo: maybe capture modelClass from first item if available
+      throw new Error("ModelClass must be defined!");
     }
-    if (!this.modelClass instanceof OneModel) {
-      throw new Error('ModelClass must be instance of OneModel');
+    if (!modelClass instanceof OneModel) {
+      throw new Error("ModelClass must be instance of OneModel");
     }
     for (let i = 0; i < items.length; i++) {
-      items[i] = new this.modelClass(items[i]);
+      items[i] = new modelClass(items[i]);
     }
 
     return items;
   }
 
-  constructor() {
+  /**
+   * Args
+   * can be either list of items OR
+   * can be single Array of items OR
+   * can be Object like {data: [], modelClass}
+   * todo: improve docs and add test cases
+   * @param {*} args
+   */
+  constructor(...args) {
     super();
+    let items, modelClass;
+    if (args.length > 1) { // multiple items case
+      items = args;
+    } else if (args.length === 1) { // items array OR config object case
+      if (Array.isArray(args[0])) { // items array
+        items = args[0];
+      } else if (typeof args[0] === "object") { // config object
+        modelClass = args[0].modelClass;
+        items = args[0].data;
+      }
+    }
     //this.defineProperty({ name: 'pushed', value: [], writable: true });
     //this.defineProperty({ name: 'removed', value: [], writable: true });
     this.__hookBeforeConstruct && this.__hookBeforeConstruct(...arguments);
-    this.push(...this.constructor.wrapItems(...arguments));
+    items && items.length && this.push(...this.constructor.wrapItems({modelClass, items});
     this.__hookAfterConstruct && this.__hookAfterConstruct();
   }
 
@@ -63,7 +89,7 @@ class Store extends Array {
     if (id === undefined || id === null || this.length === 0) {
       return -1;
     }
-    const idAttr = this.getClassModel().getConfig('idAttr');
+    const idAttr = this.getClassModel().getConfig("idAttr");
     return super.findIndex((item) => item[idAttr] == id);
   }
 
@@ -76,14 +102,14 @@ class Store extends Array {
    * example: find(1) or find('firstName', 'Bob')
    */
   find(param1, param2) {
-    if (typeof param1 === 'number' || !isNaN(param1)) {
+    if (typeof param1 === "number" || !isNaN(param1)) {
       const index = this.findIndex(param1);
       return this[index];
-    } else if (typeof param1 === 'string' && typeof param2 !== 'undefined') {
+    } else if (typeof param1 === "string" && typeof param2 !== "undefined") {
       return super.find((model) => deepEqual(model[param1], param2));
     }
     throw new Error(
-      `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`,
+      `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`
     );
   }
 
@@ -91,25 +117,25 @@ class Store extends Array {
     const index = this.findIndex(id);
     if (index > -1) {
       this.__hookBeforeChange && this.__hookBeforeChange();
-      const primaryKey = this.getClassModel().getConfig('idAttr');
+      const primaryKey = this.getClassModel().getConfig("idAttr");
       const id = this[index][primaryKey];
-      if (typeof id !== 'undefined') {
+      if (typeof id !== "undefined") {
         this.removed.push(id);
       }
       const out = super.splice(index, 1);
       this.__hookAfterChange && this.__hookAfterChange();
       return out;
     }
-    throw new Error('Store removeById: not found by id ' + id);
+    throw new Error("Store removeById: not found by id " + id);
   }
 
   removeByKeyValue(key, value) {
     const index = super.findIndex((model) => deepEqual(model[key], value));
     if (index > -1) {
       this.__hookBeforeChange && this.__hookBeforeChange();
-      const primaryKey = this.getClassModel().getConfig('idAttr');
+      const primaryKey = this.getClassModel().getConfig("idAttr");
       const id = this[index][primaryKey];
-      if (typeof id !== 'undefined') {
+      if (typeof id !== "undefined") {
         this.removed.push(id);
       } else {
         const pushedIndex = this.pushed.findIndex((pushed) => pushed[key] == value);
@@ -133,13 +159,13 @@ class Store extends Array {
    * example: remove(1) or remove('firstName', 'Bob')
    */
   remove(param1, param2) {
-    if (typeof param1 === 'number' || !isNaN(param1)) {
+    if (typeof param1 === "number" || !isNaN(param1)) {
       return this.removeById(param1);
-    } else if (typeof param1 === 'string' && typeof param2 !== 'undefined') {
+    } else if (typeof param1 === "string" && typeof param2 !== "undefined") {
       return this.removeByKeyValue(param1, param2);
     }
     throw new Error(
-      `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`,
+      `Invalid parameters, param1 takes id or param1 key and param2 value: param1 - ${typeof param1}, param2 - ${typeof param2}`
     );
   }
 

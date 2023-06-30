@@ -6,7 +6,7 @@ import { OneModel } from "../index";
  */
 function generateForm(model) {
   const { props } = model.getConfig();
-  let out = "<form method=\"post\">";
+  let out = `<form action='/${model.constructor.name.toLowerCase()}' method='post'>`;
   for (let prop in props) {
     //todo: support complex prop definitions
     out += getProp(prop, props[prop], model.get ? model.get(prop) : undefined); //whether instance or class
