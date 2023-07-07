@@ -4,7 +4,7 @@
   "description": "OneModel - Isomorphic Data Model and Store for Client and Server",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules --experimental-specifier-resolution=node node_modules/jest/bin/jest.js",
     "coverage": "jest --coverage",
     "build": "webpack",
     "prepublish": "npm run build",
