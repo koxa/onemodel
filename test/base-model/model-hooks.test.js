@@ -1,23 +1,17 @@
+import OneModel from '../../src/index.js';
 describe('test hooks', () => {
   let Model;
   let CarHookAfterSet;
   let CarHookBeforeSet;
 
   beforeAll(() => {
-    Object.defineProperty(process, 'env', {
-      get() {
-        return { WEBPACK_TARGET: 'web' };
-      },
-    });
-    Model = require('../src').OneModel;
-
-    class CarHookAfterSetTemp extends Model {
-      static _config = {
-        ...Model._config,
+    class CarHookAfterSetTemp extends OneModel {
+      static config = {
+        ...super.config,
         props: {
           make: 'test',
           model: 'test',
-        },
+        }
       };
 
       __hookAfterSet(prop, val) {
@@ -28,9 +22,9 @@ describe('test hooks', () => {
       }
     }
 
-    class CarHookBeforeSetTemp extends Model {
-      static _config = {
-        ...Model._config,
+    class CarHookBeforeSetTemp extends OneModel {
+      static config = {
+        ...super.config,
         props: {
           make: 'test',
           model: 'test',

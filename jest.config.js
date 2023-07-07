@@ -18,4 +18,4 @@ const settings = {
   testPathIgnorePatterns: ['MariaDbModelAdaptor.test.js', 'HttpServerModelAdaptor.test.js'],
 };
 
-module.exports = settings;
+export default settings

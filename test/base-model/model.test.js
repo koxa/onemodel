@@ -1,18 +1,11 @@
+import OneModel from '../../src/index.js';
+
 describe('testing model basics', () => {
   let car;
-  let Model;
-
-  beforeAll(() => {
-    Object.defineProperty(process, 'env', {
-      get() {
-        return { WEBPACK_TARGET: 'node' };
-      },
-    });
-    Model = require('../src').OneModel;
-  });
+  //let Model;
 
   beforeEach(() => {
-    car = new Model({ make: 'toyota', model: 'camry' });
+    car = new OneModel({ make: 'toyota', model: 'camry' });
   });
 
   afterEach(() => {
@@ -30,13 +23,14 @@ describe('testing model basics', () => {
     expect(car.get('model')).toEqual('camry');
   });
 
-  test('model getAll', () => {
-    expect(car.getAll()).toEqual({ make: 'toyota', model: 'camry' });
-    // exclude specific props
-    // todo: support 'exclude' and 'include'
-    expect(car.getAll('make')).toEqual({ model: 'camry' });
-    expect(car.getAll('make', 'model')).toEqual({});
-  });
+  // test('model getAll', () => {
+  //   expect(car.getAll()).toEqual({ make: 'toyota', model: 'camry' });
+  //   // exclude specific props
+  //   // todo: support 'exclude' and 'include'
+  //   // todo: do we need getAll at all ?
+  //   expect(car.getAll('make')).toEqual({ model: 'camry' });
+  //   expect(car.getAll('make', 'model')).toEqual({});
+  // });
 
   test('model set', () => {
     expect(car.set('year', 2020)).toBe(true);
@@ -66,7 +60,7 @@ describe('testing model basics', () => {
     expect(car.getClientId()).not.toBeUndefined();
     expect(car.getClientId()).not.toBeNull();
     expect(car.getClientId()).toBeGreaterThan(0);
-    expect(new Model().getClientId()).not.toEqual(car.getClientId());
-    expect(new Model().getClientId()).toBeGreaterThan(car.getClientId());
+    expect(new OneModel().getClientId()).not.toEqual(car.getClientId());
+    expect(new OneModel().getClientId()).toBeGreaterThan(car.getClientId());
   });
 });

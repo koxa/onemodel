@@ -1,23 +1,18 @@
+import OneModel from '../../src/index.js';
+
 describe('testing model default props', () => {
   let Car, SedanCar;
   let car1, car2;
-  let Model;
 
   beforeAll(() => {
-    Object.defineProperty(process, 'env', {
-      get() {
-        return { WEBPACK_TARGET: 'web' };
-      },
-    });
-    Model = require('../src').OneModel;
-
-    class CarTemp extends Model {
-      static _config = {
-        ...super._config,
+    class CarTemp extends OneModel {
+      static config = {
+        ...super.config,
         props: {
           type: 'car',
           make: '',
           model: '',
+          trim: '',
           year: 1900,
           transmission: undefined,
           seats: 5,
@@ -27,12 +22,12 @@ describe('testing model default props', () => {
     }
 
     class SedanCarTemp extends CarTemp {
-      static _config = {
+      static config = {
         ...super._config,
         props: {
-          ...super._config.props,
+          ...super.config.props,
           type: 'sedan',
-        },
+        }
       };
     }
 
@@ -50,19 +45,24 @@ describe('testing model default props', () => {
     car2 = undefined;
   });
 
-  test('model get', () => {
-    expect(car1.get('year')).toBe(1900);
-    expect(car1.get('make')).toBe('toyota');
-    expect(car2.get('year')).toBe(2020);
-    expect(car2.constructor.getConfig().props).toEqual({
+  test('model check props', () => {
+    expect(car2.getConfig('props')).toEqual({
       make: '',
       model: '',
+      trim: '',
       year: 1900,
       transmission: undefined,
       type: 'sedan',
       seats: 5,
       odometer: 0,
     });
+  })
+
+  test('model get', () => {
+    expect(car1.get('year')).toBe(1900);
+    expect(car1.get('make')).toBe('toyota');
+    expect(car1.get('trim')).toBe('');
+    expect(car2.get('year')).toBe(2020);
     expect(car2.get('type')).toBe('sedan');
     expect(car2.get('seats')).toBe(5);
     expect(car2.get('make')).toBe('nissan');

@@ -1,8 +1,8 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import Model from '../src/client/model/ClientModel';
+import Model from '../../src/client/model/ClientModel.js';
 global.fetch = fetch;
-const { getQueryParams } = require('../src/utils/node/index');
+const { getQueryParams } = require('../../src/utils/node/index.js');
 
 const app = express();
 const port = 9333;
