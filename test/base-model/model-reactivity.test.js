@@ -1,11 +1,11 @@
-import OneModel from '../../src/index.js';
+import BaseModel from "../../src/common/model/BaseModel.js";
 
 describe('test reactivity', () => {
   let Model;
   let ReactiveModel;
 
   beforeAll(() => {
-    class ReactiveModelTemp extends OneModel {
+    class ReactiveModelTemp extends BaseModel {
       static config = {
         ...super.config,
         reactivity: true,
@@ -18,7 +18,12 @@ describe('test reactivity', () => {
 
       __hookBeforeSet(prop, val) {
         // WARNING! modifying same prop while reactivity enabled will create infinite loop
-        return val.toUpperCase();
+        return {
+          doSet: true,
+          prop: prop,
+          val: val.toUpperCase(),
+          info: null
+        };
       }
     }
 

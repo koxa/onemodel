@@ -1,11 +1,11 @@
-import OneModel from '../../src/index.js';
+import BaseModel from "../../src/common/model/BaseModel.js";
 
 describe('testing model basics', () => {
   let car;
   //let Model;
 
   beforeEach(() => {
-    car = new OneModel({ make: 'toyota', model: 'camry' });
+    car = new BaseModel({ make: 'toyota', model: 'camry' });
   });
 
   afterEach(() => {
@@ -60,7 +60,7 @@ describe('testing model basics', () => {
     expect(car.getClientId()).not.toBeUndefined();
     expect(car.getClientId()).not.toBeNull();
     expect(car.getClientId()).toBeGreaterThan(0);
-    expect(new OneModel().getClientId()).not.toEqual(car.getClientId());
-    expect(new OneModel().getClientId()).toBeGreaterThan(car.getClientId());
+    expect(new BaseModel().getClientId()).not.toEqual(car.getClientId());
+    expect(new BaseModel().getClientId()).toBeGreaterThan(car.getClientId());
   });
 });

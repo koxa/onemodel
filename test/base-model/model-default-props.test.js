@@ -1,11 +1,11 @@
-import OneModel from '../../src/index.js';
+import BaseModel from "../../src/common/model/BaseModel.js";
 
 describe('testing model default props', () => {
   let Car, SedanCar;
   let car1, car2;
 
   beforeAll(() => {
-    class CarTemp extends OneModel {
+    class CarTemp extends BaseModel {
       static config = {
         ...super.config,
         props: {

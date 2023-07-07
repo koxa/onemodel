@@ -1,13 +1,14 @@
-import OneModel from '../../src/index.js';
+import BaseModel from "../../src/common/model/BaseModel.js";
 describe('test hooks', () => {
   let Model;
   let CarHookAfterSet;
   let CarHookBeforeSet;
 
   beforeAll(() => {
-    class CarHookAfterSetTemp extends OneModel {
+    class CarHookAfterSetTemp extends BaseModel {
       static config = {
         ...super.config,
+        reactivity: false,
         props: {
           make: 'test',
           model: 'test',
@@ -22,7 +23,7 @@ describe('test hooks', () => {
       }
     }
 
-    class CarHookBeforeSetTemp extends OneModel {
+    class CarHookBeforeSetTemp extends BaseModel {
       static config = {
         ...super.config,
         props: {
@@ -36,9 +37,14 @@ describe('test hooks', () => {
         // WARNING! modifying same prop while reactivity enabled will create infinite loop
         if (prop === 'year') {
           // making sure year is at least 1900 using the hook
-          return val > 1900 ? val : 1900;
+          val = val > 1900 ? val : 1900;
         }
-        return val;
+        return {
+          doSet: true,
+          prop: prop,
+          val: val,
+          info: null
+        };
       }
     }
 

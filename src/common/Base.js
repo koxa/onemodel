@@ -39,11 +39,13 @@ class Base {
     });
 
     //apply mixin constructors (copy mixin instance properties to this, starting with oldest mixin)
-    for (let cls of this.constructor.__appliedMixins) {
-      // you can't apply es6 class constructor directly to this
-      // that's why you have to instantiate it and then copy own props to this
-      const clsObj = new cls(...arguments);
-      applyProps(this, clsObj);
+    if (Array.isArray(this.constructor.__appliedMixins)) {
+      for (let cls of this.constructor.__appliedMixins) {
+        // you can't apply es6 class constructor directly to this
+        // that's why you have to instantiate it and then copy own props to this
+        const clsObj = new cls(...arguments);
+        applyProps(this, clsObj);
+      }
     }
   }
 

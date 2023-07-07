@@ -192,6 +192,9 @@ class BaseModel extends Base {
       return tmpProps[prop];
     };
     def.set = (val) => {
+      if (tmpProps[prop] === val) { // if value same just skip it
+        return;
+      }
       let doSet = true, info = null, mixin;
       if (reactivity && this.__hookBeforeSet) {
         ({ mixin, doSet, prop, val, info } = this.__hookBeforeSet(prop, val));
@@ -233,6 +236,10 @@ class BaseModel extends Base {
       this[prop] = val; // property's setter will call preparation function
       return val !== oldVal; // if prop didn't exist before or val modified
     } else {
+      if (this[prop] === val) {
+        // skip set when value is same todo: review for deep equality of objects and arrays
+        return false;
+      }
       let doSet = true, info = null;
       if (!skipHooks && this.__hookBeforeSet) {
         ({ doSet, prop, val, info } = this.__hookBeforeSet(prop, val));
@@ -301,7 +308,6 @@ class BaseModel extends Base {
       val: val,
       info: null
     };
-
   };
 
   __hookAfterSet(prop, val) {
