@@ -1,22 +1,8 @@
-import OneModel from "../../OneModel.js"; //making sure to import not from index to avoid recursion
+import OneModel from "../../OneModel.js";
+import BaseModel from "../model/BaseModel.js"; //making sure to import not from index to avoid recursion
 
-class Store extends Array {
+class BaseStore extends Array {
   static modelClass = null;
-  // static wrapItems(items = []) {
-  //   let modelClass = this.getClassModel();
-  //   if (!modelClass && Array.isArray(items)) {
-  //     modelClass = this.getClassModelFromItems(items);
-  //     modelClass && this.constructor.setConfig({ modelClass });
-  //   }
-  //   if (modelClass) {
-  //     for (let i = 0; i < items.length; i++) {
-  //       if (typeof items[i] === "object" && !(items[i] instanceof modelClass)) {
-  //         items[i] = new modelClass(items[i]);
-  //       }
-  //     }
-  //   }
-  //   return items;
-  // }
 
   /**
    * Wraps items with OneModel class instances
@@ -25,8 +11,9 @@ class Store extends Array {
    * @param items
    * @returns {*[]}
    */
-  static wrapItems({modelClass = this.modelClass, items = []}) {
-    if (!modelClass) { //todo: maybe capture modelClass from first item if available
+  static wrapItems({modelClass= this.modelClass, items = []}) {
+    if (!modelClass) {
+      //todo: maybe capture modelClass from first item if available
       throw new Error("ModelClass must be defined!");
     }
     if (!modelClass instanceof OneModel) {
@@ -38,6 +25,8 @@ class Store extends Array {
 
     return items;
   }
+
+  #modelClass = null;
 
   /**
    * Args
@@ -60,11 +49,25 @@ class Store extends Array {
         items = args[0].data;
       }
     }
+    if (modelClass) {
+      // todo: read modelClass from actual items maybe if not specified explicitly
+      if (!modelClass.prototype) {
+        throw new Error("Correct ModelClass must be specified");
+      }
+      if (!modelClass.prototype instanceof BaseModel) {
+        throw new Error("Specified ModelClass must be inherited from BaseModel");
+      }
+      this.#modelClass = modelClass;
+    }
     //this.defineProperty({ name: 'pushed', value: [], writable: true });
     //this.defineProperty({ name: 'removed', value: [], writable: true });
     this.__hookBeforeConstruct && this.__hookBeforeConstruct(...arguments);
-    items && items.length && this.push(...this.constructor.wrapItems({modelClass, items});
+    items && items.length && this.push(...this.constructor.wrapItems({ modelClass, items }));
     this.__hookAfterConstruct && this.__hookAfterConstruct();
+  }
+
+  getModelClass() {
+    return this.#modelClass;
   }
 
   // defineProperty({ name, value, writable = false }) {
@@ -169,10 +172,10 @@ class Store extends Array {
     );
   }
 
-  push() {
+  push(...items) {
     this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
     //this.pushed.push(...items);
-    const out = super.push(...this.constructor.wrapItems(...arguments));
+    const out = super.push(...this.constructor.wrapItems({modelClass: this.getModelClass(), items}));
     this.__hookAfterChange && this.__hookAfterChange(out);
     return out;
   }
@@ -216,4 +219,4 @@ class Store extends Array {
   // }
 }
 
-export default Store;
+export default BaseStore;

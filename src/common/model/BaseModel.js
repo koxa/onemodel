@@ -1,5 +1,5 @@
-import Base from "../Base";
-import { isClass, deepEqual } from "../../utils";
+import Base from "../Base.js";
+import { isClass, deepEqual } from "../../utils/index.js";
 import { underscoredIf } from "sequelize/lib/utils";
 
 class BaseModel extends Base {

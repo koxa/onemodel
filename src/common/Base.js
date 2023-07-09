@@ -1,4 +1,4 @@
-import { applyProps, addMixins } from '../utils/mixins';
+import { applyProps, addMixins } from '../utils/mixins.js';
 
 class Base {
   /**

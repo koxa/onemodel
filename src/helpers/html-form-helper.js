@@ -1,15 +1,18 @@
-import { OneModel } from "../index";
+import { OneModel } from "../index.js";
+import { isClass } from "../utils/index.js";
 
 /**
  *
  * @param {OneModel} model
  */
 function generateForm(model) {
+  let isModelClass = isClass(model);
+
   const { props } = model.getConfig();
-  let out = `<form action='/${model.constructor.name.toLowerCase()}' method='post'>`;
+  let out = `<form action='/${isModelClass ? model.name.toLowerCase() : model.constructor.name.toLowerCase()}' method='post'>`;
   for (let prop in props) {
     //todo: support complex prop definitions
-    out += getProp(prop, props[prop], model.get ? model.get(prop) : undefined); //whether instance or class
+    out += getProp(prop, props[prop], isClass ? props[prop] : model.get(prop)); //whether instance or class
   }
   out += "<input type=\"submit\" />";
   out += "</form>";

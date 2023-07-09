@@ -2,7 +2,7 @@
 //const BaseModel = (await import("./common/model/BaseModel.js")).default;
 //const ObservableModel = (await import ("./common/model/ObservableModel.js")).default;
 const OneModel = (await import ("./OneModel.js")).default;
-//const OneStore = (await import ("./OneStore.js")).default;
+const OneStore = (await import ("./OneStore.js")).default;
 
 //if (process.env.WEBPACK_TARGET === "node") {
 //  const ServerModel = require("./server/model/ServerModel").default;
@@ -18,5 +18,5 @@ const OneModel = (await import ("./OneModel.js")).default;
 //const ClientModel = require("./client/model/ClientModel").default;
 //const ClientModelWrapper = require("./client/model/ClientModelWrapper").default;
 //}
-export {OneModel/*OneStore*/}
+export {OneModel, OneStore}
 export default OneModel

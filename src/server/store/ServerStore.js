@@ -1,6 +1,6 @@
-import Store from '../../common/store/Store.js';
+import BaseStore from '../../common/store/BaseStore.js';
 
-class ServerStore extends Store {
+class ServerStore extends BaseStore {
   static getDbCollection() {
     return this.getModelClass().getDbInstance();
   }

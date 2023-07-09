@@ -1,8 +1,8 @@
 import ObservableModel from '../../common/model/ObservableModel';
 import { applyProps, addMixins } from '../../utils/mixins';
-import Store from '../../common/store/Store';
+import BaseStore from '../../common/store/BaseStore.js';
 
-class ClientStore extends Store {
+class ClientStore extends BaseStore {
   static _config = {
     model: null,
   };

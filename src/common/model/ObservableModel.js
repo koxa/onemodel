@@ -1,5 +1,5 @@
-import BaseModel from './BaseModel';
-import ObservableModelMixin from './mixins/ObservableModelMixin';
+import BaseModel from './BaseModel.js';
+import ObservableModelMixin from './mixins/ObservableModelMixin.js';
 
 class ObservableModel extends BaseModel {}
 
