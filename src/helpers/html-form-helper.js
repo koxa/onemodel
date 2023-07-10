@@ -52,7 +52,15 @@ function getProp(prop, propVal, val) {
           selected = "selected";
         }
       }
-      html += `<option value="${v}" ${selected}>${v}</option>`;
+      let vRender;
+      switch (typeof v) {
+        case 'object': // in case it is object {} try to serialize for render
+          vRender = JSON.stringify(v);
+          break;
+        default:
+          vRender = v; // render as is
+      }
+      html += `<option value="${v}" ${selected}>${vRender}</option>`;
     }
     html += `</select>`;
     return html;
