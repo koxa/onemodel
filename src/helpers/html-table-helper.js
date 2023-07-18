@@ -5,7 +5,7 @@ import { OneStore } from "../index.js";
  * @returns {string}
  */
 function generateTable(store) {
-  let html = "<table>";
+  let html = "<table border='1'>";
   html += "<thead>";
   for (let prop of Object.keys(store[0] ?? {})) {
     html += `<td>${prop}</td>`;

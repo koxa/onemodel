@@ -8,7 +8,7 @@ class Base {
    * @param mixins
    * @returns {Base}
    */
-  static addMixins(mixins = []) {
+  static addMixins(...mixins) {
     return addMixins(this, mixins);
   }
 

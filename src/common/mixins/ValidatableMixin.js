@@ -1,52 +1,141 @@
+import { isLiteralObject } from "../../utils/index.js";
+
 class ValidatableMixin {
 
-  static #validateProp(propConfig, val) {
+  static getInvalidResponse(prop, val, message) {
+    return {
+      mixin: ValidatableMixin.name,
+      doSet: false,
+      prop: prop,
+      val: val,
+      message: message
+    };
+  }
+
+  /**
+   *
+   * @param propConfig Prop definition
+   * @param val Value being tested against prop definition
+   * @returns {object} Result object
+   */
+  static #doValidation(propConfig, val) {
     // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
-    let type = propConfig["type"] ?? (propConfig["options"] ? Array : null) ?? (propConfig["min"] || propConfig["max"] ? Number : null);
+    let type, options;
+    switch (typeof propConfig) {
+      case "object":
+        if (propConfig.constructor === Object) {
+          if (propConfig["type"]) {
+            type = propConfig["type"];
+          } else if (propConfig["options"]) {
+            type = Array;
+            options = propConfig["options"];
+          } else if (propConfig["min"] || propConfig["max"]) {
+            type = Number;
+          } else {
+            return { valid: false, message: "Unknown prop config object build up" };
+          }
+        } else if (propConfig.constructor === Array) { // todo: maybe do not support this for now
+          type = Array;
+          options = propConfig;
+        } else {
+          // todo: support null case
+          return { valid: false, message: "Unknown prop config object type" };
+        }
+        break;
+      case "string":
+        type = String;
+        break;
+      case "number":
+        type = Number;
+        break;
+      default:
+        return { valid: false, message: "Unknown propConfig type" };
+    }
+
     switch (type) {
       case Number:
         if (typeof val !== "number") {
-          //throw new Error("Must be Number");
-          return { valid: false, info: "Must be Number" };
+          return { valid: false, message: "Must be Number" };
         }
         break;
-      case Array:
-        if (!Array.isArray(val)) {
-          //throw new Error("Must be Array");
-          return { valid: false, info: "Must be Array" };
+      case Array: // todo: make sure val belongs to options defined
+        if (options && Array.isArray(options)) {
+          if (!options.includes(val)) {
+            return { valid: false, message: "Value is not within Options defined" };
+          }
+        } else {
+          return { valid: false, message: "Prop Config Options must be an array" };
         }
         break;
       case String:
         if (typeof val !== "string") {
-          //throw new Error("Must be String");
-          return { valid: false, info: "Must be String" };
+          return { valid: false, message: "Must be String" };
         }
         break;
       default:
-        return { valid: false, info: "Unknown prop config type" };
+        return { valid: false, message: "Unsupported type in prop config" };
     }
     return { valid: true };
   }
-  //todo: support multi prop validation
+
+  /**
+   *
+   * @param prop
+   * @param val
+   * @returns {object}
+   */
   validate(prop, val) {
+    //todo: support multi prop validation
     const propConfigs = this.getConfig("props");
-    if (propConfigs && typeof propConfigs === "object") {
-      if (propConfigs[prop] && typeof propConfigs[prop] === "object") {
-        return ValidatableMixin.#validateProp(propConfigs[prop], val);
-      }
+    if (isLiteralObject(propConfigs) && propConfigs[prop]) {
+      return ValidatableMixin.#doValidation(propConfigs[prop], val);
     }
     return { valid: true };
   }
 
   __hookBeforeSet(prop, val) {
-    let { valid, info } = this.validate(prop, val);
+    const result = this.validate(prop, val);
     return {
       mixin: ValidatableMixin.name,
-      doSet: valid,
+      doSet: result.valid,
       prop: prop,
       val: val,
-      info: info
+      message: result.message ?? null
     };
+  }
+
+  __hookBeforeConstruct(data, options, config) {
+    const propConfigs = this.getConfig("props");
+    let out = {};
+    if (propConfigs && typeof propConfigs === "object") {
+      for (let prop in propConfigs) { // check each prop config for specific attributes todo: maybe somehow do it in __hookBeforeSet though ability to reject entire construction/setAll must exist
+        let propCfg = propConfigs[prop];
+        if (isLiteralObject(propCfg)) { // todo: move to util object
+          // 'required'
+          if (propCfg.required && (data[prop] === undefined || data[prop] === null || data[prop] === "")) {
+            out[prop] = {
+              mixin: ValidatableMixin.name,
+              doSet: false,
+              prop: prop,
+              val: data[prop],
+              message: `Prop "${prop}" is required`
+            };
+          }
+        }
+      }
+    }
+    if (Object.keys(out).length > 0) {
+      return {
+        mixin: ValidatableMixin.name,
+        doSet: false,
+        props: out
+      }
+    } else {
+      return {
+        mixin: ValidatableMixin.name,
+        doSet: true
+      }
+    }
   }
 }
 

@@ -7,8 +7,16 @@ class BaseModel extends Base {
     //todo: make config private ? but how to extend in children ? //todo: make it private with es6 '#' private props
     idAttr: "id", //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
     props: null, //this.getProps(),
-    reactivity: true //this.getReactivity(),
+    reactivity: true, //this.getReactivity(),
   };
+
+  static incrementTracker = {}; // tracks attr's auto increment value when autoIncrement: true or primaryKey: true
+
+  static incrementProp(prop) {
+    this.incrementTracker[prop] = this.incrementTracker[prop] ?? 0;
+    return ++this.incrementTracker[prop];
+  }
+
 
   /**
    *
@@ -50,11 +58,12 @@ class BaseModel extends Base {
       case "number":
         return val;
       case "object":
+        //todo: test null
         if (Array.isArray(val)) {
           return null; // no default value. todo: should be null or undefined ?
         } else {
           // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
-          let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null);
+          let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null) ?? (val['primaryKey'] || val['autoIncrement'] ? Number : null);
           //todo: support validator/converter right here
           switch (type) {
             case Number:
@@ -83,6 +92,10 @@ class BaseModel extends Base {
     config = {}
   ) {
     super(...arguments);
+    let beforeConstruct = this.__hookBeforeConstruct(data, options, config);
+    if (!beforeConstruct.doSet) {
+      throw beforeConstruct;
+    }
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
       this.#defineConfig({ ...this.constructor.getConfig(), ...config });
@@ -95,6 +108,7 @@ class BaseModel extends Base {
     }
     //this.#defineModified(false);
     data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
+    this.__hookAfterConstruct(data, options, config);
   }
 
   /**
@@ -150,6 +164,7 @@ class BaseModel extends Base {
   // }
 
   #defineConfig(config) {
+    // todo: get rid of this method
     // Object.defineProperty(this, "#config", {
     //   configurable: false,
     //   enumerable: false,
@@ -171,16 +186,20 @@ class BaseModel extends Base {
   // }
 
   #defineId(val) {
-    Object.defineProperty(this, this.constructor.getConfig("idAttr"), {
+    // defineId happens in construction or during new prop assigned
+    Object.defineProperty(this, this.getConfig("idAttr"), {
       configurable: true,
       enumerable: true,
       writable: false, // id is immutable by default
-      value: val // initial value is assigned
+      value: val ?? this.constructor.incrementProp(this.getConfig("idAttr")) // initial value is assigned OR autoIncremented value
     });
-    return this[this.constructor.getConfig("idAttr")];
+    return this[this.getConfig("idAttr")];
   }
 
   #defineProperty(prop, val, reactivity) {
+    if (prop === this.getConfig('idAttr')) {
+      return this.#defineId(val);
+    }
     const def = {
       configurable: true,
       enumerable: true
@@ -195,9 +214,9 @@ class BaseModel extends Base {
       if (tmpProps[prop] === val) { // if value same just skip it
         return;
       }
-      let doSet = true, info = null, mixin;
+      let doSet = true, info = null, mixin, message;
       if (reactivity && this.__hookBeforeSet) {
-        ({ mixin, doSet, prop, val, info } = this.__hookBeforeSet(prop, val));
+        ({ mixin, doSet, prop, val, message } = this.__hookBeforeSet(prop, val));
         // if (typeof tmpProps[prop] !== 'undefined') {
         //   this.isModified = true;
         //   this.__hookUpdate && this.__hookUpdate(prop, val);
@@ -207,8 +226,7 @@ class BaseModel extends Base {
         tmpProps[prop] = val;
         reactivity && this.__hookAfterSet && this.__hookAfterSet(prop, val);
       } else if (doSet === false) {
-        //console.log(`__hookBeforeSet: false, prop: ${prop}, val: ${val}, info: ${info}`);
-        throw {method: '__hookBeforeSet', mixin, doSet: false, prop, val, info};
+        throw {method: '__hookBeforeSet', mixin, doSet, prop, val, message};
       } else {
         throw new Error("__hookBeforeSet: doSet must return boolean");
       }
@@ -242,7 +260,7 @@ class BaseModel extends Base {
       }
       let doSet = true, info = null;
       if (!skipHooks && this.__hookBeforeSet) {
-        ({ doSet, prop, val, info } = this.__hookBeforeSet(prop, val));
+        ({ doSet, prop, val, message } = this.__hookBeforeSet(prop, val));
       }
       if (doSet === true) {
         if (prop === this.constructor.getConfig("idAttr") && this[prop] === undefined) {
@@ -296,17 +314,25 @@ class BaseModel extends Base {
     return deleted;
   }
 
-  __hookAfterConstruct(data) {
+  __hookBeforeConstruct(data, options, config) {
+    return {
+      mixin: null,
+      doSet: true,
+      props: null
+    };
+  }
+  __hookAfterConstruct(data, options, config) {
     return this;
   }
 
   //todo: how do you apply multiple mixins ?
   __hookBeforeSet(prop, val) {
     return {
+      mixin: null,
       doSet: true,
       prop: prop,
       val: val,
-      info: null
+      message: null
     };
   };
 
