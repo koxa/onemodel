@@ -31,7 +31,7 @@ function getProp(prop, propVal, val, isClass, error = {}) {
       html += `<input type="number" name="${prop}" value="${isClass ? propVal : val}" />`;
       break;
     case "object":
-      if (Array.isArray(propVal)) {
+      if (Array.isArray(propVal)) { // todo: maybe drop support for straight Array for now
         html += getPropArray(prop, propVal, false, isClass ? undefined : val);
       } else {
         html += getObject(prop, propVal, val);
@@ -40,61 +40,71 @@ function getProp(prop, propVal, val, isClass, error = {}) {
     default:
       break;
   }
-  html += `<span class="error" aria-live="polite">${error.message ?? ''}</span></label></p>`;
+  html += `<span class="error" aria-live="polite">${error.message ?? ""}</span></label></p>`;
   return html;
 }
 
-  function getPropArray(name, options, multiple, val) {
-    let html = "";
-    html += `<select name="${name}" ${multiple ? "multiple" : ""}>`;
-    for (let i = 0; i < options.length; i++) {
-      let v = options[i];
-      let selected = "";
-      if (val) {
-        if (Array.isArray(val) && val.includes(v) || val === v) {
-          selected = "selected";
+function getPropArray(name, options, multiple, val, valueProp, textProp) {
+  let html = "";
+  html += `<select name="${name}" ${multiple ? "multiple" : ""}>`;
+  for (let i = 0; i < options.length; i++) {
+    let v = options[i];
+    let selected = "";
+    if (val) {
+      if (Array.isArray(val) && val.includes(v) || val === v) {
+        selected = "selected";
+      }
+    }
+    let oText, oVal;
+    switch (typeof v) {
+      case "string":
+      case "number":
+        oText = v;
+        oVal = v;
+        break;
+      case "object":
+        //oText = JSON.stringify(oVal);
+        if (textProp) {
+          oText = v[textProp];
         }
-      }
-      let vRender;
-      switch (typeof v) {
-        case "object": // in case it is object {} try to serialize for render
-          vRender = JSON.stringify(v);
-          break;
-        default:
-          vRender = v; // render as is
-      }
-      html += `<option value="${v}" ${selected}>${vRender}</option>`;
+        if (valueProp) {
+          oVal = v[valueProp];
+        }
+        break;
+      default:
+        throw new Error("Unknown Option Type in prop options " + oVal);
     }
-    html += `</select>`;
-    return html;
+    html += `<option value="${oVal}" ${selected}>${oText}</option>`;
+  }
+  html += `</select>`;
+  return html;
+}
+
+function getObject(name, propVal, val) {
+  let html = "";
+  let type = propVal["type"];
+
+  if (propVal["options"]) {
+    // consider Array is options available
+    type = Array; // todo: maybe use String And Number and implement options under it
+  } else if (propVal["min"] || propVal["max"]) {
+    // consider Number if min or max available
+    type = Number;
   }
 
-  function getObject(name, propVal, val) {
-    let html = "";
-    let type = propVal["type"];
-    if (!type) {
-      // trying to determine type by available fields
-      if (propVal["options"]) {
-        // consider Array is options available
-        type = Array;
-      } else if (propVal["min"] || propVal["max"]) {
-        // consider Number if min or max available
-        type = Number;
-      }
-    }
-    switch (type) {
-      case String:
-        html += `<input type="text" name="${name}" value="${val || propVal["value"] || ""}"/>`;
-        break;
-      case Number:
-        html += `<input type="number" name="${name}" value="${val || propVal["value"] || ""}" min="${propVal["min"]}" max="${propVal["max"]}"/>`;
-        break;
-      case Array:
-        html += getPropArray(name, propVal["options"], propVal["multiple"], val || propVal["value"]);
-        break;
-    }
-
-    return html;
+  switch (type) {
+    case String:
+      html += `<input type="text" name="${name}" value="${val || propVal["value"] || ""}"/>`;
+      break;
+    case Number:
+      html += `<input type="number" name="${name}" value="${val || propVal["value"] || ""}" min="${propVal["min"]}" max="${propVal["max"]}"/>`;
+      break;
+    case Array:
+      html += getPropArray(name, propVal["options"], propVal["multiple"], val || propVal["value"], propVal["valueProp"], propVal["textProp"]);
+      break;
   }
+
+  return html;
+}
 
 export default generateForm;
