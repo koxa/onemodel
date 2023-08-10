@@ -84,6 +84,11 @@ function getObject(name, propVal, val) {
   let html = "";
   let type = propVal["type"];
 
+  // special case for primaryKey, do NOT render it
+  if (propVal.primaryKey) {
+    return html;
+  }
+
   if (propVal["options"]) {
     // consider Array is options available
     type = Array; // todo: maybe use String And Number and implement options under it

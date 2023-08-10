@@ -5,14 +5,17 @@ import { underscoredIf } from "sequelize/lib/utils";
 class BaseModel extends Base {
   static config = {
     //todo: make config private ? but how to extend in children ? //todo: make it private with es6 '#' private props
-    idAttr: "id", //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
+    //idAttr: "id", //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
     props: null, //this.getProps(),
     reactivity: true, //this.getReactivity(),
   };
 
-  static incrementTracker = {}; // tracks attr's auto increment value when autoIncrement: true or primaryKey: true
+  static incrementTracker = null; // MUST BE NULL. tracks attr's auto increment value when autoIncrement: true or primaryKey: true
 
   static incrementProp(prop) {
+    if (!this.incrementTracker) {
+      this.incrementTracker = {}; // must be defined dynamically on model class instance to avoid inheritance of BaseModel's object by ref
+    }
     this.incrementTracker[prop] = this.incrementTracker[prop] ?? 0;
     return ++this.incrementTracker[prop];
   }
@@ -46,7 +49,7 @@ class BaseModel extends Base {
    * //todo: maybe move this to mixin
    * @param propObj
    */
-  static #getDefaultValueFromPropConfig(val) {
+  static getDefaultValueFromPropConfig(prop, val) {
     if (val === null) { // null is object so treat it in advance
       return null;
     }
@@ -62,9 +65,11 @@ class BaseModel extends Base {
         if (Array.isArray(val)) {
           return null; // no default value. todo: should be null or undefined ?
         } else {
+          if (val['primaryKey'] || val['autoIncrement']) {
+            return this.incrementProp(prop); //todo: should support val["value"] as starting point for increment ? can primaryKey disable increment ?
+          }
           // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
           let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null) ?? (val['primaryKey'] || val['autoIncrement'] ? Number : null);
-          //todo: support validator/converter right here
           switch (type) {
             case Number:
             case Array:
@@ -98,12 +103,12 @@ class BaseModel extends Base {
     }
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
-      this.#defineConfig({ ...this.constructor.getConfig(), ...config });
+      this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey and other defaults are generated here
     }
     const fullConfig = this.getConfig();
     if (fullConfig.props) {
       for (let prop in fullConfig.props) {
-        this.#defineProperty(prop, BaseModel.#getDefaultValueFromPropConfig(fullConfig.props[prop]), fullConfig.reactivity);
+        this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfig(prop, fullConfig.props[prop]), fullConfig.reactivity);
       }
     }
     //this.#defineModified(false);
@@ -130,19 +135,19 @@ class BaseModel extends Base {
     return this.#config ? Object.assign(this.#config, config) : this.#defineConfig(config);
   }
 
-  getId() {
-    let idAttr = this.getConfig("idAttr");
-    return this[idAttr];
-  }
+  // getId() {
+  //   let idAttr = this.getConfig("idAttr");
+  //   return this[idAttr];
+  // }
 
   getClientId() {
     //todo: maybe move getClientIdAttr to config
     return this[this.constructor.getClientIdAttr()];
   }
 
-  setId(id) {
-    return this.set(this.getConfig("idAttr"), id);
-  }
+  // setId(id) {
+  //   return this.set(this.getConfig("idAttr"), id);
+  // }
 
   //todo: do we need this method ?
   get(prop) {
@@ -185,21 +190,21 @@ class BaseModel extends Base {
   //   return this['isModified'];
   // }
 
-  #defineId(val) {
-    // defineId happens in construction or during new prop assigned
-    Object.defineProperty(this, this.getConfig("idAttr"), {
-      configurable: true,
-      enumerable: true,
-      writable: false, // id is immutable by default
-      value: val ?? this.constructor.incrementProp(this.getConfig("idAttr")) // initial value is assigned OR autoIncremented value
-    });
-    return this[this.getConfig("idAttr")];
-  }
+  // #defineId(val) {
+  //   // defineId happens in construction or during new prop assigned
+  //   Object.defineProperty(this, this.getConfig("idAttr"), {
+  //     configurable: true,
+  //     enumerable: true,
+  //     writable: false, // id is immutable by default
+  //     value: val ?? this.constructor.incrementProp(this.getConfig("idAttr")) // initial value is assigned OR autoIncremented value
+  //   });
+  //   return this[this.getConfig("idAttr")];
+  // }
 
   #defineProperty(prop, val, reactivity) {
-    if (prop === this.getConfig('idAttr')) {
-      return this.#defineId(val);
-    }
+    // if (prop === this.getConfig('idAttr')) {
+    //   return this.#defineId(val);
+    // }
     const def = {
       configurable: true,
       enumerable: true
@@ -263,11 +268,11 @@ class BaseModel extends Base {
         ({ doSet, prop, val, message } = this.__hookBeforeSet(prop, val));
       }
       if (doSet === true) {
-        if (prop === this.constructor.getConfig("idAttr") && this[prop] === undefined) {
-          this.#defineId(val); // will define and set id attr as immutable
-        } else {
+        // if (prop === this.constructor.getConfig("idAttr") && this[prop] === undefined) {
+        //   this.#defineId(val); // will define and set id attr as immutable
+        // } else {
           this[prop] = val;
-        }
+        //}
         !skipHooks && this.__hookAfterSet && this.__hookAfterSet(prop, this[prop]); // todo: maybe call this always with didSet: true/false param
       } else if (doSet === false) {
         console.log(`__hookBeforeSet: false, prop: ${prop}, val: ${val}, info: ${info}`);

@@ -45,30 +45,35 @@ class ValidatableMixin {
     if (propConfig.required && (val === undefined || val === null || val === "")) {
       return { valid: false, message: `Prop is required` };
     }
+    if (propConfig.primaryKey && propConfig.autoIncrement === false) { // if autoIncrement disabled for primaryKey then it must be user-defined
+      return { valid: false, message: `Prop is required` };
+    }
 
     /** BASIC TYPE & OPTIONS VALIDATION **/
-    switch (type) {
-      case Number:
-        if (typeof val !== "number") {
-          return { valid: false, message: "Must be Number" };
-        }
-        break;
-      case Array: // Array of Strings likely todo: maybe implement this under String/Number
-        if (options && Array.isArray(options)) {
-          if (!options.includes(val)) {
-            return { valid: false, message: "Value is not within Options defined" };
+    if (val !== undefined) { // only if val was defined we validate type
+      switch (type) {
+        case Number:
+          if (typeof val !== "number") {
+            return { valid: false, message: "Must be Number" };
           }
-        } else {
-          return { valid: false, message: "Prop Config Options must be an array" };
-        }
-        break;
-      case String:
-        if (typeof val !== "string") {
-          return { valid: false, message: "Must be String" };
-        }
-        break;
-      default:
-        return { valid: false, message: "Unsupported OR Undefined type in prop config" };
+          break;
+        case Array: // Array of Strings likely todo: maybe implement this under String/Number
+          if (options && Array.isArray(options)) {
+            if (!options.includes(val)) {
+              return { valid: false, message: "Value is not within Options defined" };
+            }
+          } else {
+            return { valid: false, message: "Prop Config Options must be an array" };
+          }
+          break;
+        case String:
+          if (typeof val !== "string") {
+            return { valid: false, message: "Must be String" };
+          }
+          break;
+        default:
+          return { valid: false, message: "Unsupported OR Undefined type in prop config" };
+      }
     }
     /** END OF TYPE VALIDATION CHECK **/
 
@@ -101,11 +106,14 @@ class ValidatableMixin {
       for (let prop in propConfigs) {
         let propCfg = propConfigs[prop];
         if (isLiteralObject(propCfg)) {
-          out[prop] = ValidatableMixin.#doValidation(propCfg, data[prop]);
+          let res = ValidatableMixin.#doValidation(propCfg, data[prop]);
+          if (res.valid === false) { // only collect invalid results
+            out[prop] = res;
+          }
         }
       }
     }
-    if (Object.keys(out).length > 0) {
+    if (Object.keys(out).length > 0) { // if invalid results collected
       return { valid: false, props: out };
     }
     return { valid: true };
