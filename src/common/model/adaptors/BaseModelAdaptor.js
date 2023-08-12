@@ -1,5 +1,5 @@
-class BaseAdaptor {
-  static _config = {
+class BaseModelAdaptor {
+  static config = {
     collectionName() {
       return this.name.toLowerCase(); // will be applied during getConfig against workable object
     },
@@ -106,4 +106,4 @@ class BaseAdaptor {
   }
 }
 
-export default BaseAdaptor;
+export default BaseModelAdaptor;

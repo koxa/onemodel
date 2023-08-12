@@ -1,9 +1,9 @@
-import BaseAdaptor from '../../adaptors/BaseAdaptor';
+import BaseModelAdaptor from './BaseModelAdaptor.js';
 import { getFilter } from '../../../utils';
 
-class HttpModelAdaptor extends BaseAdaptor {
+class HttpModelAdaptor extends BaseModelAdaptor {
   static _config = {
-    ...BaseAdaptor._config,
+    ...BaseModelAdaptor._config,
     hostname: this.getHostname(),
     prefix: this.getPrefix(),
     port: this.getPort(),

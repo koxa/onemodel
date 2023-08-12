@@ -1,10 +1,10 @@
 import BaseModel from "../../src/common/model/BaseModel.js";
-import ValidatableMixin from "../../src/common/mixins/ValidatableMixin.js";
+import ValidatableModelMixin from "../../src/common/model/mixins/ValidatableModelMixin.js";
 
 class OneModel extends BaseModel {
 }
 
-OneModel.addMixins([ValidatableMixin]);
+OneModel.addMixins([ValidatableModelMixin]);
 
 describe("testing model advanced props", () => {
   let car;

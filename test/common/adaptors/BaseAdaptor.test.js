@@ -1,4 +1,4 @@
-import BaseAdaptor from '../../../src/common/adaptors/BaseAdaptor';
+import BaseModelAdaptor from '../../../src/common/model/adaptors/BaseModelAdaptor.js';
 
 const setMockDataToAdaptor = (adaptor, id) => {
   adaptor.getId = jest.fn(() => id);
@@ -22,14 +22,14 @@ describe('BaseAdaptor', () => {
   let adaptor;
 
   beforeAll(async () => {
-    adaptor = new BaseAdaptor();
-    setMockDataToAdaptor(BaseAdaptor, 1);
+    adaptor = new BaseModelAdaptor();
+    setMockDataToAdaptor(BaseModelAdaptor, 1);
     setMockDataToAdaptor(adaptor, 2);
   });
 
   describe('create', () => {
     it('throws an error when called from the base class', () => {
-      expect(() => BaseAdaptor.create()).toThrow(
+      expect(() => BaseModelAdaptor.create()).toThrow(
         'CREATE method must be implemented in child Adaptor',
       );
     });
@@ -37,13 +37,13 @@ describe('BaseAdaptor', () => {
 
   describe('read', () => {
     it('throws an error when called from the base class', () => {
-      expect(() => BaseAdaptor.read()).toThrow('READ method must be implemented in child Adaptor');
+      expect(() => BaseModelAdaptor.read()).toThrow('READ method must be implemented in child Adaptor');
     });
   });
 
   describe('readOne', () => {
     it('throws an error when called from the base class', () => {
-      expect(() => BaseAdaptor.readOne()).toThrow(
+      expect(() => BaseModelAdaptor.readOne()).toThrow(
         'READ_ONE method must be implemented in child Adaptor',
       );
     });
@@ -51,7 +51,7 @@ describe('BaseAdaptor', () => {
 
   describe('update', () => {
     it('throws an error when called from the base class', () => {
-      expect(() => BaseAdaptor.update()).toThrow(
+      expect(() => BaseModelAdaptor.update()).toThrow(
         'UPDATE method must be implemented in child Adaptor',
       );
     });
@@ -59,15 +59,15 @@ describe('BaseAdaptor', () => {
 
   describe('delete', () => {
     it('throws an error when called from the base class', () => {
-      expect(() => BaseAdaptor.delete()).toThrow(
+      expect(() => BaseModelAdaptor.delete()).toThrow(
         'DELETE method must be implemented in child Adaptor',
       );
     });
 
     it('should return true', async () => {
       const mockUpdateResult = true;
-      const updateSpy = jest.spyOn(BaseAdaptor, 'delete').mockResolvedValue(mockUpdateResult);
-      const baseAdaptor = new BaseAdaptor();
+      const updateSpy = jest.spyOn(BaseModelAdaptor, 'delete').mockResolvedValue(mockUpdateResult);
+      const baseAdaptor = new BaseModelAdaptor();
       setMockDataToAdaptor(baseAdaptor, 10);
       const result = await baseAdaptor.delete();
 
@@ -78,8 +78,8 @@ describe('BaseAdaptor', () => {
 
     it('should return an error with missing id parameter', async () => {
       let messageError = '';
-      const updateSpy = jest.spyOn(BaseAdaptor, 'delete').mockResolvedValue(true);
-      const baseAdaptor = new BaseAdaptor();
+      const updateSpy = jest.spyOn(BaseModelAdaptor, 'delete').mockResolvedValue(true);
+      const baseAdaptor = new BaseModelAdaptor();
       setMockDataToAdaptor(baseAdaptor, undefined);
       try {
         await baseAdaptor.delete();
@@ -95,7 +95,7 @@ describe('BaseAdaptor', () => {
 
   describe('count', () => {
     it('throws an error when called from the base class', async () => {
-      expect(() => BaseAdaptor.count()).toThrow(
+      expect(() => BaseModelAdaptor.count()).toThrow(
         'COUNT method must be implemented in child Adaptor',
       );
     });
@@ -109,8 +109,8 @@ describe('BaseAdaptor', () => {
     });
 
     it('throws an error when id is not provided', async () => {
-      const baseAdaptor = new BaseAdaptor();
-      const mockRead = jest.spyOn(BaseAdaptor, 'read').mockImplementation(() => {});
+      const baseAdaptor = new BaseModelAdaptor();
+      const mockRead = jest.spyOn(BaseModelAdaptor, 'read').mockImplementation(() => {});
       setMockDataToAdaptor(baseAdaptor, undefined);
 
       await expect(baseAdaptor.fetch({ id: undefined })).rejects.toThrow(
@@ -121,7 +121,7 @@ describe('BaseAdaptor', () => {
     });
 
     it('calls the read method with the id', async () => {
-      const mockRead = jest.spyOn(BaseAdaptor, 'read').mockImplementation(() => {});
+      const mockRead = jest.spyOn(BaseModelAdaptor, 'read').mockImplementation(() => {});
       await adaptor.fetch({});
 
       expect(mockRead).toHaveBeenCalledWith(2);
@@ -133,7 +133,7 @@ describe('BaseAdaptor', () => {
   describe('save', () => {
     it('should call update method with correct parameters when ID is present', async () => {
       const mockUpdateResult = true;
-      const updateSpy = jest.spyOn(BaseAdaptor, 'update').mockResolvedValue(mockUpdateResult);
+      const updateSpy = jest.spyOn(BaseModelAdaptor, 'update').mockResolvedValue(mockUpdateResult);
       const id = 2;
       const result = await adaptor.save();
 
@@ -147,7 +147,7 @@ describe('BaseAdaptor', () => {
     });
 
     it('should throw an error when update method does not return a boolean', async () => {
-      const updateSpy = jest.spyOn(BaseAdaptor, 'update').mockResolvedValue({});
+      const updateSpy = jest.spyOn(BaseModelAdaptor, 'update').mockResolvedValue({});
 
       await expect(adaptor.save()).rejects.toThrowError(
         'BaseAdaptor save: update must return boolean',
@@ -158,8 +158,8 @@ describe('BaseAdaptor', () => {
 
     it('should throw an error when create method does not return an object with modified props or ID', async () => {
       const mockCreateResult = 'not an object';
-      const createSpy = jest.spyOn(BaseAdaptor, 'create').mockResolvedValue(mockCreateResult);
-      const baseAdaptor = new BaseAdaptor();
+      const createSpy = jest.spyOn(BaseModelAdaptor, 'create').mockResolvedValue(mockCreateResult);
+      const baseAdaptor = new BaseModelAdaptor();
       setMockDataToAdaptor(baseAdaptor, undefined);
 
       await expect(baseAdaptor.save()).rejects.toThrowError(

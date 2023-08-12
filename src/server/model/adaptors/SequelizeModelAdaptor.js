@@ -1,9 +1,9 @@
-import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
+import BaseModelAdaptor from '../../../common/model/adaptors/BaseModelAdaptor.js';
 import { getFilter } from '../../../utils';
 
-class SequelizeModelAdaptor extends BaseAdaptor {
+class SequelizeModelAdaptor extends BaseModelAdaptor {
   static _config = {
-    ...BaseAdaptor._config,
+    ...BaseModelAdaptor._config,
     sequelize: null,
     db: null,
     schemas: [],

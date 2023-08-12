@@ -1,8 +1,8 @@
-import BaseAdaptor from '../../adaptors/BaseAdaptor';
+import BaseModelAdaptor from './BaseModelAdaptor.js';
 
-class SocketModelAdaptor extends BaseAdaptor {
+class SocketModelAdaptor extends BaseModelAdaptor {
   static _config = {
-    ...BaseAdaptor._config,
+    ...BaseModelAdaptor._config,
     hostname: this.getHostname(),
     prefix: this.getPrefix(),
     port: this.getPort(),

@@ -1,9 +1,9 @@
-import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
+import BaseModelAdaptor from '../../../common/model/adaptors/BaseModelAdaptor.js';
 import { getFilter } from '../../../utils';
 
-class MongoServerModelAdaptor extends BaseAdaptor {
+class MongoServerModelAdaptor extends BaseModelAdaptor {
   static _config = {
-    ...BaseAdaptor._config,
+    ...BaseModelAdaptor._config,
     idAttr: '_id',
     mongo: null, // global Mongo reference
     db: null, // DB instance

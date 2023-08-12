@@ -1,4 +1,4 @@
-class IndexableStoreMixin {
+class _old_IndexableStoreMixin {
   static getIndexes() {
     throw new Error('GetIndexes must be implemented in child class');
   }
@@ -99,4 +99,4 @@ class IndexableStoreMixin {
   }
 }
 
-export default IndexableStoreMixin;
+export default _old_IndexableStoreMixin;

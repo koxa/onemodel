@@ -1,6 +1,6 @@
-import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
+import BaseModelAdaptor from '../../../common/model/adaptors/BaseModelAdaptor.js';
 
-class LocalStorageAdaptor extends BaseAdaptor {
+class LocalStorageAdaptor extends BaseModelAdaptor {
   static create(data, params) {
     data = data instanceof this ? data : new this(data);
     const localCollection = window.localStorage.getItem(this.getKey());

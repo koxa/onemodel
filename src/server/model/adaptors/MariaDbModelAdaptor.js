@@ -1,8 +1,8 @@
-import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
+import BaseModelAdaptor from '../../../common/model/adaptors/BaseModelAdaptor.js';
 import { getFilter } from '../../../utils';
-class MariaDbModelAdaptor extends BaseAdaptor {
+class MariaDbModelAdaptor extends BaseModelAdaptor {
   static _config = {
-    ...BaseAdaptor._config,
+    ...BaseModelAdaptor._config,
     db: null,
     idAttr: 'id',
   };

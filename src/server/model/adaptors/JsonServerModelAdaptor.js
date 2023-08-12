@@ -1,12 +1,12 @@
 import { existsSync } from 'fs';
 import { promises as fs } from 'fs';
 import path from 'path';
-import BaseAdaptor from '../../../common/adaptors/BaseAdaptor';
+import BaseModelAdaptor from '../../../common/model/adaptors/BaseModelAdaptor.js';
 import { getFilter } from '../../../utils';
 
-class JsonServerModelAdaptor extends BaseAdaptor {
+class JsonServerModelAdaptor extends BaseModelAdaptor {
   static _config = {
-    ...BaseAdaptor._config,
+    ...BaseModelAdaptor._config,
     idAttr: 'id',
     pathDir: 'db/json/',
     memoryDb: null,

@@ -1,5 +1,5 @@
 import Base from '../Base';
-import ObservableMixin from '../mixins/ObservableMixin';
+import ObservableMixin from '../model/mixins/ObservableMixin.js';
 import SortableStoreMixin from './mixins/SortableStoreMixin';
 
 class Store extends Base {

@@ -1,4 +1,4 @@
-import ObservableMixin from '../../../src/common/mixins/ObservableMixin';
+import ObservableMixin from '../../../src/common/model/mixins/ObservableMixin.js';
 
 describe('ObservableMixin', () => {
   describe('constructor', () => {

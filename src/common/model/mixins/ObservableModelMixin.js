@@ -1,4 +1,4 @@
-import ObservableMixin from '../../mixins/ObservableMixin.js';
+import ObservableMixin from './ObservableMixin.js';
 
 class ObservableModelMixin extends ObservableMixin {
   static getEvents() {

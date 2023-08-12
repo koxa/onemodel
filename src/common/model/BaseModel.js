@@ -7,7 +7,7 @@ class BaseModel extends Base {
     //todo: make config private ? but how to extend in children ? //todo: make it private with es6 '#' private props
     //idAttr: "id", //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
     props: null, //this.getProps(),
-    reactivity: true, //this.getReactivity(),
+    reactivity: true //this.getReactivity(),
   };
 
   static incrementTracker = null; // MUST BE NULL. tracks attr's auto increment value when autoIncrement: true or primaryKey: true
@@ -39,6 +39,11 @@ class BaseModel extends Base {
     return out;
   }
 
+  static getPrimaryKeyProp() {
+    const props = this.getConfig("props");
+    return Object.keys(props).find(prop => props[prop].primaryKey);
+  }
+
   static setConfig(config) {
     this.config = { ...this.config, ...config };
     return this.config;
@@ -65,11 +70,11 @@ class BaseModel extends Base {
         if (Array.isArray(val)) {
           return null; // no default value. todo: should be null or undefined ?
         } else {
-          if (val['primaryKey'] || val['autoIncrement']) {
+          if (val["primaryKey"] || val["autoIncrement"]) {
             return this.incrementProp(prop); //todo: should support val["value"] as starting point for increment ? can primaryKey disable increment ?
           }
           // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
-          let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null) ?? (val['primaryKey'] || val['autoIncrement'] ? Number : null);
+          let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null) ?? (val["primaryKey"] || val["autoIncrement"] ? Number : null);
           switch (type) {
             case Number:
             case Array:
@@ -103,7 +108,7 @@ class BaseModel extends Base {
     }
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
-      this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey and other defaults are generated here
+      this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey autoIncrement and other defaults are generated here
     }
     const fullConfig = this.getConfig();
     if (fullConfig.props) {
@@ -124,6 +129,7 @@ class BaseModel extends Base {
   getConfig(prop) {
     let out = Object.assign({}, this.constructor.getConfig(), this.#config);
     return prop ? out[prop] : out;
+    //return prop ? this.#config[prop] : this.#config;
   }
 
   /**
@@ -135,10 +141,13 @@ class BaseModel extends Base {
     return this.#config ? Object.assign(this.#config, config) : this.#defineConfig(config);
   }
 
-  // getId() {
-  //   let idAttr = this.getConfig("idAttr");
-  //   return this[idAttr];
-  // }
+  getID() {
+    const primaryKeyProp = this.constructor.getPrimaryKeyProp();
+    if (!primaryKeyProp) {
+      throw new Error("Unable to get ID since primaryKey is not defined in props");
+    }
+    return this[primaryKeyProp];
+  }
 
   getClientId() {
     //todo: maybe move getClientIdAttr to config
@@ -169,13 +178,13 @@ class BaseModel extends Base {
   // }
 
   #defineConfig(config) {
-    // todo: get rid of this method
     // Object.defineProperty(this, "#config", {
     //   configurable: false,
     //   enumerable: false,
     //   writable: false,
     //   value: config // initial value is assigned
     // });
+    //todo: validate config props, like primaryKey can only be one etc.
     this.#config = config;
     return this.#config;
   }
@@ -231,7 +240,7 @@ class BaseModel extends Base {
         tmpProps[prop] = val;
         reactivity && this.__hookAfterSet && this.__hookAfterSet(prop, val);
       } else if (doSet === false) {
-        throw {method: '__hookBeforeSet', mixin, doSet, prop, val, message};
+        throw { method: "__hookBeforeSet", mixin, doSet, prop, val, message };
       } else {
         throw new Error("__hookBeforeSet: doSet must return boolean");
       }
@@ -271,7 +280,7 @@ class BaseModel extends Base {
         // if (prop === this.constructor.getConfig("idAttr") && this[prop] === undefined) {
         //   this.#defineId(val); // will define and set id attr as immutable
         // } else {
-          this[prop] = val;
+        this[prop] = val;
         //}
         !skipHooks && this.__hookAfterSet && this.__hookAfterSet(prop, this[prop]); // todo: maybe call this always with didSet: true/false param
       } else if (doSet === false) {
@@ -326,6 +335,7 @@ class BaseModel extends Base {
       props: null
     };
   }
+
   __hookAfterConstruct(data, options, config) {
     return this;
   }
