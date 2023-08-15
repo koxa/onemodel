@@ -25,7 +25,9 @@ class BaseStoreAdaptor {
     let added = this.getAdded();
     let deletedIDs = this.getDeletedIDs();
     if (added.length) {
-      return this.constructor.create(added, this.getConfig());
+      const out = await this.constructor.create(added, this.getConfig());
+      this.refreshAdded();
+      return out;
     }
     if (deletedIDs.length) {
       return this.constructor.delete(deletedIDs, this.getConfig());
@@ -33,8 +35,13 @@ class BaseStoreAdaptor {
   }
 
   async fetch() {
-    const results = this.constructor.read(this.getConfig());
-    return this.add(results, {skipHooks: true, raw: true});
+    this.refreshAdded();
+    this.refreshDeleted();
+    this.empty(); // clear array before reading
+    const results = await this.constructor.read(this.getConfig());
+    const res = this.push(...results);
+    this.refreshAdded(); //todo: find different approach for this
+    return res;
   }
 }
 

@@ -1,5 +1,5 @@
 import Base from "../Base.js";
-import { isClass, deepEqual } from "../../utils/index.js";
+import { isClass, deepEqual, isLiteralObject } from "../../utils/index.js";
 import { underscoredIf } from "sequelize/lib/utils";
 
 class BaseModel extends Base {
@@ -12,11 +12,16 @@ class BaseModel extends Base {
 
   static incrementTracker = null; // MUST BE NULL. tracks attr's auto increment value when autoIncrement: true or primaryKey: true
 
-  static incrementProp(prop) {
+  static incrementProp(prop, val) {
     if (!this.incrementTracker) {
-      this.incrementTracker = {}; // must be defined dynamically on model class instance to avoid inheritance of BaseModel's object by ref
+      this.incrementTracker = {[prop]: 0}; // must be defined dynamically on model class instance to avoid inheritance of BaseModel's object by ref
     }
-    this.incrementTracker[prop] = this.incrementTracker[prop] ?? 0;
+    if (val) {
+      if (this.incrementTracker[prop] < val) {
+        this.incrementTracker[prop] = val;
+      }
+      return val; // todo: for now just return defaultVal as it is from server but later compare it for validity within its own Class or Store
+    }
     return ++this.incrementTracker[prop];
   }
 
@@ -54,40 +59,41 @@ class BaseModel extends Base {
    * //todo: maybe move this to mixin
    * @param propObj
    */
-  static getDefaultValueFromPropConfig(prop, val) {
-    if (val === null) { // null is object so treat it in advance
+  static getDefaultValueFromPropConfigOrData(prop, cfg) {
+    // dataVal was validated in advance likely through __beforeConstruct hook
+    if (cfg === null) { // null is object so treat it in advance
       return null;
     }
-    switch (typeof val) {
+    switch (typeof cfg) {
       case "bigint":
       case "boolean":
       case "undefined":
       case "string":
       case "number":
-        return val;
+        return cfg;
       case "object":
         //todo: test null
-        if (Array.isArray(val)) {
+        if (Array.isArray(cfg)) {
           return null; // no default value. todo: should be null or undefined ?
         } else {
-          if (val["primaryKey"] || val["autoIncrement"]) {
-            return this.incrementProp(prop); //todo: should support val["value"] as starting point for increment ? can primaryKey disable increment ?
+          if (cfg["primaryKey"] || cfg["autoIncrement"]) {
+            return this.incrementProp(prop, cfg.value); //todo: can primaryKey disable increment ?
           }
           // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
-          let type = val["type"] ?? (val["options"] ? Array : null) ?? (val["min"] || val["max"] ? Number : null) ?? (val["primaryKey"] || val["autoIncrement"] ? Number : null);
+          let type = cfg["type"] ?? (cfg["options"] ? Array : null) ?? (cfg["min"] || cfg["max"] ? Number : null) ?? (cfg["primaryKey"] || cfg["autoIncrement"] ? Number : null);
           switch (type) {
             case Number:
             case Array:
             case String:
-              return val["value"];
+              return cfg["value"];
             default:
               throw new Error("Unknown prop config type" + type);
           }
         }
       case "function":
-        console.log(val); //todo
+        console.log(cfg); //todo
       default:
-        throw new Error("Unknown prop config value" + val);
+        throw new Error("Unknown prop config value" + cfg);
     }
   }
 
@@ -110,14 +116,29 @@ class BaseModel extends Base {
       // if custom config provided store it in instance
       this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey autoIncrement and other defaults are generated here
     }
-    const fullConfig = this.getConfig();
-    if (fullConfig.props) {
-      for (let prop in fullConfig.props) {
-        this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfig(prop, fullConfig.props[prop]), fullConfig.reactivity);
+    const props = this.getConfig("props");
+    const reactivity = this.getConfig("reactivity");
+    let propsWithData = {};
+    if (props && isLiteralObject(props)) {
+      propsWithData = JSON.parse(JSON.stringify(props)); // deep clone props since values can be modified further
+    }
+    if (data && isLiteralObject(data)) {
+      for (let prop in data) {
+        if (isLiteralObject(propsWithData[prop])) {
+          propsWithData[prop].value = data[prop]; // change default value to data value
+          continue;
+        }
+        if (data[prop] !== undefined) {
+          propsWithData[prop] = data[prop];
+        }
       }
     }
+    for (let prop in propsWithData) {
+      this.#defineProperty(prop,  this.constructor.getDefaultValueFromPropConfigOrData(prop, propsWithData[prop]), reactivity);
+    }
+
     //this.#defineModified(false);
-    data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
+    //data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
     this.__hookAfterConstruct(data, options, config);
   }
 

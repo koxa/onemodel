@@ -209,14 +209,14 @@ class BaseStore extends BaseArray {
   //   );
   // }
 
-  add(items = [], config = {}) {
-    const models = this.constructor.wrapItems({ modelClass: this.getModelClass(), items });
-    const res = super.push(...models);
-    if (!config.raw) {
-      this.#added.push(...models.map(model => model.getID()));
-    }
-    return res;
-  }
+  // add(items = [], config = {}) {
+  //   const models = this.constructor.wrapItems({ modelClass: this.getModelClass(), items });
+  //   const res = super.push(...models);
+  //   if (!config.raw) {
+  //     this.#added.push(...models.map(model => model.getID()));
+  //   }
+  //   return res;
+  // }
 
   push(...items) {
     this.__hookBeforeChange && this.__hookBeforeChange(...arguments);
@@ -266,6 +266,19 @@ class BaseStore extends BaseArray {
   //     return items.find((item) => isClass(item));
   //   }
   // }
+
+  empty() {
+   this.splice(0, this.length);
+  }
+
+  //todo: remove this hack
+  refreshAdded() {
+    this.#added = [];
+  }
+
+  refreshDeleted() {
+    this.#deleted = [];
+  }
 
   getAdded() {
     return this.#added.map(id => this.get(id));

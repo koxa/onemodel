@@ -166,7 +166,7 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
         query = `UPDATE WHERE`;
         break;
       case MYSQL_OPERATIONS.DELETE:
-        query = `DELETE WHERE`;
+        query = `DELETE FROM \`${table}\` WHERE ()`;
         break;
       default:
         throw new Error("Unknown MySQL operation");
@@ -208,10 +208,18 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
     //console.log(this.query(MYSQL_OPERATIONS.SELECT));
     const results = await this.query(MYSQL_OPERATIONS.SELECT, null, config);
     console.log("RESULTS IS", results);
+    const out = [];
     for (let result of results) {
-      console.log(JSON.stringify(result));
+      //todo: make this an util function
+      // convert to literal. by default it's 'RowDataPacket' object
+      out.push({ ...result });
     }
-    return results;
+    console.log(JSON.stringify(out));
+    return out;
+  }
+
+  static async delete(ids = [], config) {
+
   }
 }
 

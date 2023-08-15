@@ -42,15 +42,15 @@ class ValidatableModelMixin {
     // }
 
     /** 'REQUIRED' VALIDATION **/
-    if (propConfig.required && (val === undefined || val === null || val === "")) {
+    if (propConfig.required && (val === undefined || val === null || val === "")) { //todo: check "" since for mysql it's a real value
       return { valid: false, message: `Prop is required` };
     }
-    if (propConfig.primaryKey && propConfig.autoIncrement === false) { // if autoIncrement disabled for primaryKey then it must be user-defined
+    if (propConfig.primaryKey && propConfig.autoIncrement === false && (val === undefined || val === null || val === "")) { // if autoIncrement disabled for primaryKey then it must be user-defined
       return { valid: false, message: `Prop is required` };
     }
 
     /** BASIC TYPE & OPTIONS VALIDATION **/
-    if (val !== undefined) { // only if val was defined we validate type
+    if (val !== undefined && val !== null) { // only if val was defined, and it's not null we validate type
       switch (type) {
         case Number:
           if (typeof val !== "number") {
