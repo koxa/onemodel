@@ -11,10 +11,44 @@ class BaseModel extends Base {
   };
 
   static incrementTracker = null; // MUST BE NULL. tracks attr's auto increment value when autoIncrement: true or primaryKey: true
+  /**
+   * Optional custom config for model todo review
+   */
+  #config;
+
+  constructor(
+    data = {},
+    options = { skipHooks: false, skipConvert: false, skipValidate: false },
+    config = {}
+  ) {
+    super(...arguments);
+    let beforeConstruct = this.__hookBeforeConstruct(data, options, config);
+    if (!beforeConstruct.doSet) {
+      throw beforeConstruct;
+    }
+    if (config && Object.keys(config).length) {
+      // if custom config provided store it in instance
+      this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey autoIncrement and other defaults are generated here
+    }
+    const props = this.getConfig("props") || {};
+    const reactivity = this.getConfig("reactivity");
+    for (let prop in props) {
+      this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfigOrData(prop, props[prop], data[prop]), reactivity);
+    }
+    for (let prop in data) { // define leftover data props
+      if (props[prop] === undefined) {
+        this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfigOrData(prop, data[prop]), reactivity);
+      }
+    }
+
+    //this.#defineModified(false);
+    //data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
+    this.__hookAfterConstruct(data, options, config);
+  }
 
   static incrementProp(prop, val) {
     if (!this.incrementTracker) {
-      this.incrementTracker = {[prop]: 0}; // must be defined dynamically on model class instance to avoid inheritance of BaseModel's object by ref
+      this.incrementTracker = { [prop]: 0 }; // must be defined dynamically on model class instance to avoid inheritance of BaseModel's object by ref
     }
     if (val) {
       if (this.incrementTracker[prop] < val) {
@@ -24,7 +58,6 @@ class BaseModel extends Base {
     }
     return ++this.incrementTracker[prop];
   }
-
 
   /**
    *
@@ -59,7 +92,7 @@ class BaseModel extends Base {
    * //todo: maybe move this to mixin
    * @param propObj
    */
-  static getDefaultValueFromPropConfigOrData(prop, cfg) {
+  static getDefaultValueFromPropConfigOrData(prop, cfg, val) {
     // dataVal was validated in advance likely through __beforeConstruct hook
     if (cfg === null) { // null is object so treat it in advance
       return null;
@@ -74,10 +107,10 @@ class BaseModel extends Base {
       case "object":
         //todo: test null
         if (Array.isArray(cfg)) {
-          return null; // no default value. todo: should be null or undefined ?
+          return val ?? null; // no default value. todo: should be null or undefined ?
         } else {
           if (cfg["primaryKey"] || cfg["autoIncrement"]) {
-            return this.incrementProp(prop, cfg.value); //todo: can primaryKey disable increment ?
+            return this.incrementProp(prop, val); //todo: can primaryKey disable increment ?
           }
           // it's an object: may have Type[Number, Array, String]. If not Type defined check for fields: options = Array, min/max = Number
           let type = cfg["type"] ?? (cfg["options"] ? Array : null) ?? (cfg["min"] || cfg["max"] ? Number : null) ?? (cfg["primaryKey"] || cfg["autoIncrement"] ? Number : null);
@@ -85,7 +118,7 @@ class BaseModel extends Base {
             case Number:
             case Array:
             case String:
-              return cfg["value"];
+              return val !== undefined ? val : cfg["value"];
             default:
               throw new Error("Unknown prop config type" + type);
           }
@@ -95,51 +128,6 @@ class BaseModel extends Base {
       default:
         throw new Error("Unknown prop config value" + cfg);
     }
-  }
-
-  /**
-   * Optional custom config for model todo review
-   */
-  #config;
-
-  constructor(
-    data,
-    options = { skipHooks: false, skipConvert: false, skipValidate: false },
-    config = {}
-  ) {
-    super(...arguments);
-    let beforeConstruct = this.__hookBeforeConstruct(data, options, config);
-    if (!beforeConstruct.doSet) {
-      throw beforeConstruct;
-    }
-    if (config && Object.keys(config).length) {
-      // if custom config provided store it in instance
-      this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey autoIncrement and other defaults are generated here
-    }
-    const props = this.getConfig("props");
-    const reactivity = this.getConfig("reactivity");
-    let propsWithData = {};
-    if (props && isLiteralObject(props)) {
-      propsWithData = JSON.parse(JSON.stringify(props)); // deep clone props since values can be modified further
-    }
-    if (data && isLiteralObject(data)) {
-      for (let prop in data) {
-        if (isLiteralObject(propsWithData[prop])) {
-          propsWithData[prop].value = data[prop]; // change default value to data value
-          continue;
-        }
-        if (data[prop] !== undefined) {
-          propsWithData[prop] = data[prop];
-        }
-      }
-    }
-    for (let prop in propsWithData) {
-      this.#defineProperty(prop,  this.constructor.getDefaultValueFromPropConfigOrData(prop, propsWithData[prop]), reactivity);
-    }
-
-    //this.#defineModified(false);
-    //data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
-    this.__hookAfterConstruct(data, options, config);
   }
 
   /**
