@@ -68,7 +68,7 @@ class BaseStore extends BaseArray {
     } else if (args.length === 1) { // items array OR config object case
       if (Array.isArray(args[0])) { // items array
         items = args[0];
-      } else if (typeof args[0] === "object") { // config object
+      } else if (typeof args[0] === "object") { // config object //todo: maybe support 2 args case (data, config), maybe use single object for config {modelClass, data, etc}
         config = args[0].config;
         items = args[0].data;
       }
@@ -84,7 +84,7 @@ class BaseStore extends BaseArray {
       if (!modelClass.prototype) {
         throw new Error("Correct ModelClass must be specified");
       }
-      if (!modelClass.prototype instanceof BaseModel) {
+      if (!(modelClass.prototype instanceof BaseModel)) {
         throw new Error("Specified ModelClass must be inherited from BaseModel");
       }
       if (!modelClass.getPrimaryKeyProp()) {
@@ -268,7 +268,7 @@ class BaseStore extends BaseArray {
   // }
 
   empty() {
-   this.splice(0, this.length);
+   this.splice(0, this.length);// todo: review this splice
   }
 
   //todo: remove this hack

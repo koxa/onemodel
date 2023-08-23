@@ -1,6 +1,5 @@
 import Base from "../Base.js";
-import { isClass, deepEqual, isLiteralObject } from "../../utils/index.js";
-import { underscoredIf } from "sequelize/lib/utils";
+import { isClass } from "../../utils/index.js";
 
 class BaseModel extends Base {
   static config = {
@@ -9,6 +8,18 @@ class BaseModel extends Base {
     props: null, //this.getProps(),
     reactivity: true //this.getReactivity(),
   };
+
+  static hooks = {
+    beforeConstruct: [],
+    afterConstruct: [],
+    beforeSet: [],
+    afterSet: [],
+    beforeSetAll: [],
+    afterSetAll: [],
+    beforeUnset: [],
+    afterUnset: []
+  };
+
 
   static incrementTracker = null; // MUST BE NULL. tracks attr's auto increment value when autoIncrement: true or primaryKey: true
   /**
@@ -22,9 +33,11 @@ class BaseModel extends Base {
     config = {}
   ) {
     super(...arguments);
-    let beforeConstruct = this.__hookBeforeConstruct(data, options, config);
-    if (!beforeConstruct.doSet) {
-      throw beforeConstruct;
+    for (let fn of this.constructor.hooks.beforeConstruct) {
+      let result = fn.call(this, data, options, config);
+      if (!result.doSet) {
+        throw result;
+      }
     }
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
@@ -43,7 +56,12 @@ class BaseModel extends Base {
 
     //this.#defineModified(false);
     //data && this.setAll(data, options); // do not skip hooks unless it's specifically set by user
-    this.__hookAfterConstruct(data, options, config);
+    for (let fn of this.constructor.hooks.afterConstruct) {
+      let result = fn.call(this, data, options, config);
+      if (!result.doSet) { //todo: review this, likely call 'success: boolean' or similar or don't even use this since it happens afterConstruct
+        throw result;
+      }
+    }
   }
 
   static incrementProp(prop, val) {
@@ -124,7 +142,7 @@ class BaseModel extends Base {
           }
         }
       case "function":
-        console.log(cfg); //todo
+        console.log("got function cfg", cfg); //todo
       default:
         throw new Error("Unknown prop config value" + cfg);
     }
@@ -237,22 +255,34 @@ class BaseModel extends Base {
       if (tmpProps[prop] === val) { // if value same just skip it
         return;
       }
-      let doSet = true, info = null, mixin, message;
-      if (reactivity && this.__hookBeforeSet) {
-        ({ mixin, doSet, prop, val, message } = this.__hookBeforeSet(prop, val));
-        // if (typeof tmpProps[prop] !== 'undefined') {
-        //   this.isModified = true;
-        //   this.__hookUpdate && this.__hookUpdate(prop, val);
-        // }
+
+      //todo: likely get rid of configurable 'reactivity' at all
+      if (this.constructor.hooks.beforeSet) {
+        for (let fn of this.constructor.hooks.beforeSet) {
+          let { mixin, doSet, prop, val, message } = fn.call(this, prop, val);
+          if (!doSet) { // todo: validate signature of all hooks arguments and returned data
+            throw {mixin, method: 'beforeSet', doSet, prop, val, message}
+          }
+          tmpProps[prop] = val;
+        }
       }
-      if (doSet === true) {
-        tmpProps[prop] = val;
-        reactivity && this.__hookAfterSet && this.__hookAfterSet(prop, val);
-      } else if (doSet === false) {
-        throw { method: "__hookBeforeSet", mixin, doSet, prop, val, message };
-      } else {
-        throw new Error("__hookBeforeSet: doSet must return boolean");
-      }
+
+      // let doSet = true, mixin, message;
+      // if (reactivity && this.__hookBeforeSet) {
+      //   ({ mixin, doSet, prop, val, message } = this.__hookBeforeSet(prop, val));
+      //   // if (typeof tmpProps[prop] !== 'undefined') {
+      //   //   this.isModified = true;
+      //   //   this.__hookUpdate && this.__hookUpdate(prop, val);
+      //   // }
+      // }
+      // if (doSet === true) {
+      //   tmpProps[prop] = val;
+      //   reactivity && this.__hookAfterSet && this.__hookAfterSet(prop, val);
+      // } else if (doSet === false) {
+      //   throw { method: "__hookBeforeSet", mixin, doSet, prop, val, message };
+      // } else {
+      //   throw new Error("__hookBeforeSet: doSet must return boolean");
+      // }
     };
     Object.defineProperty(this, prop, def);
   }

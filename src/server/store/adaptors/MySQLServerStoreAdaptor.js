@@ -183,7 +183,7 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
     if (!(await this.isTableExists(config.collectionName))) {
       console.log(`Table '${config.collectionName}' doesn't exist. Table will be auto-created based on model's props`);
       try {
-        await this.createTableFromModel(config.collectionName, model);
+        await this.createTableFromModel(config.collectionName, model || config.modelClass);
       } catch (err) {
         console.log(`Error creating table '${config.collectionName}'`, err);
       }
@@ -214,7 +214,6 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
       // convert to literal. by default it's 'RowDataPacket' object
       out.push({ ...result });
     }
-    console.log(JSON.stringify(out));
     return out;
   }
 

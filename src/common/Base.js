@@ -1,41 +1,12 @@
-import { applyProps, addMixins } from '../utils/mixins.js';
+import { applyProps, addMixins } from "../utils/mixins.js";
 
 class Base {
-  /**
-   * Applies a chain of prototypes for each object in array
-   * 1) Will apply static properties in chain starting with the oldest prototype
-   * 2) Will instantiate object and then apply dynamic properties in chain starting with the oldest prototype
-   * @param mixins
-   * @returns {Base}
-   */
-  static addMixins(...mixins) {
-    return addMixins(this, mixins);
-  }
-
-  // static extend() {
-  //     const cls = function() {
-  //
-  //     };
-  //     cls.prototype = this;
-  //     this.constructor.apply(cls);
-  //     return cls;
-  // }
-
-  static getClientIdAttr() {
-    //todo: move to _config ?
-    return '__cid';
-  }
-
-  static generateClientId() {
-    return (this.__lastClientId = this.__lastClientId ? ++this.__lastClientId : 1);
-  }
-
   constructor() {
     Object.defineProperty(this, this.constructor.getClientIdAttr(), {
       value: this.constructor.generateClientId(),
       enumerable: false,
       writable: false,
-      configurable: false,
+      configurable: false
     });
 
     //apply mixin constructors (copy mixin instance properties to this, starting with oldest mixin)
@@ -47,6 +18,48 @@ class Base {
         applyProps(this, clsObj);
       }
     }
+  }
+
+  /**
+   * Applies a chain of prototypes for each object in array
+   * 1) Will apply static properties in chain starting with the oldest prototype
+   * 2) Will instantiate object and then apply dynamic properties in chain starting with the oldest prototype
+   * @param mixins
+   * @returns {Base}
+   */
+  static addMixins(...mixins) {
+    return addMixins(this, mixins);
+  }
+
+  static async extend(config = {}) {
+    //todo: make this common with array base
+    const newClass = class extends this {
+    };
+    const fullConfig = newClass.setConfig(config);
+    if (fullConfig.mixins && Array.isArray(fullConfig.mixins)) {
+      for (let mixin of fullConfig.mixins) {
+        switch (mixin) {
+          case "validatable":
+            const { default: ValidatableModelMixin } = await import ("./model/mixins/ValidatableModelMixin.js");
+            newClass.addMixins(ValidatableModelMixin);
+            break;
+          case "observable":
+            const { default: ObservableModelMixin } = await import ("./model/mixins/ObservableModelMixin.js");
+            newClass.addMixins(ObservableModelMixin);
+            break;
+        }
+      }
+    }
+    return newClass;
+  }
+
+  static getClientIdAttr() {
+    //todo: move to _config ?
+    return "__cid";
+  }
+
+  static generateClientId() {
+    return (this.__lastClientId = this.__lastClientId ? ++this.__lastClientId : 1);
   }
 
   toJSON() {

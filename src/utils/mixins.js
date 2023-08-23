@@ -1,3 +1,5 @@
+import { deepMerge } from "./index.js";
+
 export const DEFAULT_OBJECT_PROPS = [
   'constructor',
   '__defineGetter__',
@@ -62,11 +64,12 @@ export function applyProps(accumulator, donor, excludeProps = [], mergeProps = [
       if (prop in accumulator) {
         // if prop already exists
         if (mergeProps.includes(prop)) {
-          if (typeof accumulator[prop] === 'object' && typeof donor[prop] === 'object') {
-            Object.assign(accumulator[prop], donor[prop]);
-          } else {
-            throw new Error("MergeProps prop types don't match");
-          }
+          accumulator[prop] = deepMerge(accumulator[prop], donor[prop]);
+          // if (typeof accumulator[prop] === 'object' && typeof donor[prop] === 'object') {
+          //   Object.assign(accumulator[prop], donor[prop]);
+          // } else {
+          //   throw new Error("MergeProps prop types don't match");
+          // }
         } else {
           //UPDATE: Now assign all mixin methods and props as non-enum to be hidden by default
           Object.defineProperty(accumulator, prop, {
@@ -97,7 +100,7 @@ export function addMixins(self, mixins = []) {
       self,
       mixin,
       [...DEFAULT_FUNCTION_PROPS, ...DEFAULT_OBJECT_PROPS],
-      ['_config'],
+      ['config', 'hooks'],
     ); // apply Static/Constructor(function) props excluding standard Function and Object props. Also merge config objects
     applyPrototypeChainProps(self.prototype, mixin.prototype, DEFAULT_OBJECT_PROPS); // apply prototype(object) props excluding constructor and standard object props
     if (!self.__appliedMixins) {

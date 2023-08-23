@@ -1,16 +1,16 @@
 export function isClass(v) {
-  return typeof v === 'function' && /^\s*class\s+/.test(v.toString());
+  return typeof v === "function" && /^\s*class\s+/.test(v.toString());
 }
 
 export function isLiteralObject(obj) {
-  return (obj && typeof obj === 'object' && obj.constructor === Object);
+  return (obj && typeof obj === "object" && obj.constructor === Object);
 }
 
 export function getFilter(filterObj) {
-  if (filterObj && typeof filterObj === 'object' && Object.keys(filterObj).length) {
+  if (filterObj && typeof filterObj === "object" && Object.keys(filterObj).length) {
     let filters = {};
     for (const key in filterObj) {
-      if (typeof filterObj[key] !== 'undefined' && filterObj[key] !== null) {
+      if (typeof filterObj[key] !== "undefined" && filterObj[key] !== null) {
         filters[key] = filterObj[key];
       }
     }
@@ -25,22 +25,22 @@ export function convertToQueryString(params, parentKey = null) {
     const fullKey = parentKey ? `${parentKey}.${key}` : key;
 
     if (Array.isArray(value)) {
-      if (key === '$and' || key === '$or') {
+      if (key === "$and" || key === "$or") {
         const arrayQueryParts = value.map((element) => convertToQueryString(element));
         queryParts.push(
-          `${encodeURIComponent(fullKey)}=${encodeURIComponent(`[${arrayQueryParts.join('&')}]`)}`,
+          `${encodeURIComponent(fullKey)}=${encodeURIComponent(`[${arrayQueryParts.join("&")}]`)}`
         );
       } else {
-        queryParts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(value.join(','))}`);
+        queryParts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(value.join(","))}`);
       }
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (typeof value === "object" && value !== null) {
       queryParts.push(convertToQueryString(value, fullKey));
     } else {
       queryParts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(value)}`);
     }
   }
 
-  return queryParts.join('&');
+  return queryParts.join("&");
 }
 
 export function deepEqual(obj1, obj2) {
@@ -49,8 +49,8 @@ export function deepEqual(obj1, obj2) {
   }
 
   if (
-    typeof obj1 !== 'object' ||
-    typeof obj2 !== 'object' ||
+    typeof obj1 !== "object" ||
+    typeof obj2 !== "object" ||
     obj1 === null ||
     obj2 === null ||
     obj1 === undefined ||
@@ -73,4 +73,43 @@ export function deepEqual(obj1, obj2) {
   }
 
   return true;
+}
+
+export function deepMerge(target, source) {
+  switch (typeof target) {
+    case "undefined":
+    case "boolean":
+    case "number":
+    case "bigint":
+    case "string":
+    case "symbol":
+    case "function":
+      return source; // source value takes priority and will override target
+    case "object": // objects can be {}, array, null
+      if (typeof source !== "object") {
+        return source; // if types don't match source takes priority //todo: should we take 'undefined' as value ?
+      }
+      if (target === null) {
+        return source;
+      } else if (Array.isArray(target)) {
+        if (Array.isArray(source)) {
+          target.push(...source); // simply append all source elements to target, won't check for uniqueness
+          return target;
+        } else {
+          return source;
+        }
+      } else if (target.constructor === Object) {
+        if (source.constructor === Object) {
+          for (let prop in source) {
+            target[prop] = deepMerge(target[prop], source[prop]);
+          }
+          return target;
+        } else {
+          return source;
+        }
+      }
+      throw new Error("Unknown object prototype for target" + target);
+    default:
+      throw new Error("Unsupported deepMerge type");
+  }
 }
