@@ -39,6 +39,10 @@ class Base {
     if (fullConfig.mixins && Array.isArray(fullConfig.mixins)) {
       for (let mixin of fullConfig.mixins) {
         switch (mixin) {
+          case "convertible":
+            const { default: ConvertibleModelMixin } = await import ("./model/mixins/ConvertibleModelMixin.js");
+            newClass.addMixins(ConvertibleModelMixin);
+            break;
           case "validatable":
             const { default: ValidatableModelMixin } = await import ("./model/mixins/ValidatableModelMixin.js");
             newClass.addMixins(ValidatableModelMixin);

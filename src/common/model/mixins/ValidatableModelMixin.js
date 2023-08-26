@@ -6,12 +6,14 @@ function beforeConstruct(data, options, config) {
     return {
       mixin: ValidatableModelMixin.name,
       doSet: false,
-      props: result.props
+      props: result.props,
+      data
     };
   } else {
     return {
       mixin: ValidatableModelMixin.name,
-      doSet: true
+      doSet: true,
+      data
     };
   }
 }
@@ -110,7 +112,7 @@ function getInvalidResponse(prop, val, message) {
   };
 }
 
-class ValidatableModelMixin {
+export default class ValidatableModelMixin {
 
   static hooks = {
     beforeConstruct: [beforeConstruct],
@@ -134,14 +136,12 @@ class ValidatableModelMixin {
   validateAll(data) {
     const propConfigs = this.getConfig("props");
     let out = {};
-    if (isLiteralObject(propConfigs)) {
-      for (let prop in propConfigs) {
-        let propCfg = propConfigs[prop];
-        if (isLiteralObject(propCfg)) {
-          let res = doValidation(propCfg, data[prop]);
-          if (res.valid === false) { // only collect invalid results
-            out[prop] = res;
-          }
+    for (let prop in propConfigs) {
+      let propCfg = propConfigs[prop];
+      if (isLiteralObject(propCfg)) {
+        let res = doValidation(propCfg, data[prop]);
+        if (res.valid === false) { // only collect invalid results
+          out[prop] = res;
         }
       }
     }
@@ -178,5 +178,3 @@ class ValidatableModelMixin {
   //   }
   // }
 }
-
-export default ValidatableModelMixin;

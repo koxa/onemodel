@@ -257,6 +257,20 @@ class BaseStore extends BaseArray {
     return deleted;
   }
 
+  /**
+   * Join similar to classic MySql join
+   * Currently only supports match by key: primary Key
+   * usage: joinBy({store, fieldID= storePrimaryKey}, ...)
+   * todo: improve jsDOC
+   * @param {{fieldID: Store}[]} joins
+   * @param {Object} selectFields Should be object like {fieldID: storeID}
+   */
+  // joinBy(joins, selectFields) {
+  //   return this.map(item => {
+  //     return
+  //   })
+  // }
+
   // getClassModel() {
   //   return this.constructor.getConfig('modelClass');
   // }

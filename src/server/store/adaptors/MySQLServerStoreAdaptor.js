@@ -192,6 +192,7 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
     try {
       return await this.rawQuery(query);
     } catch (err) {
+      //todo: support failures
       console.log("Error running MySql query", err);
     }
   }
@@ -199,6 +200,7 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
   static async create(records, config) {
     //todo: support insertMany
     for (let record of records) {
+      //todo: support failures
       await this.query(MYSQL_OPERATIONS.INSERT, record, config);
     }
     return true;

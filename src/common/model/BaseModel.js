@@ -5,7 +5,7 @@ class BaseModel extends Base {
   static config = {
     //todo: make config private ? but how to extend in children ? //todo: make it private with es6 '#' private props
     //idAttr: "id", //this.getIdAttr(), // id attr is a Primary Key. It is immutable and can't be modified once set  //todo: maybe use null in BaseModel
-    props: null, //this.getProps(),
+    props: {}, //this.getProps(),
     reactivity: true //this.getReactivity(),
   };
 
@@ -38,6 +38,7 @@ class BaseModel extends Base {
       if (!result.doSet) {
         throw result;
       }
+      data = result.data;
     }
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
@@ -261,7 +262,7 @@ class BaseModel extends Base {
         for (let fn of this.constructor.hooks.beforeSet) {
           let { mixin, doSet, prop, val, message } = fn.call(this, prop, val);
           if (!doSet) { // todo: validate signature of all hooks arguments and returned data
-            throw {mixin, method: 'beforeSet', doSet, prop, val, message}
+            throw { mixin, method: "beforeSet", doSet, prop, val, message };
           }
           tmpProps[prop] = val;
         }
