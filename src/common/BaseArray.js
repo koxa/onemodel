@@ -37,14 +37,14 @@ class BaseArray extends Array {
     //todo: make this common with model base
     const newClass = class extends this {
     };
-    const fullConfig = newClass.setConfig(config);
+    const fullConfig = newClass.setConfig(config); //todo: review setConfig here, it's set twice, first time here
     if (fullConfig.adaptor) {
       switch (fullConfig.adaptor.type) {
         case "mysql":
           try {
             const { default: MySQLServerStoreAdaptor } = await import ("../server/store/adaptors/MySQLServerStoreAdaptor.js");
-            newClass.addMixins(MySQLServerStoreAdaptor);
-            newClass.setConfig({ mysql: fullConfig.adaptor }); //todo: fix this later
+            newClass.addMixins(MySQLServerStoreAdaptor); //todo: make sure all mixins added only once
+            newClass.setConfig({ mysql: fullConfig.adaptor }); //todo: fix this later //todo: review setConfig here, it's set twice, second time here
           } catch (err) {
             console.log("Unable to load MySQL Server Store Adaptor", err);
           }

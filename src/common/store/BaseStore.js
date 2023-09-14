@@ -117,7 +117,7 @@ class BaseStore extends BaseArray {
 
   get(id) {
     //todo: enable Indexing for primary and unique keys by default
-    return this.find((item) => item.getID() === id);
+    return this.find((item) => item.getID() === id); //todo: think whether comparison should be strict or not like 1 !== "1" etc.
   }
 
   // /**

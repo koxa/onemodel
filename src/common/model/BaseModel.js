@@ -42,14 +42,18 @@ class BaseModel extends Base {
     }
     if (config && Object.keys(config).length) {
       // if custom config provided store it in instance
-      this.#defineConfig({ ...this.constructor.getConfig(), ...config }); // primaryKey autoIncrement and other defaults are generated here
+      this.#defineConfig({ ...this.constructor.getConfig(), ...config });
     }
     const props = this.getConfig("props") || {};
     const reactivity = this.getConfig("reactivity");
     for (let prop in props) {
-      this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfigOrData(prop, props[prop], data[prop]), reactivity);
+      if (prop.primaryKey === true) {
+        this.#definePrimaryKey(prop, this.constructor.getDefaultValueFromPropConfigOrData(prop, props[prop], data[prop]));
+      } else {
+        this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfigOrData(prop, props[prop], data[prop]), reactivity);
+      }
     }
-    for (let prop in data) { // define leftover data props
+    for (let prop in data) { // define leftover data props //todo: whether to allow dynamic props (data-driven props)
       if (props[prop] === undefined) {
         this.#defineProperty(prop, this.constructor.getDefaultValueFromPropConfigOrData(prop, data[prop]), reactivity);
       }
@@ -144,6 +148,7 @@ class BaseModel extends Base {
         }
       case "function":
         console.log("got function cfg", cfg); //todo
+        break;
       default:
         throw new Error("Unknown prop config value" + cfg);
     }
@@ -238,6 +243,15 @@ class BaseModel extends Base {
   //   return this[this.getConfig("idAttr")];
   // }
 
+  #definePrimaryKey(prop, val) {
+    Object.defineProperty(this, prop, {
+      configurable: true,
+      enumerable: true,
+      writable: false, // primary key is immutable by default
+      value: val
+    });
+  }
+
   #defineProperty(prop, val, reactivity) {
     // if (prop === this.getConfig('idAttr')) {
     //   return this.#defineId(val);
@@ -253,20 +267,22 @@ class BaseModel extends Base {
       return tmpProps[prop];
     };
     def.set = (val) => {
-      if (tmpProps[prop] === val) { // if value same just skip it
+      let origProp = prop;
+      let origVal = val;
+      if (tmpProps[origProp] === origVal) { // if value same just skip it
         return;
       }
-
       //todo: likely get rid of configurable 'reactivity' at all
-      if (this.constructor.hooks.beforeSet) {
+      if (this.constructor.hooks.beforeSet && Array.isArray(this.constructor.hooks.beforeSet) && this.constructor.hooks.beforeSet.length) {
+        let mixin, doSet, prop = origProp, val = origVal, message;
         for (let fn of this.constructor.hooks.beforeSet) {
-          let { mixin, doSet, prop, val, message } = fn.call(this, prop, val);
+          ({ mixin, doSet, prop, val, message } = fn.call(this, prop, val));
           if (!doSet) { // todo: validate signature of all hooks arguments and returned data
             throw { mixin, method: "beforeSet", doSet, prop, val, message };
           }
-          tmpProps[prop] = val;
         }
       }
+      tmpProps[prop] = val;
 
       // let doSet = true, mixin, message;
       // if (reactivity && this.__hookBeforeSet) {

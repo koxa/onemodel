@@ -35,21 +35,29 @@ class Base {
     //todo: make this common with array base
     const newClass = class extends this {
     };
-    const fullConfig = newClass.setConfig(config);
-    if (fullConfig.mixins && Array.isArray(fullConfig.mixins)) {
-      for (let mixin of fullConfig.mixins) {
+
+    //todo: maybe separate mixins from config since 'hooks' are not in config either
+    let mixins = []
+    if (config.mixins) {
+      mixins = config.mixins;
+      delete config.mixins;
+    }
+
+    newClass.setConfig(config);
+    if (mixins && Array.isArray(mixins)) {
+      for (let mixin of mixins) {
         switch (mixin) {
           case "convertible":
             const { default: ConvertibleModelMixin } = await import ("./model/mixins/ConvertibleModelMixin.js");
-            newClass.addMixins(ConvertibleModelMixin);
+            newClass.addMixins(ConvertibleModelMixin); //todo: make sure all mixins added only once
             break;
           case "validatable":
             const { default: ValidatableModelMixin } = await import ("./model/mixins/ValidatableModelMixin.js");
-            newClass.addMixins(ValidatableModelMixin);
+            newClass.addMixins(ValidatableModelMixin); //todo: make sure all mixins added only once
             break;
           case "observable":
             const { default: ObservableModelMixin } = await import ("./model/mixins/ObservableModelMixin.js");
-            newClass.addMixins(ObservableModelMixin);
+            newClass.addMixins(ObservableModelMixin); //todo: make sure all mixins added only once
             break;
         }
       }

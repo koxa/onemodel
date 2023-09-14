@@ -209,7 +209,7 @@ class MySQLServerStoreAdaptor extends BaseStoreAdaptor {
   static async read(config) {
     //console.log(this.query(MYSQL_OPERATIONS.SELECT));
     const results = await this.query(MYSQL_OPERATIONS.SELECT, null, config);
-    console.log("RESULTS IS", results);
+    //console.log("RESULTS IS", results);
     const out = [];
     for (let result of results) {
       //todo: make this an util function
