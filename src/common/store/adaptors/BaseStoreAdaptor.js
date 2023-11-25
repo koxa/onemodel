@@ -9,7 +9,7 @@ class BaseStoreAdaptor {
     throw new Error("CREATE method must be implemented in child Adaptor");
   }
 
-  static read() {
+  static read(config = this.getConfig()) {
     throw new Error("READ method must be implemented in child Adaptor");
   }
 
