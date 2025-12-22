@@ -112,7 +112,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
 
   /**
    * Finds one record by param or set of params or ID
-   * @param key or {key: val, ...} or Mongo.ObjectID or ID
+   * @param key or {key: val, ...} or Mongo.ObjectId or ID
    * @param val
    * @returns {Promise<MongoServerModelAdaptor>}
    */
@@ -120,9 +120,9 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     let query;
     const { mongo } = this.config;
     if (typeof key === 'object') {
-      // e.g. {key: val} or Mongo.ObjectID
-      if (key instanceof mongo.ObjectID) {
-        // if ObjectID supplied
+      // e.g. {key: val} or Mongo.ObjectId
+      if (key instanceof mongo.ObjectId) {
+        // if ObjectId supplied
         query = { [this.config.idAttr]: val ? val : key };
       } else {
         // if key in format {key: val, key2: val2,...}
@@ -132,7 +132,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
       query = { [key]: val };
     } else if (key) {
       // if only key and it;s not object it's likely a numeric ID
-      query = { [this.config.idAttr]: new mongo.ObjectID(key) };
+      query = { [this.config.idAttr]: new mongo.ObjectId(key) };
     }
 
     const result = await this.getCollection().findOne(query);
@@ -155,7 +155,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   static async update(data, params = {}) {
     const { id, collectionName, filter } = this.getAdaptorParams(params); //todo: ability to save
     const { mongo } = this.config;
-    const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
+    const mongoId = id ? (id instanceof mongo.ObjectId ? id : new mongo.ObjectId(id)) : undefined;
     const filters = this.buildFilter({ [this.config.idAttr]: mongoId, ...filter });
     if (!filters || !Object.keys(filters).length) {
       throw new Error(
@@ -204,7 +204,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
   static async delete(params = {}) {
     const { mongo } = this.config;
     const { id, collectionName, filter } = this.getAdaptorParams(params);
-    const mongoId = id ? (id instanceof mongo.ObjectID ? id : new mongo.ObjectID(id)) : undefined;
+    const mongoId = id ? (id instanceof mongo.ObjectId ? id : new mongo.ObjectId(id)) : undefined;
     const filters = this.buildFilter({ [this.config.idAttr]: mongoId, ...filter });
     return await this.getCollection(collectionName).deleteMany(filters);
   }
@@ -221,7 +221,7 @@ class MongoServerModelAdaptor extends BaseAdaptor {
     }
     const { collectionName } = this.getAdaptorParams(params);
     const { mongo } = this.config;
-    const _id = new mongo.ObjectID(id);
+    const _id = new mongo.ObjectId(id);
     return await this.getCollection(collectionName).deleteOne({ _id });
   }
 
