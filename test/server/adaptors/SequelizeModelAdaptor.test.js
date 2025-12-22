@@ -14,7 +14,11 @@ describe('SequelizeModelAdaptor', () => {
   const testManyDocs = [];
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite::memory:', { logging: false });
+    sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: ':memory:',
+      logging: false,
+    });
 
     userSchema = sequelize.define(SequelizeModelTestModel.name.toLocaleLowerCase(), {
       id: {
