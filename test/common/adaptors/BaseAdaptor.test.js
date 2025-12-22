@@ -149,7 +149,7 @@ describe('BaseAdaptor', () => {
     it('should throw an error when update method does not return a boolean', async () => {
       const updateSpy = jest.spyOn(BaseAdaptor, 'update').mockResolvedValue({});
 
-      await expect(adaptor.save()).rejects.toThrowError(
+      await expect(adaptor.save()).rejects.toThrow(
         'BaseAdaptor save: update must return boolean',
       );
 
@@ -162,7 +162,7 @@ describe('BaseAdaptor', () => {
       const baseAdaptor = new BaseAdaptor();
       setMockDataToAdaptor(baseAdaptor, undefined);
 
-      await expect(baseAdaptor.save()).rejects.toThrowError(
+      await expect(baseAdaptor.save()).rejects.toThrow(
         'BaseAdaptor save: create must return object with modified props or id',
       );
 

@@ -32,7 +32,7 @@ describe('ObservableMixin', () => {
 
   describe('getEvents', () => {
     test('should throw an error', () => {
-      expect(() => ObservableMixin.getEvents()).toThrowError(
+      expect(() => ObservableMixin.getEvents()).toThrow(
         'At least one event must be defined in observable class',
       );
     });
