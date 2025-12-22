@@ -14,7 +14,7 @@ module.exports = [
       library: 'OneModel',
       libraryTarget: 'umd',
       umdNamedDefine: true,
-      path: path.resolve('dist'),
+      path: path.resolve(__dirname, 'dist'),
       filename: 'onemodel.umd.dev.js',
       publicPath: '/',
     },
@@ -29,7 +29,7 @@ module.exports = [
     },
     optimization: {
       usedExports: true,
-      sideEffects: true,
+      sideEffects: false,
       concatenateModules: true,
     },
     plugins: [
@@ -49,14 +49,13 @@ module.exports = [
     },
     output: {
       libraryTarget: 'commonjs2',
-      path: path.resolve('dist'),
+      path: path.resolve(__dirname, 'dist'),
       filename: 'onemodel.common.dev.js',
-      publicPath: '/',
     },
     module: {
       rules: [
         {
-          test: /.js?$/,
+          test: /\.js?$/,
           loader: 'babel-loader',
           exclude: /node_modules/,
         },
@@ -64,7 +63,7 @@ module.exports = [
     },
     optimization: {
       usedExports: true,
-      sideEffects: true,
+      sideEffects: false,
       concatenateModules: true,
     },
     plugins: [
@@ -123,10 +122,8 @@ module.exports = [
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].js',
-      publicPath: '/',
     },
     plugins: [
-      new NodePolyfillPlugin(),
       new webpack.DefinePlugin({
         'process.env.WEBPACK_TARGET': JSON.stringify('node'),
       }),
@@ -135,11 +132,9 @@ module.exports = [
     module: {
       rules: [
         {
-          test: /\.js$/,
+          test: /\.js?$/,
+          loader: 'babel-loader',
           exclude: /node_modules/,
-          use: {
-            loader: 'babel-loader',
-          },
         },
       ],
     },

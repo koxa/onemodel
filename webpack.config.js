@@ -15,7 +15,7 @@ module.exports = [
       library: 'OneModel',
       libraryTarget: 'umd',
       umdNamedDefine: true,
-      path: path.resolve('dist'),
+      path: path.resolve(__dirname, 'dist'),
       filename: 'onemodel.umd.js',
     },
     plugins: [
@@ -35,7 +35,7 @@ module.exports = [
     },
     optimization: {
       usedExports: true,
-      sideEffects: true,
+      sideEffects: false,
       concatenateModules: true,
     },
     // devtool: 'source-map',
@@ -49,13 +49,13 @@ module.exports = [
     },
     output: {
       libraryTarget: 'commonjs2',
-      path: path.resolve('dist'),
+      path: path.resolve(__dirname, 'dist'),
       filename: 'onemodel.common.js',
     },
     module: {
       rules: [
         {
-          test: /.js?$/,
+          test: /\.js?$/,
           loader: 'babel-loader',
           exclude: /node_modules/,
         },
@@ -63,7 +63,7 @@ module.exports = [
     },
     optimization: {
       usedExports: true,
-      sideEffects: true,
+      sideEffects: false,
       concatenateModules: true,
     },
     plugins: [

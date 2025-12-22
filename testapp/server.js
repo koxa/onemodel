@@ -7,7 +7,6 @@ const express = require('express');
 
 async function createServer() {
   const app = express();
-  const router = express.Router();
   app.use(express.json());
   app.use(express.static('dist'));
   app.use(express.static('public'));
@@ -20,7 +19,6 @@ async function createServer() {
   app.use(await require('./server/CommentSQLiteRouter')()); // use SQlite3 -> sqlite::memory:
 
   app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '../public/index.html')));
-  app.use('*', router);
   http.createServer(app).listen(3000, '0.0.0.0', () => {
     console.log('Listening on port 3000');
   });
